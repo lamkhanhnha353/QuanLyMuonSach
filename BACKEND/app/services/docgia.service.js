@@ -13,7 +13,7 @@ class DocGiaService {
             HOLOT: payload.HOLOT,
             TEN: payload.TEN,
             NGAYSINH: payload.NGAYSINH,
-            GIOITINH: payload.GIOITINH,
+            GIOITINH: payload.GIOITINH, // <-- Dùng GIOITINH (theo code của bạn)
             DIACHI: payload.DIACHI,
             DIENTHOAI: payload.DIENTHOAI, 
         };
@@ -30,6 +30,7 @@ class DocGiaService {
      * Đăng ký một tài khoản độc giả mới.
      * @param {object} payload Dữ liệu độc giả từ req.body
      * @returns {object} Document độc giả vừa tạo (đã bỏ password)
+     * (ĐÃ SỬA LỖI 'insertedId')
      */
     async create(payload) {
         const docgiaData = this.#extractDocGiaData(payload);
@@ -48,13 +49,16 @@ class DocGiaService {
             throw new Error("Mật khẩu là bắt buộc");
         }
 
-        const result = await this.DocGia.insertOne(docgiaData);
+        // --- BẮT ĐẦU SỬA LỖI ---
+        // 'insertOne' sẽ tự động thêm _id vào 'docgiaData'
+        await this.DocGia.insertOne(docgiaData);
 
-        // Lấy lại thông tin độc giả vừa tạo để trả về
-        const newDocGia = await this.findById(result.insertedId);
+        // Xóa mật khẩu trước khi trả về
+        delete docgiaData.password; 
         
-        delete newDocGia.password; 
-        return newDocGia;
+        // Trả về chính 'docgiaData' (đã bao gồm _id)
+        return docgiaData;
+        // --- KẾT THÚC SỬA LỖI ---
     }
 
     /**
@@ -81,7 +85,7 @@ class DocGiaService {
         return docgia;
     }
 
-   
+    
     async find(filter) {
         const cursor = await this.DocGia.find(filter);
         return await cursor.toArray();
@@ -100,8 +104,8 @@ class DocGiaService {
             _id: ObjectId.isValid(id) ? new ObjectId(id) : null,
         });
     }
-  
-     // Cập nhật thông tin độc giả (dùng cho Admin). 
+ 
+      // Cập nhật thông tin độc giả (dùng cho Admin). 
     async update(id, payload) {
         const filter = {
             _id: ObjectId.isValid(id) ? new ObjectId(id) : null,

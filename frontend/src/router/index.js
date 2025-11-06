@@ -1,13 +1,25 @@
 import { createRouter, createWebHistory } from "vue-router";
-import Home from "@/views/Home.vue"; // Import trang Home mới
+import Home from "@/views/Home.vue";
+import DocGiaRegister from "@/views/DocGiaRegister.vue";
+import DocGiaLogin from "@/views/DocGiaLogin.vue"; // <-- 1. IMPORT
 
 const routes = [
   {
     path: "/",
     name: "home",
-    component: Home, // Trang chủ
+    component: Home,
   },
-  // Chúng ta sẽ thêm các trang khác (Login, Register...) vào đây
+  {
+    path: "/docgia/register",
+    name: "docgia.register",
+    component: DocGiaRegister,
+  },
+  // <-- 2. THÊM ROUTE NÀY
+  {
+    path: "/docgia/login",
+    name: "docgia.login",
+    component: DocGiaLogin,
+  },
 ];
 
 const router = createRouter({
