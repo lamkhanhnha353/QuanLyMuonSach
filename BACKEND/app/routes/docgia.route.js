@@ -1,0 +1,19 @@
+const express = require("express");
+const docgia = require("../controllers/docgia.controller");
+    
+const router = express.Router();
+
+router.route("/login")
+    .post(docgia.login);
+
+router.route("/")
+    .get(docgia.findAll)
+    .post(docgia.create) // Đây là Đăng Ký
+    .delete(docgia.deleteAll);
+
+router.route("/:id")
+    .get(docgia.findOne)
+    .put(docgia.update)
+    .delete(docgia.delete);
+
+module.exports = router;
