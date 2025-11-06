@@ -203,7 +203,7 @@ export default {
 }
 .error-feedback {
   color: #dc3545;
-  font-weight: bold;
+
   min-height: 1.5em;
 }
 .form-control {

@@ -1,9 +1,9 @@
 import http from "./http-common";
 
 class AuthService {
-  // 
-  // --- SỬA LỖI TRONG HÀM LOGIN NÀY ---
-  //
+  /**
+   * Đăng nhập ĐỘC GIẢ
+   */
   login(user) {
     return http
       .post("/docgia/login", {
@@ -11,29 +11,48 @@ class AuthService {
         password: user.password,
       })
       .then((response) => {
-        // response.data (từ API) là: { message: "...", data: { ...user... } }
-        
-        // 1. Kiểm tra xem 'response.data.data' (thông tin user) có tồn tại không
+        // API trả về: { message: "...", data: { ...user... } }
         if (response.data && response.data.data) {
-          
-          // 2. Chỉ lưu thông tin user (response.data.data) vào localStorage
+          // Chỉ lưu thông tin user (response.data.data)
           localStorage.setItem("user", JSON.stringify(response.data.data));
-          
-          // 3. Trả về chỉ thông tin user (response.data.data) cho component
           return response.data.data;
         } else {
-          // Xử lý nếu API trả về không đúng (hiếm khi)
           return null; 
         }
       });
   }
 
-  // Hàm Đăng xuất (Giữ nguyên)
+  /**
+   * Đăng nhập NHÂN VIÊN
+   */
+  loginNhanVien(staff) {
+    return http
+      .post("/nhanvien/login", {
+        MSNV: staff.MSNV,
+        password: staff.password,
+      })
+      .then((response) => {
+        // API trả về: { message: "...", data: { ...staff... } }
+        if (response.data && response.data.data) {
+          // Ghi đè "user" bằng thông tin Nhân Viên
+          localStorage.setItem("user", JSON.stringify(response.data.data));
+          return response.data.data;
+        } else {
+          return null; 
+        }
+      });
+  }
+
+  /**
+   * Đăng xuất (Dùng chung)
+   */
   logout() {
     localStorage.removeItem("user");
   }
 
-  // Hàm Đăng ký (Giữ nguyên)
+  /**
+   * Đăng ký (Chỉ dành cho Độc Giả)
+   */
   register(user) {
     return http.post("/docgia", {
       username: user.username,
@@ -47,7 +66,9 @@ class AuthService {
     });
   }
 
-  // Hàm getCurrentUser (Giữ nguyên)
+  /**
+   * Lấy user/staff hiện tại từ localStorage (Dùng chung)
+   */
   getCurrentUser() {
     return JSON.parse(localStorage.getItem("user"));
   }

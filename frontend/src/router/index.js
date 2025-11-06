@@ -1,7 +1,10 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Home from "@/views/Home.vue";
 import DocGiaRegister from "@/views/DocGiaRegister.vue";
-import DocGiaLogin from "@/views/DocGiaLogin.vue"; // <-- 1. IMPORT
+
+// 1. IMPORT TRANG LOGIN MỚI
+import Login from "@/views/Login.vue"; 
+// (Xóa 2 import cũ: DocGiaLogin và NhanVienLogin)
 
 const routes = [
   {
@@ -14,12 +17,13 @@ const routes = [
     name: "docgia.register",
     component: DocGiaRegister,
   },
-  // <-- 2. THÊM ROUTE NÀY
+  // 2. THAY 2 ROUTE CŨ BẰNG 1 ROUTE MỚI
   {
-    path: "/docgia/login",
-    name: "docgia.login",
-    component: DocGiaLogin,
+    path: "/login", // Đường dẫn gộp mới
+    name: "login",
+    component: Login,
   },
+  // (Chúng ta sẽ thêm trang Sách và Quản lý sau)
 ];
 
 const router = createRouter({

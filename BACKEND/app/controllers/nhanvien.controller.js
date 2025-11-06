@@ -1,21 +1,22 @@
-// (Tạm thời chúng ta cũng tạo các hàm CRUD cho nhân viên, 
 const NhanVienService = require("../services/nhanvien.service");
 const MongoDB = require("../utils/mongodb.util");
 const ApiError = require("../api-error");
 
 // 1. Create (Register): Tạo nhân viên mới
 exports.create = async (req, res, next) => {
-    // Kiểm tra MSNV và Password
-    if (!req.body?.MSNV || !req.body?.Password) {
+    // FIX 1: Kiểm tra "password" (thường)
+    if (!req.body?.MSNV || !req.body?.password) {
         return next(new ApiError(400, "MSNV và Mật khẩu là bắt buộc"));
     }
 
     try {
         const nhanVienService = new NhanVienService(MongoDB.client);
+        // (Hàm service.create đã được sửa lỗi insertedId)
         const document = await nhanVienService.create(req.body);
+        
+        // (Format trả về của bạn)
         return res.send({ message: "Tạo nhân viên thành công", data: document });
     } catch (error) {
-        // Bắt lỗi "MSNV đã tồn tại"
         if (error.message.includes("MSNV")) {
             return next(new ApiError(409, error.message)); // 409 = Conflict
         }
@@ -27,22 +28,24 @@ exports.create = async (req, res, next) => {
 
 // 2. Login: Đăng nhập
 exports.login = async (req, res, next) => {
-    if (!req.body?.MSNV || !req.body?.Password) {
+    // FIX 2: Kiểm tra "password" (thường)
+    if (!req.body?.MSNV || !req.body?.password) {
         return next(new ApiError(400, "MSNV và Mật khẩu là bắt buộc"));
     }
 
     try {
         const nhanVienService = new NhanVienService(MongoDB.client);
+        // (Hàm service.login đã được sửa lỗi so sánh pass)
         const nhanvien = await nhanVienService.login(req.body);
         
+        // (Format trả về của bạn)
         return res.send({ message: "Đăng nhập thành công", data: nhanvien });
     } catch (error) {
-        // Bắt lỗi "MSNV hoặc Mật khẩu không đúng"
         return next(new ApiError(401, error.message)); // 401 = Unauthorized
     }
 };
 
-// 3. FindAll: Lấy tất cả nhân viên
+// 3. FindAll: Lấy tất cả nhân viên (Giữ nguyên)
 exports.findAll = async (req, res, next) => {
     let documents = [];
     try {
@@ -57,7 +60,7 @@ exports.findAll = async (req, res, next) => {
     return res.send(documents);
 };
 
-// 4. FindOne: Tìm một nhân viên qua ID
+// 4. FindOne: Tìm một nhân viên qua ID (Giữ nguyên)
 exports.findOne = async (req, res, next) => {
     try {
         const nhanVienService = new NhanVienService(MongoDB.client);
@@ -77,7 +80,7 @@ exports.findOne = async (req, res, next) => {
     }
 };
 
-// 5. Update: Cập nhật thông tin nhân viên
+// 5. Update: Cập nhật thông tin nhân viên (Giữ nguyên)
 exports.update = async (req, res, next) => {
     if (Object.keys(req.body).length === 0) {
         return next(new ApiError(400, "Dữ liệu cập nhật không thể rỗng"));
@@ -97,6 +100,7 @@ exports.update = async (req, res, next) => {
     }
 };
 
+// (Delete và DeleteAll giữ nguyên)
 exports.delete = async (req, res, next) => {
     try {
         const nhanVienService = new NhanVienService(MongoDB.client);

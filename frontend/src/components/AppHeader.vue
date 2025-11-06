@@ -17,11 +17,11 @@
       <div v-if="!currentUser" class="navbar-nav ms-auto">
         <li class="nav-item">
           <router-link to="/docgia/register" class="nav-link">
-            Đăng ký
+            Đăng ký 
           </router-link>
         </li>
         <li class="nav-item">
-          <router-link to="/docgia/login" class="nav-link btn btn-outline-info btn-sm">
+          <router-link to="/login" class="nav-link btn btn-outline-info btn-sm">
             Đăng nhập
           </router-link>
         </li>
@@ -30,7 +30,7 @@
       <div v-if="currentUser" class="navbar-nav ms-auto">
         <li class="nav-item">
           <a class="nav-link">
-            Xin chào, {{ currentUser.HOLOT }} {{ currentUser.TEN }}
+            Xin chào, {{ currentUser.HoTenNV || (currentUser.HOLOT + " " + currentUser.TEN) }}
           </a>
         </li>
         <li class="nav-item">
@@ -45,7 +45,7 @@
 </template>
 
 <script>
-// --- PHẦN SCRIPT GIỮ NGUYÊN (Vẫn dùng Event Bus) ---
+// --- PHẦN SCRIPT (Đã cập nhật Event Bus) ---
 import AuthService from "@/services/auth.service";
 import eventBus from "@/services/eventBus";
 
@@ -59,21 +59,22 @@ export default {
   methods: {
     logOut() {
       AuthService.logout();
-      eventBus.emit("auth-change"); 
-      this.$router.push('/docgia/login');
+      eventBus.emit("auth-change"); // Gửi tín hiệu
+      this.$router.push('/login'); // Đẩy về trang login
     },
     
     updateLoginStatus() {
-        // Hàm này bây giờ sẽ lấy đúng user object
         this.currentUser = AuthService.getCurrentUser();
     }
   },
   
+  // Lắng nghe tín hiệu
   created() {
       this.updateLoginStatus(); 
       eventBus.on("auth-change", this.updateLoginStatus);
   },
 
+  // Dọn dẹp
   beforeUnmount() {
       eventBus.off("auth-change", this.updateLoginStatus);
   }
