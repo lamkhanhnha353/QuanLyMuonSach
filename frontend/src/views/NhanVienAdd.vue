@@ -101,8 +101,8 @@ export default {
       HoTenNV: yup.string().required("Họ tên là bắt buộc!"),
       password: yup.string().required("Mật khẩu là bắt buộc!").min(6),
       ChucVu: yup.string().required("Chức vụ là bắt buộc!"),
-      DiaChi: yup.string().optional(),
-      SoDienThoai: yup.string().optional(),
+      DiaChi: yup.string().required("Địa chỉ là bắt buộc!"),
+      SoDienThoai: yup.string().required("Số điện thoại là bắt buộc!"),
       // Avatar: yup.string().url... // <-- ĐÃ XÓA
     });
 

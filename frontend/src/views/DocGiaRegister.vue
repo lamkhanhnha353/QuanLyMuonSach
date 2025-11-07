@@ -10,7 +10,7 @@
         
         <Form 
           @submit="handleRegister" 
-          :validation-schema="registerSchema" 
+          :validation-schema="registerSchema"  
           v-slot="{ resetForm }" 
           :validate-on-input="true" 
         >
