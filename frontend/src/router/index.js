@@ -13,7 +13,8 @@ import Login from "@/views/Login.vue";
 // Trang Admin
 import Dashboard from "@/views/Dashboard.vue";
 import NhanVienManagement from "@/views/NhanVienManagement.vue";
-import NhanVienAdd from "@/views/NhanVienAdd.vue"; // <-- 1. IMPORT TRANG MỚI
+import NhanVienAdd from "@/views/NhanVienAdd.vue"; 
+import NhanVienEdit from "@/views/NhanVienEdit.vue"; // <-- 1. IMPORT TRANG MỚI
 
 const routes = [
   // --- LUỒNG PUBLIC (Dùng PublicLayout) ---
@@ -56,13 +57,17 @@ const routes = [
         name: "admin.nhanvien",
         component: NhanVienManagement, // Trang Danh Sách
       },
-      // 2. THÊM ROUTE MỚI
       {
         path: "nhanvien/add", // /admin/nhanvien/add
         name: "admin.nhanvien.add",
         component: NhanVienAdd, // Trang Form Thêm Mới
       },
-      // (Chúng ta sẽ thêm Sửa/Chi tiết sau)
+      // 2. THÊM ROUTE MỚI (CHỈNH SỬA)
+      {
+        path: "nhanvien/edit/:id", // /admin/nhanvien/edit/123
+        name: "admin.nhanvien.edit",
+        component: NhanVienEdit, 
+      },
     ]
   },
 ];
