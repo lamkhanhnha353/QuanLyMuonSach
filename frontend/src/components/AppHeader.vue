@@ -7,9 +7,15 @@
       </router-link>
 
       <div class="navbar-nav me-auto">
-        <li v-if="currentUser" class="nav-item">
+        <li v-if="currentUser && !currentUser.ChucVu" class="nav-item">
           <router-link to="/sach" class="nav-link">
             <i class="fas fa-book"></i> Sách
+          </router-link>
+        </li>
+        
+        <li v-if="currentUser && currentUser.ChucVu" class="nav-item">
+          <router-link to="/admin" class="nav-link text-warning">
+            <i class="fas fa-tachometer-alt me-1"></i> Trang Quản Trị
           </router-link>
         </li>
       </div>
@@ -17,7 +23,7 @@
       <div v-if="!currentUser" class="navbar-nav ms-auto">
         <li class="nav-item">
           <router-link to="/docgia/register" class="nav-link">
-            Đăng ký 
+            Đăng ký (Độc Giả)
           </router-link>
         </li>
         <li class="nav-item">
@@ -45,7 +51,8 @@
 </template>
 
 <script>
-// --- PHẦN SCRIPT (Đã cập nhật Event Bus) ---
+// --- PHẦN SCRIPT (Giữ nguyên Event Bus) ---
+// (Event Bus vẫn CẦN THIẾT để Login.vue báo cho AppHeader.vue)
 import AuthService from "@/services/auth.service";
 import eventBus from "@/services/eventBus";
 
@@ -68,13 +75,11 @@ export default {
     }
   },
   
-  // Lắng nghe tín hiệu
+  // (Phần created và beforeUnmount giữ nguyên)
   created() {
       this.updateLoginStatus(); 
       eventBus.on("auth-change", this.updateLoginStatus);
   },
-
-  // Dọn dẹp
   beforeUnmount() {
       eventBus.off("auth-change", this.updateLoginStatus);
   }

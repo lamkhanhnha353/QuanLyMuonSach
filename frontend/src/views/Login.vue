@@ -6,7 +6,7 @@
   <div class="login-container d-flex align-items-center">
     <div class="row justify-content-center w-100">
       
-      <div class="col-lg-4 col-md-5">
+      <div class="col-10 col-sm-8 col-md-6 col-lg-4">
         
         <div class="form-container">
           <h4 class="text-center text-white mb-4">Đăng Nhập</h4>
@@ -157,7 +157,7 @@ export default {
         
         setTimeout(() => {
           this.$router.push("/");
-        }, 0);
+        }, 3500);
 
       } catch (error) {
         this.loading = false;
@@ -177,8 +177,9 @@ export default {
         this.loading = false;
         this.successMessage = "Đăng nhập thành công! Xin chào " + loggedInStaff.HoTenNV;
         
+        // Đẩy Admin về trang Quản Trị
         setTimeout(() => {
-          this.$router.push("/"); // (Tạm thời về trang chủ)
+          this.$router.push("/admin"); 
         }, 3500);
 
       } catch (error) {
@@ -192,7 +193,7 @@ export default {
 
 <style scoped>
 /*
-  PHẦN STYLE GIỮ NGUYÊN (Vẫn dùng viền dưới)
+  PHẦN STYLE (Đã sửa .error-feedback)
 */
 @keyframes slideInFromRight {
   from { transform: translateX(100%); opacity: 0; }
@@ -227,18 +228,14 @@ export default {
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 4px 20px rgba(0,0,0,0.3);
 }
-/* FIX: XÓA form-label VÌ KHÔNG CÒN DÙNG
-*/
-/*
-.form-label {
-  color: #f8f9fa;
-  font-weight: 500;
-}
-*/
 
+/* FIX: SỬA LỖI KHOẢNG CÁCH */
 .error-feedback {
   color: #dc3545;
   font-weight: bold;
+  margin-top: 4px;
+  margin-bottom: 0;
+  min-height: 0;
 }
 
 /* CSS CHO TAB (Giữ nguyên) */
@@ -257,7 +254,6 @@ export default {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-
 /* CSS CHO INPUT (STYLE VIỀN DƯỚI) - Giữ nguyên */
 .form-control {
   background: transparent !important; 
@@ -267,22 +263,16 @@ export default {
   color: white !important;
   padding-left: 0;
 }
-
-/* FIX: CSS CHO PLACEHOLDER (Chữ mờ) */
 .form-control::placeholder {
   color: rgba(255, 255, 255, 0.5);
-  opacity: 1; /* Đảm bảo placeholder hiện rõ */
+  opacity: 1;
 }
-
-/* CSS KHI FOCUS (STYLE VIỀN DƯỚI) - Giữ nguyên */
 .form-control:focus {
   background: transparent !important; 
   border-color: #58a6ff !important; 
   box-shadow: none !important; 
   color: white !important;
 }
-
-/* CSS AUTOFILL (STYLE VIỀN DƯỚI) - Giữ nguyên */
 input:-webkit-autofill,
 input:-webkit-autofill:hover, 
 input:-webkit-autofill:focus, 

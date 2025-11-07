@@ -9,10 +9,9 @@ class NhanVienService {
     #extractNhanVienData(payload) {
         const nhanvien = {
             MSNV: payload.MSNV,
-            // FIX 1: Nhận "password" (thường) từ controller
-            Password: payload.password, 
+            Password: payload.password, // Nhận "password" (thường)
             HoTenNV: payload.HoTenNV,
-            ChucVu: payload.ChucVu || "staff", 
+            ChucVu: payload.ChucVu, // <-- FIX 1: Bỏ (|| "staff")
             DiaChi: payload.DiaChi,
             SoDienThoai: payload.SoDienThoai,
         };
@@ -23,10 +22,6 @@ class NhanVienService {
         return nhanvien;
     }
 
-    /**
-     * Đăng ký (tạo) một nhân viên mới.
-     * (ĐÃ SỬA LỖI insertedId)
-     */
     async create(payload) {
         const nhanvienData = this.#extractNhanVienData(payload);
 
@@ -44,45 +39,37 @@ class NhanVienService {
             throw new Error("Mật khẩu là bắt buộc");
         }
         
-        // (Kiểm tra ChucVu - giữ nguyên)
-        if (!["staff", "admin"].includes(nhanvienData.ChucVu)) {
-             nhanvienData.ChucVu = "staff";
+        // FIX 2: Sửa logic kiểm tra (chấp nhận "Admin" (hoa))
+        if (!nhanvienData.ChucVu || !["Staff", "Admin"].includes(nhanvienData.ChucVu)) {
+             nhanvienData.ChucVu = "Staff"; // Mặc định là "Staff" (hoa)
         }
 
-        // FIX 2: SỬA LỖI insertedId
-        // 'insertOne' sẽ tự thêm _id vào 'nhanvienData'
+        // (Đã sửa lỗi insertedId)
         await this.NhanVien.insertOne(nhanvienData);
         
-        // Xóa mật khẩu và trả về
         delete nhanvienData.Password; 
         return nhanvienData;
     }
 
-    /**
-     * Đăng nhập nhân viên.
-     */
     async login(payload) {
-        // 1. Tìm nhân viên bằng MSNV (giữ nguyên)
+        // (Hàm này đã sửa ở bước trước, giữ nguyên)
         const nhanvien = await this.NhanVien.findOne({ MSNV: payload.MSNV });
         
         if (!nhanvien) {
             throw new Error("MSNV hoặc Mật khẩu không đúng");
         }
 
-        // 2. So sánh mật khẩu
-        // FIX 3: Dùng "payload.password" (thường)
         const isMatch = await bcrypt.compare(payload.password, nhanvien.Password);
         
         if (!isMatch) {
             throw new Error("MSNV hoặc Mật khẩu không đúng");
         }
 
-        // 3. Đăng nhập thành công (giữ nguyên)
         delete nhanvien.Password;
         return nhanvien;
     }
 
-    // --- Chức năng CRUD (Giữ nguyên code của bạn) ---
+    // --- Chức năng CRUD (Giữ nguyên) ---
  
     async find(filter) {
         const cursor = await this.NhanVien.find(filter);
@@ -99,13 +86,21 @@ class NhanVienService {
         const filter = {
             _id: ObjectId.isValid(id) ? new ObjectId(id) : null,
         };
-        const update = this.#extractNhanVienData(payload);
-        delete update.MSNV; 
-        delete update.Password; 
+        // FIX 3: Sửa lại extractData khi update
+        const updatePayload = {
+            HoTenNV: payload.HoTenNV,
+            ChucVu: payload.ChucVu,
+            DiaChi: payload.DiaChi,
+            SoDienThoai: payload.SoDienThoai,
+        }
+        // Xóa các trường undefined
+         Object.keys(updatePayload).forEach(
+            (key) => updatePayload[key] === undefined && delete updatePayload[key]
+        );
 
         const result = await this.NhanVien.findOneAndUpdate(
             filter,
-            { $set: update },
+            { $set: updatePayload },
             { returnDocument: "after" }
         );
         
