@@ -154,7 +154,7 @@ export default {
         // Tự động chuyển trang sau 3.5 giây
         setTimeout(() => {
           this.$router.push("/docgia/login");
-        }, 3500); // 3500ms = 3.5 giây
+        },0); // 3500ms = 3.5 giây
 
       } catch (error) {
         this.loading = false;

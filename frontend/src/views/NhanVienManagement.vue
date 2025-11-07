@@ -1,6 +1,23 @@
 <template>
   <div class="container-fluid">
-    <h3 class="text-white mb-4">Quản lý Nhân Viên</h3>
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h3 class="text-white">Quản lý Nhân Viên</h3>
+      <router-link to="/admin/nhanvien/add" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i> Thêm Nhân Viên Mới
+      </router-link>
+    </div>
+
+    <div class="card bg-dark text-white mb-4">
+      <div class="card-body">
+        <div class="input-group">
+          <input type="text" class="form-control" placeholder="Tìm kiếm theo Tên hoặc MSNV...">
+          <button class="btn btn-info" type="button">
+            <i class="fas fa-search"></i> Tìm
+          </button>
+        </div>
+      </div>
+    </div>
 
     <div class="card bg-dark text-white mb-4">
       <div class="card-header">
@@ -31,125 +48,39 @@
                 <td>{{ nv.DiaChi }}</td>
                 <td>{{ nv.SoDienThoai }}</td>
                 <td>
-                  <button class="btn btn-danger btn-sm" @click="handleDelete(nv._id)">
-                    <i class="fas fa-trash"></i> Xóa
+                  <button class="btn btn-info btn-sm me-2" title="Xem chi tiết">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button class="btn btn-warning btn-sm me-2" title="Sửa">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button class="btn btn-danger btn-sm" @click="handleDelete(nv._id)" title="Xóa">
+                    <i class="fas fa-trash"></i>
                   </button>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
-      </div>
-    </div>
-
-    <div class="card bg-dark text-white">
-      <div class="card-header">
-        <i class="fas fa-user-plus me-2"></i> Thêm Nhân Viên Mới (Đăng ký nội bộ)
-      </div>
-      <div class="card-body">
-        <Form 
-          @submit="handleRegister" 
-          :validation-schema="registerSchema" 
-          v-slot="{ resetForm }"
-          :validate-on-input="true"
-        >
-          <div class="row">
-            <div class="col-md-4">
-              <div class="form-group mb-3">
-                <label for="MSNV" class="form-label">MSNV (Tên đăng nhập)</label>
-                <Field name="MSNV" type="text" class="form-control" />
-                <ErrorMessage name="MSNV" class="error-feedback" />
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="form-group mb-3">
-                <label for="HoTenNV" class="form-label">Họ Tên</label>
-                <Field name="HoTenNV" type="text" class="form-control" />
-                <ErrorMessage name="HoTenNV" class="error-feedback" />
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="form-group mb-3">
-                <label for="password" class="form-label">Mật khẩu</label>
-                <Field name="password" type="password" class="form-control" />
-                <ErrorMessage name="password" class="error-feedback" />
-              </div>
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="col-md-4">
-              <div class="form-group mb-3">
-                <label for="DiaChi" class="form-label">Địa chỉ</label>
-                <Field name="DiaChi" type="text" class="form-control" />
-                <ErrorMessage name="DiaChi" class="error-feedback" />
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="form-group mb-3">
-                <label for="SoDienThoai" class="form-label">Điện thoại</label>
-                <Field name="SoDienThoai" type="tel" class="form-control" />
-                <ErrorMessage name="SoDienThoai" class="error-feedback" />
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="form-group mb-3">
-                <label for="ChucVu" class="form-label">Chức Vụ</label>
-                <Field name="ChucVu" as="select" class="form-select">
-                  <option value="Staff">Nhân viên (Staff)</option>
-                  <option value="Admin">Quản trị (Admin)</option>
-                </Field>
-                <ErrorMessage name="ChucVu" class="error-feedback" />
-              </div>
-            </div>
-          </div>
-
-          <div class="form-group text-end">
-            <button class="btn btn-primary" :disabled="loading">
-              <i class="fas fa-plus-circle me-1"></i> Tạo Mới
-            </button>
-          </div>
-          
-          <div class="form-group mt-3" v-if="message">
-            <div :class="message.includes('thành công') ? 'alert-success' : 'alert-danger'" class="alert">
-              {{ message }}
-            </div>
-          </div>
-        </Form>
-      </div>
+        </div>
     </div>
 
   </div>
 </template>
 
 <script>
-// --- PHẦN SCRIPT GIỮ NGUYÊN ---
-import { Form, Field, ErrorMessage } from "vee-validate";
-import * as yup from "yup";
+// (KHÔNG CẦN Form, Field, ErrorMessage, yup nữa)
 import NhanVienService from "@/services/nhanvien.service";
 
 export default {
   name: "NhanVienManagement",
   components: {
-    Form,
-    Field,
-    ErrorMessage,
+    // (Đã xóa Form components)
   },
   data() {
-    const registerSchema = yup.object().shape({
-      MSNV: yup.string().required("MSNV là bắt buộc!"),
-      HoTenNV: yup.string().required("Họ tên là bắt buộc!"),
-      password: yup.string().required("Mật khẩu là bắt buộc!").min(6), // Gửi "password" (thường)
-      ChucVu: yup.string().required("Chức vụ là bắt buộc!"),
-      DiaChi: yup.string().optional(),
-      SoDienThoai: yup.string().optional(),
-    });
-
     return {
       nhanviens: [],
-      loading: false,
-      message: "",
-      registerSchema,
+      // (Đã xóa loading, message, registerSchema)
     };
   },
   methods: {
@@ -163,21 +94,7 @@ export default {
       }
     },
     
-    // Xử lý "Đăng ký nội bộ"
-    async handleRegister(user, { resetForm }) {
-      this.loading = true;
-      this.message = "";
-      try {
-        await NhanVienService.create(user); // user chứa "password" (thường)
-        this.message = "Tạo nhân viên mới thành công!";
-        resetForm(); // Xóa form
-        this.retrieveNhanViens(); // Tải lại bảng
-      } catch (error) {
-        this.message = error.response?.data?.message || "Lỗi khi tạo nhân viên.";
-      } finally {
-        this.loading = false;
-      }
-    },
+    // (Hàm handleRegister đã bị XÓA)
     
     // Xử lý Xóa
     async handleDelete(id) {
@@ -199,8 +116,7 @@ export default {
 </script>
 
 <style scoped>
-/* PHẦN STYLE GIỮ NGUYÊN
-*/
+/* Style cho Card, Form, Table... */
 .card {
   border: 1px solid rgba(255, 255, 255, 0.125);
 }
@@ -214,16 +130,5 @@ export default {
   color: #fff;
   border-color: #58a6ff;
   box-shadow: 0 0 0 0.25rem rgba(88, 166, 255, 0.25);
-}
-.form-label {
-  color: #f8f9fa;
-}
-.error-feedback {
-  color: #dc3545;
-  font-weight: bold;
-}
-.form-select option {
-  background-color: #212529;
-  color: white;
 }
 </style>

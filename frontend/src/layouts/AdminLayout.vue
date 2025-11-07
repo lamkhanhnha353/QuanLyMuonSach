@@ -101,41 +101,44 @@ export default {
 </script>
 
 <style scoped>
-/* PHẦN STYLE (Đã sửa .nav-link.active)
+/* PHẦN STYLE (Đã sửa .sidebar-header và .navbar)
 */
 
 .admin-wrapper {
   display: flex;
   width: 100%;
   min-height: 100vh;
-  /* Nền xám tối cho toàn bộ trang Admin */
   background-color: #212529; 
-  color: #f8f9fa; /* Chữ trắng */
+  color: #f8f9fa; 
 }
 
 /* --- Sidebar --- */
 #sidebar {
-  width: 250px; /* Độ rộng khi MỞ */
+  width: 250px; 
   min-height: 100vh;
-  /* Hiệu ứng trượt "tự nhiên" */
   transition: width 0.3s ease-in-out;
-  overflow-x: hidden; /* Ẩn nội dung khi co lại */
+  overflow-x: hidden; 
 }
 
-/* Style cho nút Toggle (thay cho header cũ) */
+/* FIX 1: SỬA HEADER CỦA SIDEBAR
+  Ép chiều cao = 56px và dùng Flexbox căn giữa
+*/
 .sidebar-header {
-  padding: 10px; /* Giảm padding */
+  height: 56px; /* Ép chiều cao bằng navbar */
+  padding: 0 10px; /* Bỏ padding dọc */
   border-bottom: 1px solid #495057;
+  display: flex; /* Dùng Flexbox */
+  align-items: center; /* Căn giữa nút Menu theo chiều dọc */
 }
 .sidebar-header .btn {
-  width: 100%; /* Nút chiếm 100% */
+  width: 100%; 
   font-size: 1.2rem;
   white-space: nowrap;
   overflow: hidden;
-  text-align: left; /* Căn trái khi MỞ */
+  text-align: left; 
 }
 .sidebar-header .btn .fas {
-   width: 30px; /* Căn icon */
+   width: 30px; 
    text-align: center;
 }
 
@@ -143,11 +146,11 @@ export default {
 .nav-link {
   font-weight: 500;
   color: #c9d1d9;
-  white-space: nowrap; /* Ngăn chữ xuống hàng */
-  overflow: hidden; /* Ẩn chữ (quan trọng) */
+  white-space: nowrap; 
+  overflow: hidden; 
 }
 .nav-link .fas {
-  width: 30px; /* Tăng độ rộng icon */
+  width: 30px; 
   text-align: center;
   margin-right: 10px;
 }
@@ -156,9 +159,7 @@ export default {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* FIX 2: SỬA LỖI ACTIVE LINK
-  Đổi từ ".nav-link.active" thành ".nav-link.router-link-exact-active"
-*/
+/* Sửa lỗi Active Link (dùng class mặc định của Vue Router 4) */
 .nav-link.router-link-exact-active {
   color: #58a6ff;
   font-weight: bold;
@@ -167,45 +168,41 @@ export default {
 
 /* --- Nội dung chính (Main Content) --- */
 #main-content {
-  /* Dùng flex-grow: 1 để nó tự lấp đầy phần còn lại */
   flex-grow: 1;
   min-height: 100vh;
-  /* Hiệu ứng trượt "tự nhiên" (dùng chung transition) */
   transition: width 0.3s ease-in-out; 
-  /* (Không cần margin-left nữa) */
+}
+
+/* FIX 2: SỬA HEADER (NAVBAR) CỦA NỘI DUNG
+  Đảm bảo nó cũng cao 56px
+*/
+#main-content .navbar {
+    height: 56px; /* Giữ nguyên 56px */
+    border-bottom: 1px solid #495057;
+    /* Bootstrap .navbar đã là flex và căn giữa, 
+      nên không cần thêm CSS
+    */
 }
 
 .content-area {
-  /* Đây là nền của nội dung (nơi đặt card, table...) */
-  min-height: calc(100vh - 56px); /* 100% trừ đi header admin */
-}
-
-/* (Navbar style giữ nguyên) */
-#main-content .navbar {
-    height: 56px;
-    border-bottom: 1px solid #495057;
+  min-height: calc(100vh - 56px); 
 }
 
 /*
   TRẠNG THÁI KHI SIDEBAR ĐÓNG (collapsed)
 */
 .admin-wrapper.sidebar-collapsed #sidebar {
-  width: 80px; /* Độ rộng khi ĐÓNG (chỉ icon) */
+  width: 80px; 
 }
-
 .admin-wrapper.sidebar-collapsed .sidebar-text {
-  display: none; /* Ẩn chữ */
+  display: none; 
 }
-
-/* Căn giữa icon của nút toggle khi ĐÓNG */
 .admin-wrapper.sidebar-collapsed .sidebar-header .btn {
    text-align: center;
 }
 .admin-wrapper.sidebar-collapsed .sidebar-header .btn .fas {
    margin-right: 0;
 }
-
-/* Căn giữa icon của link menu khi ĐÓNG */
 .admin-wrapper.sidebar-collapsed .nav-link {
   text-align: center;
 }
