@@ -1,4 +1,3 @@
-
 const SachService = require("../services/sach.service");
 const MongoDB = require("../utils/mongodb.util");
 const ApiError = require("../api-error");
@@ -31,8 +30,7 @@ exports.findAll = async (req, res, next) => {
     let documents = [];
     try {
         const sachService = new SachService(MongoDB.client);
-        const { TENSACH } = req.query; // Lấy tên sách từ query param
-
+        const { TENSACH } = req.query;
         if (TENSACH) {
             documents = await sachService.findByName(TENSACH);
         } else {
@@ -40,13 +38,13 @@ exports.findAll = async (req, res, next) => {
         }
     } catch (error) {
         return next(
-            new ApiError(500, "Lỗi xảy ra khi đang lấy thông tin sách")
+            new ApiError(500, "Lỗi khi lấy danh sách sách")
         );
     }
     return res.send(documents);
 };
 
-// 3. FindOne: Tìm một sách qua ID
+// 3. FindOne: Lấy 1 sách
 exports.findOne = async (req, res, next) => {
     try {
         const sachService = new SachService(MongoDB.client);
@@ -104,21 +102,17 @@ exports.delete = async (req, res, next) => {
     }
 };
 
-// 6. DeleteAll: Xóa tất cả sách (HÀM MỚI)
-// 6. DeleteAll: Xóa tất cả sách (HÀM MỚI)
+// 6. DeleteAll: Xóa tất cả sách
 exports.deleteAll = async (_req, res, next) => {
     try {
         const sachService = new SachService(MongoDB.client);
         const deletedCount = await sachService.deleteAll();
-        
-        // Dòng này chính là dòng tạo ra thông báo
         return res.send({
-            message: `${deletedCount} cuốn sách đã được xóa thành công`,
+            message: `${deletedCount} sách đã được xóa.`,
         });
-
     } catch (error) {
         return next(
-            new ApiError(500, "Lỗi xảy ra khi đang xóa tất cả sách")
+            new ApiError(500, "Lỗi xảy ra khi xóa tất cả sách")
         );
     }
 };

@@ -5,7 +5,7 @@ class SachService {
         this.Sach = client.db().collection("SACH");
     }
 
-    // Hàm trích xuất dữ liệu sách (theo CSDL Quanlymuonsach.pdf)
+    // Hàm trích xuất dữ liệu sách
     #extractSachData(payload) {
         const sach = {
             TENSACH: payload.TENSACH,
@@ -14,6 +14,7 @@ class SachService {
             NAMXUATBAN: payload.NAMXUATBAN,
             MANXB: payload.MANXB,
             TACGIA: payload.TACGIA, 
+            HinhAnh: payload.HinhAnh, // <-- FIX 1: THÊM TRƯỜNG HÌNH ẢNH
         };
 
         // Loại bỏ các trường không xác định (undefined)
@@ -23,7 +24,7 @@ class SachService {
         return sach;
     }
 
-    // 1. Tạo sách mới (chức năng của người quản lý)
+    // 1. Tạo sách mới
     async create(payload) {
         const sachData = this.#extractSachData(payload);
 
@@ -36,21 +37,21 @@ class SachService {
         // B. Chèn sách mới vào CSDL
         const result = await this.Sach.insertOne(sachData);
 
-        // C. Lấy lại thông tin sách vừa tạo để trả về
-        const newBook = await this.findById(result.insertedId);
-        return newBook;
+        // FIX 2: SỬA LỖI (Không trả về 'result' mà trả về document)
+        const newDocument = await this.Sach.findOne({ _id: result.insertedId });
+        return newDocument;
     }
 
-    // 2. Tìm tất cả sách (hoặc tìm theo tên or tác giả)
+    // 2. Tìm tất cả sách
     async find(filter) {
         const cursor = await this.Sach.find(filter);
         return await cursor.toArray();
     }
 
-    // 3. Tìm sách bằng Tên (cho chức năng tìm kiếm)
+    // 3. Tìm sách bằng Tên
     async findByName(name) {
         return await this.find({
-            TENSACH: { $regex: new RegExp(name), $options: "i" }, // "i" = không phân biệt hoa thường
+            TENSACH: { $regex: new RegExp(name), $options: "i" }, 
         });
     }
 
@@ -61,7 +62,7 @@ class SachService {
         });
     }
 
-    // 5. Cập nhật sách (chức năng của người quản lý)
+    // 5. Cập nhật sách
     async update(id, payload) {
         const filter = {
             _id: ObjectId.isValid(id) ? new ObjectId(id) : null,
@@ -71,24 +72,24 @@ class SachService {
         const result = await this.Sach.findOneAndUpdate(
             filter,
             { $set: update },
-            { returnDocument: "after" } 
+            { returnDocument: "after" } // Trả về document sau khi update
         );
         return result;
     }
 
-    // 6. Xóa sách (chức năng của người quản lý)
+    // 6. Xóa sách
     async delete(id) {
-
         const result = await this.Sach.findOneAndDelete({
             _id: ObjectId.isValid(id) ? new ObjectId(id) : null,
         });
-        return result;
+        return result; 
     }
 
-    // 7. Xóa tất cả sách 
+    // 7. Xóa tất cả
     async deleteAll() {
-        const result = await this.Sach.deleteMany({}); // {} = không có điều kiện, xóa tất cả
-        return result.deletedCount; 
+        // FIX 3: Sửa lỗi (NhanVien -> Sach)
+        const result = await this.Sach.deleteMany({}); 
+        return result.deletedCount;
     }
 }
 

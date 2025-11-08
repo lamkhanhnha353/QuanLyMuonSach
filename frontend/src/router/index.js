@@ -14,10 +14,15 @@ import Login from "@/views/Login.vue";
 import Dashboard from "@/views/Dashboard.vue";
 import NhanVienManagement from "@/views/NhanVienManagement.vue";
 import NhanVienAdd from "@/views/NhanVienAdd.vue"; 
-import NhanVienEdit from "@/views/NhanVienEdit.vue"; // <-- 1. IMPORT TRANG MỚI
+import NhanVienEdit from "@/views/NhanVienEdit.vue";
+
+import SachManagement from "@/views/SachManagement.vue";
+import SachAdd from "@/views/SachAdd.vue";
+// 1. IMPORT TRANG SỬA SÁCH MỚI
+import SachEdit from "@/views/SachEdit.vue"; 
 
 const routes = [
-  // --- LUỒNG PUBLIC (Dùng PublicLayout) ---
+  // --- (Luồng Public giữ nguyên) ---
   {
     path: "/",
     component: PublicLayout, 
@@ -28,11 +33,12 @@ const routes = [
     ]
   },
 
-  // --- LUỒNG ADMIN (Dùng AdminLayout) ---
+  // --- (Luồng Admin giữ nguyên) ---
   {
     path: "/admin",
     component: AdminLayout, 
     beforeEnter: (to, from, next) => {
+      // (Code lính gác giữ nguyên)
       const user = AuthService.getCurrentUser();
       if (user && user.ChucVu && (user.ChucVu === "Admin" || user.ChucVu === "Staff")) {
         next(); 
@@ -45,28 +51,33 @@ const routes = [
       }
     },
     
-    // CÁC TRANG CON CỦA ADMIN
     children: [
       {
         path: "", // /admin
         name: "admin.dashboard",
         component: Dashboard,
       },
+      // (Route Nhân Viên giữ nguyên)
+      { path: "nhanvien", name: "admin.nhanvien", component: NhanVienManagement, },
+      { path: "nhanvien/add", name: "admin.nhanvien.add", component: NhanVienAdd, },
+      { path: "nhanvien/edit/:id", name: "admin.nhanvien.edit", component: NhanVienEdit, },
+
+      // (Route Sách)
       {
-        path: "nhanvien", // /admin/nhanvien
-        name: "admin.nhanvien",
-        component: NhanVienManagement, // Trang Danh Sách
+        path: "sach", 
+        name: "admin.sach",
+        component: SachManagement, 
       },
       {
-        path: "nhanvien/add", // /admin/nhanvien/add
-        name: "admin.nhanvien.add",
-        component: NhanVienAdd, // Trang Form Thêm Mới
+        path: "sach/add", 
+        name: "admin.sach.add",
+        component: SachAdd, 
       },
-      // 2. THÊM ROUTE MỚI (CHỈNH SỬA)
+      // 2. THÊM ROUTE SỬA SÁCH MỚI
       {
-        path: "nhanvien/edit/:id", // /admin/nhanvien/edit/123
-        name: "admin.nhanvien.edit",
-        component: NhanVienEdit, 
+        path: "sach/edit/:id", // /admin/sach/edit/123
+        name: "admin.sach.edit",
+        component: SachEdit, 
       },
     ]
   },
