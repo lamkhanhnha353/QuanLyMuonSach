@@ -22,12 +22,13 @@
             <span class="sidebar-text">Quản lý Nhân Viên</span>
           </router-link>
         </li>
+        
         <li class="nav-item">
-          <a class="nav-link" style="color: #6c757d; cursor: not-allowed;">
+          <router-link to="/admin/docgia" class="nav-link">
             <i class="fas fa-users"></i>
             <span class="sidebar-text">Quản lý Độc Giả</span>
-          </a>
-          </li>
+          </router-link>
+        </li>
          <li class="nav-item">
           <router-link to="/admin/sach" class="nav-link">
             <i class="fas fa-book"></i>
@@ -37,16 +38,17 @@
         
         <li class="nav-item">
           <router-link to="/admin/muonsach" class="nav-link">
-            <i class="fas fa-receipt"></i> <span class="sidebar-text">Quản lý Phiếu Mượn</span>
+            <i class="fas fa-receipt"></i>
+            <span class="sidebar-text">Quản lý Phiếu Mượn</span>
           </router-link>
         </li>
 
         <li class="nav-item">
-          <a class="nav-link" style="color: #6c757d; cursor: not-allowed;">
+          <router-link to="/admin/nhaxuatban" class="nav-link">
             <i class="fas fa-building"></i>
             <span class="sidebar-text">Quản lý NXB</span>
-          </a>
-          </li>
+          </router-link>
+        </li>
       </ul>
       
       <ul class="nav flex-column mt-auto">
@@ -62,7 +64,7 @@
     <div id="main-content" class="bg-secondary-dark text-white">
       <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
         <div class="container-fluid">
-          <span class="navbar-text ms-auto" v-if="currentUser">
+           <span class="navbar-text ms-auto" v-if="currentUser">
              Chào, <strong>{{ currentUser.HoTenNV }}</strong> ({{ currentUser.ChucVu }})
            </span>
         </div>
@@ -76,6 +78,7 @@
 </template>
 
 <script>
+// (Phần script giữ nguyên như cũ)
 import AuthService from "@/services/auth.service";
 import eventBus from "@/services/eventBus";
 
@@ -98,10 +101,7 @@ export default {
     },
   },
   mounted() {
-    // Lấy thông tin user khi layout được tải
     this.currentUser = AuthService.getCurrentUser();
-    
-    // (Lắng nghe nếu có lỗi 401 - Tùy chọn)
     eventBus.on("unauthorized", () => {
         this.logOut();
     });
@@ -113,7 +113,7 @@ export default {
 </script>
 
 <style scoped>
-/* (Style cho layout Admin, giữ nguyên như bạn đã cung cấp) */
+/* (Phần style giữ nguyên như cũ) */
 .admin-wrapper {
   display: flex;
 }
@@ -130,7 +130,6 @@ export default {
   flex-direction: column;
 }
 
-/* Sidebar khi thu gọn */
 .admin-wrapper.sidebar-collapsed #sidebar {
   width: 70px;
 }
@@ -145,7 +144,6 @@ export default {
   justify-content: center;
 }
 
-/* --- Header của Sidebar (nút toggle) --- */
 .sidebar-header {
   height: 56px; 
   display: flex;
@@ -164,7 +162,6 @@ export default {
    text-align: center;
 }
 
-/* Link trong Sidebar */
 .nav-link {
   font-weight: 500;
   color: #c9d1d9;
@@ -192,17 +189,14 @@ export default {
   border-left: 3px solid #58a6ff;
 }
 
-/* Nút đăng xuất */
 .logout-link {
   cursor: pointer;
 }
 .logout-link:hover {
-  color: #ff7b72; /* Màu đỏ nhạt khi hover */
+  color: #ff7b72;
   background-color: rgba(255, 123, 114, 0.1);
 }
 
-
-/* --- Nội dung chính (Main Content) --- */
 #main-content {
   flex-grow: 1;
   min-height: 100vh;
@@ -220,7 +214,7 @@ export default {
 }
 
 .bg-secondary-dark {
-  background-color: #212529; /* Màu nền tối cho nội dung */
+  background-color: #212529;
 }
 
 main {
