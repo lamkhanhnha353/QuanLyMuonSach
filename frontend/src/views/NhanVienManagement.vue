@@ -30,117 +30,184 @@
           </div>
           <div class="col-md-3 text-end">
             <router-link to="/admin/nhanvien/add" class="btn btn-primary w-100">
-              <i class="fas fa-plus me-2"></i> Thêm Mới
+              <i class="fas fa-plus me-2"></i> Thêm Nhân Viên Mới
             </router-link>
           </div>
         </div>
       </div>
     </div>
-
-    <div class="card bg-dark text-white mb-4">
+    
+    <div class="card bg-dark text-white">
       <div class="card-header">
         <i class="fas fa-users-cog me-2"></i> Danh sách Nhân Viên
       </div>
       <div class="card-body">
         <div class="table-responsive">
-          <table class="table table-dark table-hover">
+          <table class="table table-dark table-striped table-hover align-middle">
             <thead>
               <tr>
-                <th style="width: 60px; text-align: center;">STT</th>
+                <th style="width: 60px;">STT</th>
+                <th style="width: 60px;">Avatar</th> <th>Họ Tên</th>
                 <th>MSNV</th>
-                <th>Họ Tên</th>
-                <th>Chức Vụ</th>
-                <th>Địa chỉ</th>
-                <th>SĐT</th>
-                <th style="width: 150px; text-align: center;">Hành động</th>
+                <th>Chức vụ</th>
+                <th>Điện thoại</th>
+                <th style="width: 150px">Hành động</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody v-if="!loading">
               <tr v-for="(nv, index) in paginatedNhanViens" :key="nv._id">
-                <td style="text-align: center;">
-                  {{ (currentPage - 1) * itemsPerPage + index + 1 }}
-                </td>
-                <td>{{ nv.MSNV }}</td>
-                <td>{{ nv.HoTenNV }}</td>
+                <td>{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
                 <td>
-                  <span :class="nv.ChucVu === 'Admin' ? 'badge bg-success' : 'badge bg-info'">
-                    {{ nv.ChucVu }}
-                  </span>
+                  <img 
+                    :src="nv.AVATAR || defaultAvatar" 
+                    class="avatar-sm" 
+                    alt="Avatar"
+                  >
                 </td>
-                <td>{{ nv.DiaChi }}</td>
+                <td>{{ nv.HoTenNV }}</td>
+                <td>{{ nv.MSNV }}</td>
+                <td>{{ nv.ChucVu }}</td>
                 <td>{{ nv.SoDienThoai }}</td>
-                <td style="text-align: center;">
-                  <button class="btn btn-info btn-sm me-1" title="Xem chi tiết">
+                <td>
+                  <button 
+                    class="btn btn-sm btn-success me-2" 
+                    @click="openViewModal(nv)" 
+                    title="Xem chi tiết"
+                  >
                     <i class="fas fa-eye"></i>
                   </button>
                   
                   <router-link 
-                    :to="{ name: 'admin.nhanvien.edit', params: { id: nv._id } }"
-                    class="btn btn-warning btn-sm me-1" 
+                    :to="{ name: 'admin.nhanvien.edit', params: { id: nv._id } }" 
+                    class="btn btn-sm btn-info me-2" 
                     title="Sửa"
                   >
                     <i class="fas fa-edit"></i>
                   </router-link>
-
-                  <button class="btn btn-danger btn-sm" @click="handleDelete(nv._id)" title="Xóa">
+                  
+                  <button 
+                    class="btn btn-sm btn-danger" 
+                    @click="confirmDelete(nv)" 
+                    title="Xóa"
+                  >
                     <i class="fas fa-trash"></i>
                   </button>
                 </td>
               </tr>
-              <tr v-if="filteredNhanViens.length === 0">
-                <td colspan="7" class="text-center">Không tìm thấy nhân viên nào.</td>
+               <tr v-if="paginatedNhanViens.length === 0">
+                <td colspan="7" class="text-center">Không có nhân viên nào.</td> </tr>
+            </tbody>
+             <tbody v-else>
+              <tr>
+                <td colspan="7" class="text-center"> <div class="spinner-border text-info" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
-      <div class="card-footer" v-if="totalPages > 1">
-        <nav aria-label="Page navigation">
-          <ul class="pagination justify-content-center mb-0">
+      <div class="card-footer" v-if="!loading && totalPages > 1">
+        <nav>
+          <ul class="pagination justify-content-center">
             <li class="page-item" :class="{ disabled: currentPage === 1 }">
-              <a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)">Trang trước</a>
+              <a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)">&laquo;</a>
             </li>
-            <li v-for="page in totalPages" :key="page" class="page-item" :class="{ active: page === currentPage }">
+            <li v-for="page in totalPages" :key="page" class="page-item" :class="{ active: currentPage === page }">
               <a class="page-link" href="#" @click.prevent="changePage(page)">{{ page }}</a>
             </li>
             <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-              <a class="page-link" href="#" @click.prevent="changePage(currentPage + 1)">Trang sau</a>
+              <a class="page-link" href="#" @click.prevent="changePage(currentPage + 1)">&raquo;</a>
             </li>
           </ul>
         </nav>
       </div>
     </div>
+
+    <div 
+      class="modal fade" 
+      id="viewNhanVienModal" 
+      tabindex="-1" 
+      aria-labelledby="viewNhanVienModalLabel" 
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-dark text-white">
+          <div class="modal-header">
+            <h5 class="modal-title" id="viewNhanVienModalLabel">
+              <i class="fas fa-id-card me-2"></i> Thông tin chi tiết Nhân Viên
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" v-if="selectedNhanVien">
+            <div class="row">
+              <div class="col-md-4 text-center">
+                <img 
+                  :src="selectedNhanVien.AVATAR || defaultAvatar" 
+                  class="avatar-modal" 
+                  alt="Avatar"
+                >
+              </div>
+              <div class="col-md-8">
+                <h3 class="text-info">{{ selectedNhanVien.HoTenNV }}</h3>
+                <p class="fs-5"><strong>Chức vụ:</strong> {{ selectedNhanVien.ChucVu }}</p>
+                <hr class="border-secondary">
+                <p><strong>MSNV (Username):</strong> {{ selectedNhanVien.MSNV }}</p>
+                <p><strong>Email:</strong> {{ selectedNhanVien.EMAIL }}</p>
+                <p><strong>CCCD:</strong> {{ selectedNhanVien.CCCD }}</p>
+                <p><strong>Điện thoại:</strong> {{ selectedNhanVien.SoDienThoai }}</p>
+                <p><strong>Địa chỉ:</strong> {{ selectedNhanVien.DiaChi }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
 <script>
-// --- PHẦN SCRIPT (Giữ nguyên) ---
 import NhanVienService from "@/services/nhanvien.service";
+import { Modal } from "bootstrap"; // 3. IMPORT MODAL TỪ BOOTSTRAP
+
 export default {
   name: "NhanVienManagement",
-  components: {},
   data() {
     return {
-      nhanviens: [],
+      nhanViens: [],
+      loading: true,
       searchText: "",
       filterChucVu: "all",
       currentPage: 1,
-      itemsPerPage: 8,
+      itemsPerPage: 10,
+      defaultAvatar: "https://i.imgur.com/sC21Kna.png",
+      
+      // 4. KHAI BÁO BIẾN CHO MODAL MỚI
+      viewModal: null,
+      selectedNhanVien: null, 
     };
   },
   computed: {
+    // (Toàn bộ computed giữ nguyên)
+    filteredByChucVu() {
+      if (this.filterChucVu === "all") {
+        return this.nhanViens;
+      }
+      return this.nhanViens.filter((nv) => nv.ChucVu === this.filterChucVu);
+    },
     filteredNhanViens() {
-      let filtered = this.nhanviens;
-      if (this.filterChucVu !== 'all') {
-        filtered = filtered.filter(nv => nv.ChucVu === this.filterChucVu);
+      if (!this.searchText) {
+        return this.filteredByChucVu;
       }
-      if (this.searchText.trim()) {
-        const lowerSearch = this.searchText.trim().toLowerCase();
-        filtered = filtered.filter(nv => 
-          nv.HoTenNV.toLowerCase().includes(lowerSearch)
-        );
-      }
-      return filtered;
+      const lowerSearchText = this.searchText.toLowerCase();
+      return this.filteredByChucVu.filter(
+        (nv) => nv.HoTenNV.toLowerCase().includes(lowerSearchText)
+      );
     },
     totalPages() {
       return Math.ceil(this.filteredNhanViens.length / this.itemsPerPage);
@@ -149,26 +216,30 @@ export default {
       const start = (this.currentPage - 1) * this.itemsPerPage;
       const end = start + this.itemsPerPage;
       return this.filteredNhanViens.slice(start, end);
-    }
+    },
   },
   methods: {
+    // (Các hàm retrieveNhanViens, confirmDelete, changePage, search giữ nguyên)
     async retrieveNhanViens() {
+      this.loading = true;
       try {
         const response = await NhanVienService.getAll();
-        this.nhanviens = response.data;
+        this.nhanViens = response.data;
       } catch (error) {
-        console.error(error);
+        console.error("Lỗi khi tải danh sách nhân viên:", error);
+      } finally {
+        this.loading = false;
       }
     },
-    async handleDelete(id) {
-        if (confirm("Bạn có chắc muốn xóa nhân viên này?")) {
-            try {
-                await NhanVienService.delete(id);
-                this.retrieveNhanViens();
-            } catch (error) {
-                alert("Không thể xóa nhân viên.");
-            }
+    async confirmDelete(nhanVien) {
+      if (window.confirm(`Bạn có chắc chắn muốn xóa nhân viên "${nhanVien.HoTenNV}"?`)) {
+        try {
+          await NhanVienService.delete(nhanVien._id);
+          this.retrieveNhanViens();
+        } catch (error) {
+          alert("Không thể xóa nhân viên.");
         }
+      }
     },
     changePage(pageNumber) {
       if (pageNumber < 1) pageNumber = 1;
@@ -177,6 +248,12 @@ export default {
     },
     search() {
         this.currentPage = 1;
+    },
+
+    // 5. HÀM MỞ MODAL XEM CHI TIẾT (MỚI)
+    openViewModal(nhanVien) {
+      this.selectedNhanVien = nhanVien;
+      this.viewModal.show();
     }
   },
   watch: {
@@ -186,12 +263,14 @@ export default {
   },
   mounted() {
     this.retrieveNhanViens();
+    // 6. KHỞI TẠO MODAL MỚI KHI TRANG ĐƯỢC TẢI
+    this.viewModal = new Modal(document.getElementById("viewNhanVienModal"));
   },
 };
 </script>
 
 <style scoped>
-/* --- PHẦN STYLE (Giữ nguyên) --- */
+/* (Style CSS cho card, form, table) */
 .card {
   border: 1px solid rgba(255, 255, 255, 0.125);
 }
@@ -206,36 +285,47 @@ export default {
   border-color: #58a6ff;
   box-shadow: 0 0 0 0.25rem rgba(88, 166, 255, 0.25);
 }
-.form-control::placeholder { 
-  color: #6c757d;
-  opacity: 1;
-}
-.input-group-text {
-  background-color: #343a40;
-  border: 1px solid #495057;
+.table-hover tbody tr:hover {
   color: #fff;
+  background-color: rgba(255, 255, 255, 0.075);
 }
 .page-link {
     background-color: #212529;
-    color: #c9d1d9;
+    color: #58a6ff;
     border-color: #495057;
-    cursor: pointer;
-}
-.page-link:hover {
-    background-color: #343a40;
 }
 .page-item.active .page-link {
-    background-color: #0d6efd;
-    border-color: #0d6efd;
+    background-color: #58a6ff;
     color: #fff;
+    border-color: #58a6ff;
 }
 .page-item.disabled .page-link {
-    background-color: #343a40;
+    background-color: #212529;
     color: #6c757d;
     border-color: #495057;
-    cursor: not-allowed;
 }
-::placeholder{
-  font-style: italic;
+
+/* 7. STYLE CHO AVATAR (TRONG BẢNG) */
+.avatar-sm {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #495057;
+}
+
+/* 8. STYLE CHO AVATAR (TRONG MODAL) */
+.avatar-modal {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #495057;
+  margin-top: 1rem;
+}
+
+/* Style cho modal-body (để tránh lỗi thanh cuộn) */
+.modal-body p {
+  margin-bottom: 0.75rem;
 }
 </style>
