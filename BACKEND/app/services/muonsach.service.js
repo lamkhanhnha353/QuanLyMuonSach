@@ -10,40 +10,66 @@ class MuonSachService {
      * 1. Create: Chức năng cho Độc Giả tạo phiếu mượn mới.
      * (Đã thêm logic kiểm tra SOQUYEN)
      */
-    async create(payload) {
-        const sachId = ObjectId.isValid(payload.sachId) ? new ObjectId(payload.sachId) : null;
-        if (!sachId) throw new Error("ID Sách không hợp lệ");
+   // DÁN ĐÈ TOÀN BỘ HÀM NÀY VÀO 'muonsach.service.js'
 
-        // --- LOGIC KIỂM TRA SÁCH ---
-        const sach = await this.Sach.findOne({ _id: sachId });
-        if (!sach) throw new Error("Không tìm thấy sách");
-        if (sach.SOQUYEN <= 0) {
-            throw new Error("Sách đã hết, không thể mượn");
-        }
-        await this.Sach.updateOne(
-            { _id: sachId },
-            { $inc: { SOQUYEN: -1 } } 
-        );
-        // --- KẾT THÚC LOGIC KIỂM TRA ---
+async create(payload) {
 
-        const phieuMuonData = {
-            docGiaId: ObjectId.isValid(payload.docGiaId) ? new ObjectId(payload.docGiaId) : null,
-            sachId: sachId,
-            nhanVienId: null, 
-            ngayMuon: payload.ngayMuon,
-            ngayTra: payload.ngayTra,
-            trangThai: "chờ duyệt"
-        };
-        
-        // --- SỬA LỖI TẠI ĐÂY ---
-        
-        // Chèn phiếu mượn vào CSDL
-        // 'insertOne' sẽ tự động thêm trường '_id' vào 'phieuMuonData'
-        await this.MuonSach.insertOne(phieuMuonData);
-
-        // Trả về chính 'phieuMuonData', giờ đã bao gồm '_id' mới
-        return phieuMuonData;
+    // --- 1. LÀM SẠCH VÀ KIỂM TRA ID SÁCH ---
+    // Đọc 'payload.sachId'
+    const cleanSachId = payload.sachId ? String(payload.sachId).trim().replace(/"/g, '') : null;
+    const sachId = ObjectId.isValid(cleanSachId) ? new ObjectId(cleanSachId) : null;
+    if (!sachId) {
+        throw new Error("ID Sách không hợp lệ");
     }
+
+    // --- 2. LÀM SẠCH VÀ KIỂM TRA ID ĐỘC GIẢ ---
+    // Đọc 'payload.docGiaId' (CHÍNH XÁC TỪNG CHỮ HOA, THƯỜNG)
+    const cleanDocGiaId = payload.docGiaId ? String(payload.docGiaId).trim().replace(/"/g, '') : null;
+    const docGiaId = ObjectId.isValid(cleanDocGiaId) ? new ObjectId(cleanDocGiaId) : null;
+
+    if (!docGiaId) {
+        // Lỗi 500 của bạn xuất phát từ đây
+        throw new Error("ID Độc Giả không hợp lệ (Lỗi đọc payload)"); 
+    }
+
+    // --- 3. KIỂM TRA LOGIC SÁCH (TRỪ KHO) ---
+    const sach = await this.Sach.findOne({ _id: sachId });
+    if (!sach) throw new Error("Không tìm thấy sách");
+    if (sach.SOQUYEN <= 0) {
+        throw new Error("Sách đã hết, không thể mượn");
+    }
+    await this.Sach.updateOne(
+        { _id: sachId },
+        { $inc: { SOQUYEN: -1 } } 
+    );
+
+    // --- 4. NÂNG CẤP LOGIC NHÂN VIÊN ---
+    let trangThaiMoi = "chờ duyệt";
+    let nhanVienXuLyId = null;
+
+    // Đọc 'payload.nhanVienId'
+    if (payload.nhanVienId) {
+        const cleanNhanVienId = payload.nhanVienId ? String(payload.nhanVienId).trim().replace(/"/g, '') : null;
+        if (ObjectId.isValid(cleanNhanVienId)) {
+            nhanVienXuLyId = new ObjectId(cleanNhanVienId);
+            trangThaiMoi = "đã duyệt"; // Tự động duyệt luôn
+        }
+    }
+    // --- KẾT THÚC NÂNG CẤP ---
+
+    const phieuMuonData = {
+        docGiaId: docGiaId,
+        sachId: sachId,
+        ngayMuon: payload.ngayMuon,
+        ngayTra: payload.ngayTra,
+        trangThai: trangThaiMoi, 
+        nhanVienId: nhanVienXuLyId,
+        ngayTraThucTe: null, 
+    };
+
+    const result = await this.MuonSach.insertOne(phieuMuonData);
+    return await this.findById(result.insertedId);
+}
 
     
      //2. Find: Chức năng cho Nhân Viên/Admin xem tất cả phiếu mượn.

@@ -23,121 +23,143 @@
           </router-link>
         </li>
         <li class="nav-item">
-          <router-link to="/admin/docgia" class="nav-link">
+          <a class="nav-link" style="color: #6c757d; cursor: not-allowed;">
             <i class="fas fa-users"></i>
             <span class="sidebar-text">Quản lý Độc Giả</span>
-          </router-link>
-        </li>
+          </a>
+          </li>
          <li class="nav-item">
           <router-link to="/admin/sach" class="nav-link">
             <i class="fas fa-book"></i>
             <span class="sidebar-text">Quản lý Sách</span>
           </router-link>
         </li>
+        
         <li class="nav-item">
           <router-link to="/admin/muonsach" class="nav-link">
-            <i class="fas fa-receipt"></i>
-            <span class="sidebar-text">Quản lý Phiếu Mượn</span>
+            <i class="fas fa-receipt"></i> <span class="sidebar-text">Quản lý Phiếu Mượn</span>
           </router-link>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" style="color: #6c757d; cursor: not-allowed;">
+            <i class="fas fa-building"></i>
+            <span class="sidebar-text">Quản lý NXB</span>
+          </a>
+          </li>
+      </ul>
+      
+      <ul class="nav flex-column mt-auto">
+        <li class="nav-item">
+          <a class="nav-link logout-link" @click="logOut">
+            <i class="fas fa-sign-out-alt"></i>
+            <span class="sidebar-text">Đăng xuất</span>
+          </a>
         </li>
       </ul>
     </nav>
 
-    <div id="main-content">
-      
+    <div id="main-content" class="bg-secondary-dark text-white">
       <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
         <div class="container-fluid">
-          <span class="navbar-brand mb-0 h1">Trang Quản Trị</span>
-
-          <div class="navbar-nav ms-auto">
-            <li class="nav-item">
-              <a class="nav-link" v-if="currentUser">
-                Xin chào, {{ currentUser.HoTenNV }}
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link btn btn-outline-warning btn-sm" @click="logOut">
-                <i class="fas fa-sign-out-alt"></i> Đăng xuất
-              </a>
-            </li>
-          </div>
+          <span class="navbar-text ms-auto" v-if="currentUser">
+             Chào, <strong>{{ currentUser.HoTenNV }}</strong> ({{ currentUser.ChucVu }})
+           </span>
         </div>
       </nav>
-
-      <div class="content-area p-4">
+      
+      <main class="p-4">
         <router-view />
-      </div>
+      </main>
     </div>
   </div>
 </template>
 
 <script>
-// --- PHẦN SCRIPT (Giữ nguyên) ---
 import AuthService from "@/services/auth.service";
+import eventBus from "@/services/eventBus";
 
 export default {
+  name: "AdminLayout",
   data() {
     return {
-      isSidebarCollapsed: false, // Mặc định là MỞ
+      isSidebarCollapsed: false,
       currentUser: null,
     };
   },
   methods: {
     toggleSidebar() {
-      // Hàm này được gọi bởi nút "fas fa-bars"
       this.isSidebarCollapsed = !this.isSidebarCollapsed;
     },
     logOut() {
       AuthService.logout();
-      // Đăng xuất là về trang Login
-      this.$router.push('/login'); 
-    }
+      eventBus.emit("auth-change");
+      this.$router.push('/login');
+    },
   },
-  created() {
-    // Lấy thông tin Admin khi layout được tạo
+  mounted() {
+    // Lấy thông tin user khi layout được tải
     this.currentUser = AuthService.getCurrentUser();
+    
+    // (Lắng nghe nếu có lỗi 401 - Tùy chọn)
+    eventBus.on("unauthorized", () => {
+        this.logOut();
+    });
+  },
+  beforeUnmount() {
+     eventBus.off("unauthorized");
   }
-}
+};
 </script>
 
 <style scoped>
-/* PHẦN STYLE (Đã sửa .sidebar-header và .navbar)
-*/
-
+/* (Style cho layout Admin, giữ nguyên như bạn đã cung cấp) */
 .admin-wrapper {
   display: flex;
-  width: 100%;
-  min-height: 100vh;
-  background-color: #212529; 
-  color: #f8f9fa; 
 }
 
-/* --- Sidebar --- */
 #sidebar {
-  width: 250px; 
+  width: 250px;
   min-height: 100vh;
   transition: width 0.3s ease-in-out;
-  overflow-x: hidden; 
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
 }
 
-/* FIX 1: SỬA HEADER CỦA SIDEBAR
-  Ép chiều cao = 56px và dùng Flexbox căn giữa
-*/
+/* Sidebar khi thu gọn */
+.admin-wrapper.sidebar-collapsed #sidebar {
+  width: 70px;
+}
+.admin-wrapper.sidebar-collapsed .sidebar-text,
+.admin-wrapper.sidebar-collapsed .sidebar-header .ms-2 {
+  display: none;
+}
+.admin-wrapper.sidebar-collapsed .sidebar-header button {
+  justify-content: center;
+}
+.admin-wrapper.sidebar-collapsed .nav-link {
+  justify-content: center;
+}
+
+/* --- Header của Sidebar (nút toggle) --- */
 .sidebar-header {
-  height: 56px; /* Ép chiều cao bằng navbar */
-  padding: 0 10px; /* Bỏ padding dọc */
-  border-bottom: 1px solid #495057;
-  display: flex; /* Dùng Flexbox */
-  align-items: center; /* Căn giữa nút Menu theo chiều dọc */
+  height: 56px; 
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
-.sidebar-header .btn {
-  width: 100%; 
-  font-size: 1.2rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-align: left; 
+.sidebar-header button {
+  width: 100%;
+  display: flex;
+  align-items: center;
 }
-.sidebar-header .btn .fas {
+.sidebar-header button .fas {
    width: 30px; 
    text-align: center;
 }
@@ -148,21 +170,35 @@ export default {
   color: #c9d1d9;
   white-space: nowrap; 
   overflow: hidden; 
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
 }
 .nav-link .fas {
   width: 30px; 
   text-align: center;
   margin-right: 10px;
+  font-size: 1.1rem;
 }
 .nav-link:hover {
   color: #fff;
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Sửa lỗi Active Link (dùng class mặc định của Vue Router 4) */
 .nav-link.router-link-exact-active {
   color: #58a6ff;
   font-weight: bold;
+  background-color: rgba(88, 166, 255, 0.1);
+  border-left: 3px solid #58a6ff;
+}
+
+/* Nút đăng xuất */
+.logout-link {
+  cursor: pointer;
+}
+.logout-link:hover {
+  color: #ff7b72; /* Màu đỏ nhạt khi hover */
+  background-color: rgba(255, 123, 114, 0.1);
 }
 
 
@@ -170,43 +206,24 @@ export default {
 #main-content {
   flex-grow: 1;
   min-height: 100vh;
-  transition: width 0.3s ease-in-out; 
+  transition: margin-left 0.3s ease-in-out; 
+  margin-left: 250px; 
 }
 
-/* FIX 2: SỬA HEADER (NAVBAR) CỦA NỘI DUNG
-  Đảm bảo nó cũng cao 56px
-*/
+.admin-wrapper.sidebar-collapsed #main-content {
+  margin-left: 70px;
+}
+
 #main-content .navbar {
-    height: 56px; /* Giữ nguyên 56px */
-    border-bottom: 1px solid #495057;
-    /* Bootstrap .navbar đã là flex và căn giữa, 
-      nên không cần thêm CSS
-    */
+    height: 56px; 
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.content-area {
-  min-height: calc(100vh - 56px); 
+.bg-secondary-dark {
+  background-color: #212529; /* Màu nền tối cho nội dung */
 }
 
-/*
-  TRẠNG THÁI KHI SIDEBAR ĐÓNG (collapsed)
-*/
-.admin-wrapper.sidebar-collapsed #sidebar {
-  width: 80px; 
-}
-.admin-wrapper.sidebar-collapsed .sidebar-text {
-  display: none; 
-}
-.admin-wrapper.sidebar-collapsed .sidebar-header .btn {
-   text-align: center;
-}
-.admin-wrapper.sidebar-collapsed .sidebar-header .btn .fas {
-   margin-right: 0;
-}
-.admin-wrapper.sidebar-collapsed .nav-link {
-  text-align: center;
-}
-.admin-wrapper.sidebar-collapsed .nav-link .fas {
-  margin-right: 0;
+main {
+  padding: 20px;
 }
 </style>
