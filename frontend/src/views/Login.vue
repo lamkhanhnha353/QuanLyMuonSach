@@ -157,7 +157,7 @@ export default {
         
         setTimeout(() => {
           this.$router.push("/");
-        }, 3500);
+        }, 700);
 
       } catch (error) {
         this.loading = false;
@@ -180,7 +180,10 @@ export default {
         // Đẩy Staff về trang Staff (không phải Admin)
         setTimeout(() => {
           this.$router.push("/staff"); 
-        }, 3500);
+        }, 700);
+        
+        // Nếu là Admin, router middleware sẽ tự redirect sang /admin
+        // với timeout 700ms để hiển thị success message
 
       } catch (error) {
         this.loading = false;

@@ -1,12 +1,11 @@
 <template>
-  <div v-if="successMessage" class="toast-animated">
-    {{ successMessage }}
-  </div>
-
-  <div class="row justify-content-center">
-    <div class="col-lg-4 col-md-6">
+  <div class="register-wrapper">
+    <div class="register-card">
+      <div class="form-header">
+        <h4 class="text-white mb-0">Đăng Ký Độc Giả</h4>
+        <button type="button" class="btn-close btn-close-white" @click="goBackToLogin" title="Đóng"></button>
+      </div>
       <div class="form-container">
-        <h4 class="text-center text-white mb-4">Đăng Ký Độc Giả</h4>
         
         <Form 
           @submit="handleRegister" 
@@ -96,6 +95,10 @@
         </Form>
       </div>
     </div>
+
+    <div v-if="successMessage" class="toast-animated">
+      {{ successMessage }}
+    </div>
   </div>
 </template>
 
@@ -137,6 +140,9 @@ export default {
     };
   },
   methods: {
+    goBackToLogin() {
+      this.$router.push("/login");
+    },
     // 2. CẬP NHẬT HÀM NÀY
     async handleRegister(user, { resetForm }) {
       this.loading = true;
@@ -153,8 +159,8 @@ export default {
 
         // Tự động chuyển trang sau 3.5 giây
         setTimeout(() => {
-          this.$router.push("/docgia/login");
-        },0); // 3500ms = 3.5 giây
+          this.$router.push("/login");
+        }, 700); // 3500ms = 3.5 giây
 
       } catch (error) {
         this.loading = false;
@@ -166,8 +172,54 @@ export default {
 </script>
 
 <style scoped>
-/* PHẦN STYLE GIỮ NGUYÊN
-*/
+/* Layout wrapper & card */
+.register-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 56px);
+  padding: 20px;
+}
+
+.register-card {
+  width: 100%;
+  max-width: 500px;
+  background-color: rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 30px;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.form-header h4 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.btn-close-white {
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.btn-close-white:hover {
+  opacity: 1;
+}
+
+.form-container {
+  padding: 30px;
+}
+
+/* Toast animation */
 @keyframes slideInFromRight {
   from { transform: translateX(100%); opacity: 0; }
   to { transform: translateX(0); opacity: 1; }
@@ -177,6 +229,7 @@ export default {
   99% { transform: translateX(0); opacity: 1; }
   to { transform: translateX(50px); opacity: 0; }
 }
+
 .toast-animated {
   position: fixed;
   top: 80px;
@@ -185,45 +238,45 @@ export default {
   color: white;
   padding: 16px 24px;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 1000;
   font-weight: bold;
   animation: slideInFromRight 0.5s ease-out, fadeOut 0.5s ease-in 3s forwards;
 }
-.form-container {
-  background-color: rgba(0, 0, 0, 0.7);
-  padding: 30px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-}
+
+/* Form styling */
 .form-label {
   color: #f8f9fa;
   font-weight: 500;
 }
+
 .error-feedback {
   color: #dc3545;
-
   min-height: 1.5em;
 }
+
 .form-control {
   background: rgba(255, 255, 255, 0.05) !important;
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
   color: white !important;
 }
+
 .date-input,
 .select-input {
   background: rgba(255, 255, 255, 0.05) !important;
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
   color: white !important;
 }
+
 .select-input option {
   background-color: #212529;
   color: white;
 }
+
 .date-input::-webkit-calendar-picker-indicator {
   filter: invert(1); 
 }
+
 .form-control:focus,
 .date-input:focus,
 .select-input:focus {
@@ -232,6 +285,7 @@ export default {
   box-shadow: 0 0 0 0.25rem rgba(88, 166, 255, 0.25) !important;
   color: white !important;
 }
+
 input:-webkit-autofill,
 input:-webkit-autofill:hover, 
 input:-webkit-autofill:focus, 
@@ -240,5 +294,24 @@ input:-webkit-autofill:active {
     -webkit-box-shadow: 0 0 0 30px rgba(255, 255, 255, 0.05) inset !important;
     background-color: rgba(255, 255, 255, 0.05) !important; 
     transition: background-color 5000s ease-in-out 0s, color 5000s ease-in-out 0s;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .register-card {
+    max-width: 100%;
+  }
+
+  .form-header {
+    padding: 15px 20px;
+  }
+
+  .form-container {
+    padding: 20px;
+  }
+
+  .form-header h4 {
+    font-size: 18px;
+  }
 }
 </style>

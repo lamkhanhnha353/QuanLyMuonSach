@@ -60,13 +60,10 @@ const routes = [
       if (user && user.ChucVu && user.ChucVu === "Admin") {
         next();
       } else if (user && user.ChucVu === "Staff") {
-        alert("Bạn không có quyền truy cập trang Admin!");
         next("/staff");
       } else if (user) {
-        alert("Bạn không có quyền truy cập trang này!");
         next("/");
       } else {
-        alert("Vui lòng đăng nhập!");
         next("/login");
       }
     },
@@ -101,13 +98,10 @@ const routes = [
       if (user && user.ChucVu && user.ChucVu === "Staff") {
         next();
       } else if (user && user.ChucVu === "Admin") {
-        alert("Bạn không có quyền truy cập trang Staff!");
         next("/admin");
       } else if (user) {
-        alert("Bạn không có quyền truy cập trang này!");
         next("/");
       } else {
-        alert("Vui lòng đăng nhập!");
         next("/login");
       }
     },
