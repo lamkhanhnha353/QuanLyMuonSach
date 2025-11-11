@@ -7,6 +7,7 @@ import AuthService from "@/services/auth.service";
 // Layouts
 import PublicLayout from "@/layouts/PublicLayout.vue";
 import AdminLayout from "@/layouts/AdminLayout.vue";
+import StaffLayout from "@/layouts/StaffLayout.vue";
 
 // Trang Public
 import Home from "@/views/Home.vue";
@@ -32,7 +33,10 @@ import NhaXuatBanManagement from "@/views/NhaXuatBanManagement.vue";
 import NhaXuatBanAdd from "@/views/NhaXuatBanAdd.vue";
 import NhaXuatBanEdit from "@/views/NhaXuatBanEdit.vue";
 
-// 1. XÓA IMPORT AdminProfile TẠI ĐÂY
+// Trang Staff
+import StaffDashboard from "@/views/StaffDashboard.vue";
+import StaffSachManagement from "@/views/StaffSachManagement.vue";
+import StaffMuonSachManagement from "@/views/StaffMuonSachManagement.vue";
 
 
 const routes = [
@@ -47,26 +51,28 @@ const routes = [
     ],
   },
 
-  // --- Luồng Admin ---
+  // --- Luồng Admin (Chỉ Admin) ---
   {
     path: "/admin",
     component: AdminLayout,
     beforeEnter: (to, from, next) => {
       const user = AuthService.getCurrentUser();
-      if (user && user.ChucVu && (user.ChucVu === "Admin" || user.ChucVu === "Staff")) {
+      if (user && user.ChucVu && user.ChucVu === "Admin") {
         next();
+      } else if (user && user.ChucVu === "Staff") {
+        alert("Bạn không có quyền truy cập trang Admin!");
+        next("/staff");
       } else if (user) {
         alert("Bạn không có quyền truy cập trang này!");
         next("/");
       } else {
-        alert("Vui lòng đăng nhập với tư cách Nhân Viên!");
+        alert("Vui lòng đăng nhập!");
         next("/login");
       }
     },
     children: [
       { path: "", name: "admin.dashboard", component: Dashboard },
       
-      // (Tất cả các route khác giữ nguyên)
       { path: "nhanvien", name: "admin.nhanvien", component: NhanVienManagement },
       { path: "nhanvien/add", name: "admin.nhanvien.add", component: NhanVienAdd },
       { path: "nhanvien/edit/:id", name: "admin.nhanvien.edit", component: NhanVienEdit },
@@ -83,8 +89,32 @@ const routes = [
       { path: "nhaxuatban", name: "admin.nhaxuatban", component: NhaXuatBanManagement },
       { path: "nhaxuatban/add", name: "admin.nhaxuatban.add", component: NhaXuatBanAdd },
       { path: "nhaxuatban/edit/:id", name: "admin.nhaxuatban.edit", component: NhaXuatBanEdit },
+    ],
+  },
 
-      // 2. XÓA ROUTE /admin/profile TẠI ĐÂY
+  // --- Luồng Staff (Nhân Viên) ---
+  {
+    path: "/staff",
+    component: StaffLayout,
+    beforeEnter: (to, from, next) => {
+      const user = AuthService.getCurrentUser();
+      if (user && user.ChucVu && user.ChucVu === "Staff") {
+        next();
+      } else if (user && user.ChucVu === "Admin") {
+        alert("Bạn không có quyền truy cập trang Staff!");
+        next("/admin");
+      } else if (user) {
+        alert("Bạn không có quyền truy cập trang này!");
+        next("/");
+      } else {
+        alert("Vui lòng đăng nhập!");
+        next("/login");
+      }
+    },
+    children: [
+      { path: "", name: "staff.dashboard", component: StaffDashboard },
+      { path: "sach", name: "staff.sach", component: StaffSachManagement },
+      { path: "muonsach", name: "staff.muonsach", component: StaffMuonSachManagement },
     ],
   },
 ];

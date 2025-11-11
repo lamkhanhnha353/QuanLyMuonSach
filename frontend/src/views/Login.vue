@@ -177,9 +177,9 @@ export default {
         this.loading = false;
         this.successMessage = "Đăng nhập thành công! Xin chào " + loggedInStaff.HoTenNV;
         
-        // Đẩy Admin về trang Quản Trị
+        // Đẩy Staff về trang Staff (không phải Admin)
         setTimeout(() => {
-          this.$router.push("/admin"); 
+          this.$router.push("/staff"); 
         }, 3500);
 
       } catch (error) {
