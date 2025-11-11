@@ -19,19 +19,20 @@ import NhanVienManagement from "@/views/NhanVienManagement.vue";
 import NhanVienAdd from "@/views/NhanVienAdd.vue";
 import NhanVienEdit from "@/views/NhanVienEdit.vue";
 
+import DocGiaManagement from "@/views/DocGiaManagement.vue";
+import DocGiaEdit from "@/views/DocGiaEdit.vue";
+
 import SachManagement from "@/views/SachManagement.vue";
 import SachAdd from "@/views/SachAdd.vue";
 import SachEdit from "@/views/SachEdit.vue";
 
 import MuonSachManagement from "@/views/MuonSachManagement.vue";
 
-import NhaXuatBanManagement from "@/views/NhanVienManagement.vue";
+import NhaXuatBanManagement from "@/views/NhaXuatBanManagement.vue";
 import NhaXuatBanAdd from "@/views/NhaXuatBanAdd.vue";
 import NhaXuatBanEdit from "@/views/NhaXuatBanEdit.vue";
 
-// 1. IMPORT 2 TRANG ĐỘC GIẢ MỚI
-import DocGiaManagement from "@/views/DocGiaManagement.vue";
-import DocGiaEdit from "@/views/DocGiaEdit.vue";
+// 1. XÓA IMPORT AdminProfile TẠI ĐÂY
 
 
 const routes = [
@@ -65,35 +66,25 @@ const routes = [
     children: [
       { path: "", name: "admin.dashboard", component: Dashboard },
       
-      // Routes Quản lý Nhân Viên
+      // (Tất cả các route khác giữ nguyên)
       { path: "nhanvien", name: "admin.nhanvien", component: NhanVienManagement },
       { path: "nhanvien/add", name: "admin.nhanvien.add", component: NhanVienAdd },
       { path: "nhanvien/edit/:id", name: "admin.nhanvien.edit", component: NhanVienEdit },
 
-      // Routes Quản lý Sách
+      { path: "docgia", name: "admin.docgia", component: DocGiaManagement },
+      { path: "docgia/edit/:id", name: "admin.docgia.edit", component: DocGiaEdit },
+
       { path: "sach", name: "admin.sach", component: SachManagement },
       { path: "sach/add", name: "admin.sach.add", component: SachAdd },
       { path: "sach/edit/:id", name: "admin.sach.edit", component: SachEdit },
 
-      // Route Quản lý Mượn Sách
       { path: "muonsach", name: "admin.muonsach", component: MuonSachManagement },
       
-      // Routes Quản lý NXB
       { path: "nhaxuatban", name: "admin.nhaxuatban", component: NhaXuatBanManagement },
       { path: "nhaxuatban/add", name: "admin.nhaxuatban.add", component: NhaXuatBanAdd },
       { path: "nhaxuatban/edit/:id", name: "admin.nhaxuatban.edit", component: NhaXuatBanEdit },
 
-      // 2. THÊM 2 ROUTES ĐỘC GIẢ MỚI
-      { 
-        path: "docgia", 
-        name: "admin.docgia", 
-        component: DocGiaManagement 
-      },
-      { 
-        path: "docgia/edit/:id", 
-        name: "admin.docgia.edit", 
-        component: DocGiaEdit 
-      },
+      // 2. XÓA ROUTE /admin/profile TẠI ĐÂY
     ],
   },
 ];
