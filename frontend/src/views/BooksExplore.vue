@@ -1,20 +1,28 @@
 <template>
   <div class="books-explore">
-    <!-- Sticky Header -->
     <header class="header-sticky">
       <div class="container-fluid px-3">
         <div class="search-bar py-3">
           <div class="row g-2 align-items-center">
-            <div class="col-md-9">
+            
+            <div class="col-md-3 d-flex align-items-center gap-2">
+              <div class="library-icon">
+                <i class="fas fa-book-open"></i>
+              </div>
+              <h4 class="mb-0 fw-bold library-title">Khám phá thư viện</h4>
+            </div>
+
+            <div class="col-md-6">
               <div class="input-group search-input">
                 <input type="text" class="form-control" placeholder="Tìm theo tên sách, tác giả, ISBN" v-model="searchText" @keyup.enter="applySearch">
                 <button class="btn btn-primary" @click="applySearch"><i class="fas fa-search"></i></button>
               </div>
             </div>
+            
             <div class="col-md-3">
-              <div class="d-flex align-items-center gap-2">
-                <label class="mb-0" style="font-size: 0.9rem; white-space: nowrap;">Sắp xếp:</label>
-                <select class="form-select form-select-sm" v-model="sortOption">
+              <div class="d-flex align-items-center gap-2 justify-content-end">
+                <label class="mb-0 sort-label">Sắp xếp:</label>
+                <select class="form-select sort-select" v-model="sortOption">
                   <option value="newest">Mới nhất</option>
                   <option value="title">Tên A-Z</option>
                   <option value="author">Tác giả</option>
@@ -26,10 +34,8 @@
       </div>
     </header>
 
-    <!-- Main Content -->
     <div class="container-fluid px-3">
       <div class="row g-4 py-4">
-        <!-- Sidebar Filters -->
         <aside class="col-xl-2 col-lg-3">
           <div class="filter-panel">
             <div class="filter-header">
@@ -37,7 +43,6 @@
               <span>Bộ lọc</span>
             </div>
 
-            <!-- Category Filter -->
             <div class="filter-section">
               <div class="filter-section-title">Thể loại</div>
               <div class="filter-options">
@@ -48,7 +53,6 @@
               </div>
             </div>
 
-            <!-- Status Filter -->
             <div class="filter-section">
               <div class="filter-section-title">Tình trạng</div>
               <div class="filter-options">
@@ -73,7 +77,6 @@
           </div>
         </aside>
 
-        <!-- Books Grid -->
         <main class="col-xl-10 col-lg-9">
           <div class="books-grid">
             <div class="book-item" v-for="book in paginatedBooks" :key="book._id">
@@ -99,35 +102,36 @@
             </div>
           </div>
 
-          <!-- Pagination -->
           <div class="pagination-container mt-5 mb-4">
             <ul class="pagination justify-content-center">
-              <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                <a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)">
+              <li class="page-item prev-next" :class="{ disabled: currentPage === 1 }">
+                <a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)" aria-label="Previous">
                   <i class="fas fa-chevron-left"></i>
                 </a>
               </li>
 
-              <li v-if="currentPage > 2" class="page-item">
-                <a class="page-link" href="#" @click.prevent="changePage(1)">1</a>
+              <li v-if="totalPages > 0 && currentPage > 1" class="page-item" :class="{ 'd-none': currentPage === 1 }">
+                  <a class="page-link" href="#" @click.prevent="changePage(1)">1</a>
               </li>
-              <li v-if="currentPage > 3" class="page-item disabled">
-                <span class="page-link">...</span>
+
+              <li v-if="currentPage > 3" class="page-item disabled d-none d-sm-block">
+                <span class="page-link ellipsis">...</span>
               </li>
 
               <li v-for="page in pageRange" :key="page" class="page-item" :class="{ active: page === currentPage }">
                 <a class="page-link" href="#" @click.prevent="changePage(page)">{{ page }}</a>
               </li>
 
-              <li v-if="currentPage < totalPages - 2" class="page-item disabled">
-                <span class="page-link">...</span>
-              </li>
-              <li v-if="currentPage < totalPages - 1" class="page-item">
-                <a class="page-link" href="#" @click.prevent="changePage(totalPages)">{{ totalPages }}</a>
+              <li v-if="currentPage < totalPages - 2" class="page-item disabled d-none d-sm-block">
+                <span class="page-link ellipsis">...</span>
               </li>
 
-              <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                <a class="page-link" href="#" @click.prevent="changePage(currentPage + 1)">
+              <li v-if="totalPages > 1 && currentPage < totalPages" class="page-item" :class="{ 'd-none': currentPage === totalPages }">
+                  <a class="page-link" href="#" @click.prevent="changePage(totalPages)">{{ totalPages }}</a>
+              </li>
+              
+              <li class="page-item prev-next" :class="{ disabled: currentPage === totalPages }">
+                <a class="page-link" href="#" @click.prevent="changePage(currentPage + 1)" aria-label="Next">
                   <i class="fas fa-chevron-right"></i>
                 </a>
               </li>
@@ -137,7 +141,6 @@
       </div>
     </div>
 
-    <!-- Detail Modal -->
     <div class="modal fade" id="homeDetailModal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
@@ -234,10 +237,24 @@ export default {
       const range = [];
       const rangeStart = Math.max(2, this.currentPage - delta);
       const rangeEnd = Math.min(this.totalPages - 1, this.currentPage + delta);
-      for (let i = rangeStart; i <= rangeEnd; i++) {
-        range.push(i);
+
+      if (this.currentPage === 1 && this.totalPages > 1) {
+          range.push(1);
       }
-      return range;
+      
+      for (let i = rangeStart; i <= rangeEnd; i++) {
+        if (i > 1 && i < this.totalPages) {
+            range.push(i);
+        } else if (this.totalPages <= 5 && i >= 1 && i <= this.totalPages) {
+            range.push(i);
+        }
+      }
+      
+      if (this.currentPage === this.totalPages && this.totalPages > 1) {
+          range.push(this.totalPages);
+      }
+
+      return [...new Set(range)].filter(p => p >= 1 && p <= this.totalPages);
     }
   },
   methods: {
@@ -281,6 +298,42 @@ export default {
 </script>
 
 <style scoped>
+/* Header Title and Icon Style */
+.library-icon {
+  width: 48px;
+  height: 48px;
+  /* background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); */ /* ĐÃ XÓA */
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1f2937; /* ĐỔI TỪ 'white' SANG MÀU TỐI */
+  font-size: 1.4rem;
+  /* box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25); */ /* ĐÃ XÓA */
+}
+
+.library-title {
+  font-size: 1.5rem;
+  color: #1f2937;
+  white-space: nowrap;
+}
+
+.sort-label {
+  font-size: 0.85rem;
+  color: #6b7280;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.sort-select {
+  max-width: 130px;
+  height: 36px;
+  font-size: 0.85rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 0.375rem 0.75rem;
+}
+
 .books-explore {
   background-color: #f5f6f7;
   min-height: 100vh;
@@ -301,15 +354,15 @@ export default {
 }
 
 .search-input .form-control {
-  height: 40px;
-  font-size: 0.9rem;
+  height: 44px;
+  font-size: 0.95rem;
   border: 1px solid #d1d5db;
   border-radius: 6px;
 }
 
 .search-input .btn-primary {
-  height: 40px;
-  width: 44px;
+  height: 44px;
+  width: 48px;
   background-color: #2563eb;
   border: none;
 }
@@ -371,7 +424,7 @@ export default {
   margin-left: 6px;
 }
 
-/* Books Grid - COMPACT */
+/* Books Grid - COMPACT (Reverted to 4 columns) */
 .books-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -395,11 +448,13 @@ export default {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-.book-card:hover {
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-  transform: translateY(-4px);
-  border-color: #d1d5db;
-}
+/* * KHỐI .book-card:hover ĐÃ BỊ XÓA THEO YÊU CẦU 
+ * .book-card:hover {
+ * box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+ * transform: translateY(-4px);
+ * border-color: #d1d5db;
+ * }
+*/
 
 .book-img-container {
   position: relative;
@@ -416,6 +471,7 @@ export default {
   transition: transform 0.3s ease;
 }
 
+/* HIỆU ỨNG NÀY VẪN ĐƯỢC GIỮ NGUYÊN */
 .book-card:hover .book-img-container img {
   transform: scale(1.06);
 }
@@ -491,43 +547,72 @@ export default {
   font-weight: 600;
 }
 
-/* Pagination */
+/* Pagination - Updated Style (Kept round style) */
 .pagination-container {
   display: flex;
   justify-content: center;
 }
 
 .pagination {
-  gap: 4px;
+  gap: 8px; 
+}
+
+.page-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .page-link {
-  color: #2563eb;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  padding: 8px 12px;
-  font-size: 0.9rem;
+  color: #4b5563;
+  border: none;
+  background-color: transparent;
+  border-radius: 50%; 
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 500;
   transition: all 0.2s ease;
+  line-height: 1;
 }
 
-.page-link:hover {
-  background-color: #f3f4f6;
-  color: #1d4ed8;
-  border-color: #9ca3af;
-}
-
+/* Kiểu cho số trang đang hoạt động (active) */
 .page-item.active .page-link {
-  background-color: #2563eb;
-  border-color: #2563eb;
+  background-color: #2563eb; 
   color: white;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+  border-color: #2563eb;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
 }
 
+/* Kiểu khi di chuột (hover) */
+.page-item:not(.active) .page-link:not(.ellipsis):hover {
+  background-color: #f3f4f6;
+  color: #1f2937;
+}
+
+/* Kiểu cho nút mũi tên (prev/next) */
+.page-item.prev-next .page-link {
+  color: #4b5563;
+  width: 32px;
+  height: 32px;
+  font-size: 0.8rem;
+}
+
+.page-item.prev-next .page-link:hover {
+  background-color: #e5e7eb;
+}
+
+/* Kiểu cho dấu ... và disabled */
 .page-item.disabled .page-link {
   color: #9ca3af;
-  background-color: #f9fafb;
-  border-color: #e5e7eb;
+  background-color: transparent;
+  border-color: transparent;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 /* Responsive */
@@ -556,6 +641,11 @@ export default {
 
   .filter-panel {
     margin-bottom: 24px;
+    margin-top: 0;
+  }
+
+  .books-grid {
+    margin-top: 0;
   }
 
   .search-bar .col-md-4 {
@@ -586,6 +676,27 @@ export default {
   .search-input .btn-primary,
   .search-input .form-select-sm {
     height: 36px;
+  }
+
+  /* Responsive update for Pagination */
+  .pagination {
+    gap: 4px;
+  }
+  .page-link {
+    width: 34px;
+    height: 34px;
+    font-size: 0.9rem;
+  }
+
+  /* Hide Icon and Title, make search wider on small screens */
+  .header-sticky .col-md-3:first-child {
+      display: none !important;
+  }
+  .header-sticky .col-md-6 {
+      width: 75% !important;
+  }
+  .header-sticky .col-md-3:last-child {
+      width: 25% !important;
   }
 }
 </style>
