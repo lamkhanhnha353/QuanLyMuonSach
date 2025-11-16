@@ -3,96 +3,90 @@
     {{ successMessage }}
   </div>
 
-  <div class="login-container d-flex align-items-center">
+  <div class="login-container d-flex align-items-center justify-content-center">
     <div class="row justify-content-center w-100">
-      
       <div class="col-10 col-sm-8 col-md-6 col-lg-4">
-        
+
         <div class="form-container">
-          <h4 class="text-center text-white mb-4">Đăng Nhập</h4>
-          
-          <ul class="nav nav-pills nav-fill mb-3">
-            <li class="nav-item">
-              <a 
-                class="nav-link" 
-                :class="{ 'active': activeTab === 'docgia' }" 
-                @click="activeTab = 'docgia'"
-              >
-                Độc Giả
-              </a>
-            </li>
-            <li class="nav-item">
-              <a 
-                class="nav-link" 
-                :class="{ 'active': activeTab === 'nhanvien' }" 
-                @click="activeTab = 'nhanvien'"
-              >
-                Nhân Viên
-              </a>
-            </li>
-          </ul>
+          <div class="text-center mb-4">
+            <h4 class="mb-1 text-dark">Chào mừng trở lại!</h4>
+            <p class="text-secondary-light mb-0">
+              Đăng nhập để tiếp tục khám phá thư viện.
+            </p>
+          </div>
 
           <Form 
-            v-if="activeTab === 'docgia'"
-            @submit="handleDocGiaLogin" 
-            :validation-schema="docGiaLoginSchema" 
+            @submit="handleUnifiedLogin" 
+            :validation-schema="loginSchema" 
             :validate-on-input="true"
+            v-slot="{ values }" 
           >
-            <div class="form-group mb-3">
-              <Field 
-                name="username" 
-                type="text" 
-                class="form-control" 
-                placeholder="Username" 
-              />
-              <ErrorMessage name="username" class="error-feedback" />
+            <div class="form-group mb-4">
+              <label class="form-label">Tên đăng nhập hoặc MSNV</label>
+              <div class="input-group-custom">
+                <span class="input-icon">
+                  <i class="fa-solid fa-user"></i>
+                </span>
+                
+                <Field 
+                  name="identifier" 
+                  type="text" 
+                  class="form-control" 
+                  placeholder="Nhập tên đăng nhập hoặc MSNV"
+                />
+              </div>
+              <ErrorMessage name="identifier" class="error-feedback" />
             </div>
-            <div class="form-group mb-3"> 
-              <Field 
-                name="password" 
-                type="password" 
-                class="form-control" 
-                placeholder="Password"
-              />
+
+            <div class="form-group mb-3">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="form-label mb-0">Mật khẩu</label>
+                <router-link to="/forgot-password" class="text-link-small">
+                  Quên mật khẩu?
+                </router-link>
+              </div>
+
+              <div class="input-group-custom password-input">
+                <span class="input-icon">
+                  <i class="fa-solid fa-lock"></i>
+                </span>
+
+                <Field 
+                  name="password"
+                  :type="showPassword ? 'text' : 'password'"
+                  class="form-control" 
+                  placeholder="Nhập mật khẩu của bạn"
+                />
+
+                <button 
+                  type="button" 
+                  class="btn-toggle-password"
+                  @click="showPassword = !showPassword"
+                  v-if="values.password" 
+                >
+                  <i v-if="showPassword" class="fa-solid fa-eye"></i>
+                  <i v-else class="fa-solid fa-eye-slash"></i>
+                </button>
+              </div>
+
               <ErrorMessage name="password" class="error-feedback" />
             </div>
+
             <div class="form-group mt-4">
               <button class="btn btn-primary w-100" :disabled="loading">
-                <span>Đăng nhập (Độc Giả)</span>
+                <span v-if="!loading">Đăng nhập</span>
+                <span v-else>Đang xử lý...</span>
               </button>
             </div>
+
           </Form>
 
-          <Form 
-            v-if="activeTab === 'nhanvien'"
-            @submit="handleNhanVienLogin" 
-            :validation-schema="nhanVienLoginSchema" 
-            :validate-on-input="true"
-          >
-            <div class="form-group mb-3">
-              <Field 
-                name="MSNV" 
-                type="text" 
-                class="form-control" 
-                placeholder="Mã Số Nhân Viên (MSNV)"
-              />
-              <ErrorMessage name="MSNV" class="error-feedback" />
-            </div>
-            <div class="form-group mb-3"> 
-              <Field 
-                name="password" 
-                type="password" 
-                class="form-control" 
-                placeholder="Password"
-              />
-              <ErrorMessage name="password" class="error-feedback" />
-            </div>
-            <div class="form-group mt-4">
-              <button class="btn btn-primary w-100" :disabled="loading">
-                <span>Đăng nhập (Nhân Viên)</span>
-              </button>
-            </div>
-          </Form>
+          <div class="text-center mt-4">
+            <small class="text-secondary-light">
+              Chưa có tài khoản?
+              <router-link to="/docgia/register" class="text-link">Đăng ký ngay</router-link>
+            </small>
+          </div>
 
           <div class="form-group mt-3" v-if="errorMessage">
             <div class="alert alert-danger">
@@ -106,8 +100,9 @@
   </div>
 </template>
 
+
+
 <script>
-// --- PHẦN SCRIPT GIỮ NGUYÊN ---
 import { Form, Field, ErrorMessage } from "vee-validate";
 import * as yup from "yup";
 import AuthService from "@/services/auth.service";
@@ -115,96 +110,95 @@ import eventBus from "@/services/eventBus";
 
 export default {
   name: "Login",
-  components: {
-    Form,
-    Field,
-    ErrorMessage,
-  },
-  data() {
-    // Schema cho Độc Giả
-    const docGiaLoginSchema = yup.object().shape({
-      username: yup.string().required("Username là bắt buộc!"),
-      password: yup.string().required("Password là bắt buộc!"),
-    });
+  components: { Form, Field, ErrorMessage },
 
-    // Schema cho Nhân Viên
-    const nhanVienLoginSchema = yup.object().shape({
-      MSNV: yup.string().required("MSNV là bắt buộc!"),
-      password: yup.string().required("Password là bắt buộc!"),
+  data() {
+    const loginSchema = yup.object().shape({
+      identifier: yup.string().required("Tên đăng nhập hoặc MSNV là bắt buộc!"),
+      password: yup.string().required("Mật khẩu là bắt buộc!"),
     });
 
     return {
-      activeTab: 'docgia', // Tab mặc định
       loading: false,
-      successMessage: "", // Cho toast
-      errorMessage: "",   // Cho alert
-      docGiaLoginSchema,
-      nhanVienLoginSchema,
+      showPassword: false,
+      successMessage: "",
+      errorMessage: "",
+      loginSchema,
     };
   },
+
   methods: {
-    // Logic Đăng nhập ĐỘC GIẢ
-    async handleDocGiaLogin(user) {
+    async handleUnifiedLogin(credentials) {
       this.loading = true;
       this.successMessage = "";
       this.errorMessage = "";
 
       try {
-        const loggedInUser = await AuthService.login(user); 
-        eventBus.emit("auth-change"); 
-        this.loading = false;
-        this.successMessage = "Đăng nhập thành công! Xin chào " + loggedInUser.HOLOT + " " + loggedInUser.TEN;
-        
-        setTimeout(() => {
-          this.$router.push("/");
-        }, 700);
+        const identifier = credentials.identifier.trim();
+        const password = credentials.password;
 
-      } catch (error) {
-        this.loading = false;
-        this.errorMessage = "Username hoặc mật khẩu không đúng.";
-      }
-    },
+        let loggedInUser = null;
+        let userType = null;
 
-    // Logic Đăng nhập NHÂN VIÊN
-    async handleNhanVienLogin(staff) {
-      this.loading = true;
-      this.successMessage = "";
-      this.errorMessage = "";
+        // Thử login độc giả
+        try {
+          loggedInUser = await AuthService.login({
+            username: identifier,
+            password,
+          });
+          userType = "docgia";
+        } catch {
+          // Nếu không phải độc giả -> thử nhân viên
+          try {
+            loggedInUser = await AuthService.loginNhanVien({
+              MSNV: identifier,
+              password,
+            });
+            userType = "nhanvien";
+          } catch {
+            throw new Error("Tên đăng nhập/MSNV hoặc mật khẩu không đúng.");
+          }
+        }
 
-      try {
-        const loggedInStaff = await AuthService.loginNhanVien(staff); 
         eventBus.emit("auth-change");
         this.loading = false;
-        this.successMessage = "Đăng nhập thành công! Xin chào " + loggedInStaff.HoTenNV;
-        
-        // Đẩy Staff về trang Staff (không phải Admin)
+
+        const displayName =
+          userType === "docgia"
+            ? `${loggedInUser.HOLOT} ${loggedInUser.TEN}`
+            : loggedInUser.HoTenNV;
+
+        this.successMessage = "Đăng nhập thành công! Xin chào " + displayName;
+
         setTimeout(() => {
-          this.$router.push("/staff"); 
+          if (userType === "nhanvien") {
+            if (loggedInUser.ChucVu === "Admin") this.$router.push("/admin");
+            else this.$router.push("/staff");
+          } else {
+            this.$router.push("/");
+          }
         }, 700);
-        
-        // Nếu là Admin, router middleware sẽ tự redirect sang /admin
-        // với timeout 700ms để hiển thị success message
 
       } catch (error) {
         this.loading = false;
-        this.errorMessage = "MSNV hoặc mật khẩu không đúng.";
+        this.errorMessage =
+          error.message || "Đăng nhập thất bại. Vui lòng thử lại.";
       }
     },
   },
 };
 </script>
 
+
+
 <style scoped>
-/*
-  PHẦN STYLE (Đã sửa .error-feedback)
-*/
+/* ==== Toast (Giữ nguyên) ==== */
 @keyframes slideInFromRight {
   from { transform: translateX(100%); opacity: 0; }
   to { transform: translateX(0); opacity: 1; }
 }
 @keyframes fadeOut {
   from { opacity: 1; }
-  99% { transform: translateX(0); opacity: 1; }
   to { transform: translateX(50px); opacity: 0; }
 }
 .toast-animated {
@@ -215,74 +209,196 @@ export default {
   color: white;
   padding: 16px 24px;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   z-index: 1000;
   font-weight: bold;
   animation: slideInFromRight 0.5s ease-out, fadeOut 0.5s ease-in 3s forwards;
 }
+
+/* ==== 🎨 START: CẬP NHẬT GIAO DIỆN NỔI BẬT HƠN ==== */
+
+/* ==== Layout ==== */
 .login-container {
-  min-height: 85vh; 
+  min-height: 90vh; 
+  background-color: #f9fafb; 
+  padding: 50px 0;
+  display: flex; /* Dùng flexbox để căn giữa hoàn hảo */
+  align-items: center; /* Căn giữa theo chiều dọc */
+  justify-content: center; /* Căn giữa theo chiều ngang */
 }
+
 .form-container {
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(5px); 
-  padding: 30px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  background: #ffffff;
+  padding: 40px;
+  border-radius: 16px; /* Bo góc nhiều hơn nữa */
+  box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.1), 0 4px 10px -4px rgb(0 0 0 / 0.05); /* Đổ bóng mạnh hơn một chút */
+  max-width: 440px; /* Tăng nhẹ độ rộng để thoáng hơn */
+  width: 100%; /* Đảm bảo nó dùng hết max-width */
+  margin: 0 auto; /* Căn giữa form */
 }
 
-/* FIX: SỬA LỖI KHOẢNG CÁCH */
-.error-feedback {
-  color: #dc3545;
-  font-weight: bold;
-  margin-top: 4px;
-  margin-bottom: 0;
-  min-height: 0;
+/* Tiêu đề */
+.text-center h4 {
+  font-weight: 700;
+  font-size: 28px; /* Tăng kích thước tiêu đề chính */
+  color: #1a202c; /* Màu tối hơn cho tiêu đề */
+  margin-bottom: 8px;
+}
+.text-secondary-light {
+  color: #6b7280;
+  font-size: 15px;
+  line-height: 1.5; /* Tăng line-height cho dễ đọc */
+}
+.form-label {
+  font-weight: 600;
+  font-size: 14px;
+  color: #374151;
+  margin-bottom: 8px; 
+  display: block; /* Đảm bảo label chiếm một dòng riêng */
 }
 
-/* CSS CHO TAB (Giữ nguyên) */
-.nav-pills .nav-link {
-  color: #f8f9fa;
-  font-weight: 500;
-  border: 1px solid transparent;
-  cursor: pointer;
-}
-.nav-pills .nav-link.active {
-  color: #fff;
-  background-color: rgba(0, 123, 255, 0.5);
-  border-color: #007bff;
-}
-.nav-pills .nav-link:not(.active):hover {
-  background-color: rgba(255, 255, 255, 0.1);
+/* ==== Input + Icon ==== */
+.input-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 14px;
+  color: #9ca3af;
+  font-size: 19px; /* Tăng kích thước icon */
+  min-width: 40px; /* Đảm bảo icon có đủ không gian */
+  transition: color 0.2s ease; /* Hiệu ứng chuyển màu cho icon */
 }
 
-/* CSS CHO INPUT (STYLE VIỀN DƯỚI) - Giữ nguyên */
+.input-group-custom {
+  display: flex;
+  align-items: center;
+  border: 1px solid #e2e8f0; /* Viền sáng hơn */
+  border-radius: 10px; /* Bo góc nhẹ hơn cho input group */
+  background-color: #f8fafc; /* Nền input hơi xám */
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+/* Hiệu ứng khi bấm vào (Focus) */
+.input-group-custom:focus-within {
+  border-color: #2563eb; /* Màu xanh đậm hơn khi focus */
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2); /* Đổ bóng xanh nhẹ */
+  background-color: #ffffff; /* Nền trắng khi focus */
+}
+.input-group-custom:focus-within .input-icon {
+  color: #2563eb; /* Màu icon đổi thành xanh khi focus */
+}
+
 .form-control {
-  background: transparent !important; 
-  border: none !important; 
-  border-bottom: 2px solid rgba(255, 255, 255, 0.3) !important; 
-  border-radius: 0 !important; 
-  color: white !important;
-  padding-left: 0;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  
+  flex-grow: 1; 
+  
+  padding: 13px 14px 13px 12px; /* Padding lớn hơn cho input */
+  height: 48px; /* Chiều cao cố định, lớn hơn */
+  font-size: 16px; /* Font chữ to hơn */
+  background-color: transparent; 
+  color: #1a202c; /* Màu chữ đậm */
 }
+
+/* ĐÃ XÓA KHỐI CSS GÂY LỖI TẠI ĐÂY */
+
 .form-control::placeholder {
-  color: rgba(255, 255, 255, 0.5);
-  opacity: 1;
+  color: #9ca3af; 
+  /* ĐÃ XÓA TRANSITION TẠI ĐÂY */
 }
-.form-control:focus {
-  background: transparent !important; 
-  border-color: #58a6ff !important; 
-  box-shadow: none !important; 
-  color: white !important;
+
+/* Nút con mắt */
+.password-input .btn-toggle-password {
+  position: static; 
+  transform: none;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 19px; /* Đồng bộ kích thước icon */
+  color: #9ca3af;
+  padding: 0 16px;
+  z-index: 3;
 }
-input:-webkit-autofill,
-input:-webkit-autofill:hover, 
-input:-webkit-autofill:focus, 
-input:-webkit-autofill:active {
-    -webkit-text-fill-color: white !important; 
-    -webkit-box-shadow: none !important; 
-    transition: background-color 5000s ease-in-out 0s, color 5000s ease-in-out 0s;
-    background-color: transparent !important; 
+.password-input .btn-toggle-password:hover {
+  color: #374151;
+}
+
+.password-input .form-control {
+  padding-right: 0 !important; 
+}
+
+
+/* Error */
+.error-feedback {
+  color: #e53e3e; /* Màu đỏ sáng hơn */
+  font-size: 13px;
+  margin-top: 6px; 
+}
+
+/* Button */
+.btn-primary {
+  background-color: #2563eb; /* Màu xanh đậm hơn, đồng bộ với focus */
+  border: none; /* Bỏ border */
+  font-weight: 600;
+  padding: 14px; /* Nút to hơn */
+  border-radius: 10px; /* Đồng bộ bo góc */
+  font-size: 16px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.25); /* Thêm bóng mờ cho nút */
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #1d4ed8; /* Màu xanh đậm hơn khi hover */
+  transform: translateY(-2px); /* Hiệu ứng nhấc lên */
+  box-shadow: 0 6px 16px 0 rgba(37, 99, 235, 0.3); /* Bóng mờ rõ hơn */
+}
+.btn-primary:disabled {
+  background-color: #2563eb;
+  opacity: 0.6;
+}
+
+/* Link */
+.text-link, .text-link-small {
+  color: #2563eb !important; /* Đồng bộ màu link */
+  text-decoration: none;
+  font-weight: 600; 
+}
+.text-link-small {
+  font-weight: 500;
+  font-size: 14px;
+}
+.text-link:hover,
+.text-link-small:hover {
+  text-decoration: underline;
+  color: #1d4ed8 !important;
+}
+
+.alert {
+  border-radius: 8px; /* Đồng bộ bo góc */
+  font-size: 14px;
+  padding: 12px 16px;
+  background-color: #fff5f5; /* Nền đỏ nhạt */
+  color: #c53030; /* Chữ đỏ đậm */
+  border: 1px solid #fed7d7; /* Viền đỏ nhạt */
+}
+
+/* ==== KHẮC PHỤC LỖI AUTOFILL CỦA TRÌNH DUYỆT ==== */
+.form-control:-webkit-autofill,
+.form-control:-webkit-autofill:hover, 
+.form-control:-webkit-autofill:focus, 
+.form-control:-webkit-autofill:active {
+    -webkit-text-fill-color: #1a202c; /* Đồng bộ màu chữ */
+    transition: background-color 5000s ease-in-out 0s;
+    /* Hack: Vẽ bóng trắng đè lên nền autofill của trình duyệt */
+    /* Cập nhật màu nền này để khớp với màu .input-group-custom */
+    box-shadow: 0 0 0 1000px #f8fafc inset !important;
+}
+
+/* Khi focus vào input đã autofill */
+.input-group-custom:focus-within .form-control:-webkit-autofill {
+  /* Đổi nền thành trắng để khớp với hiệu ứng focus */
+  box-shadow: 0 0 0 1000px #ffffff inset !important; 
 }
 </style>

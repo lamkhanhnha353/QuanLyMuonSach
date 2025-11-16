@@ -1,112 +1,180 @@
 <template>
-  <div class="register-wrapper">
-    <div class="register-card">
-      <div class="form-header">
-        <h4 class="text-white mb-0">Đăng Ký Độc Giả</h4>
-        <button type="button" class="btn-close btn-close-white" @click="goBackToLogin" title="Đóng"></button>
-      </div>
-      <div class="form-container">
-        
-        <Form 
-          @submit="handleRegister" 
-          :validation-schema="registerSchema"  
-          v-slot="{ resetForm }" 
-          :validate-on-input="true" 
-        >
-          
-          <div class="row">
-            <div class="col-md-6">
-              <div class="form-group mb-2">
-                <label for="HOLOT" class="form-label">Họ</label>
-                <Field name="HOLOT" type="text" class="form-control" />
-                <ErrorMessage name="HOLOT" class="error-feedback" />
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="form-group mb-2">
-                <label for="TEN" class="form-label">Tên</label>
-                <Field name="TEN" type="text" class="form-control" />
-                <ErrorMessage name="TEN" class="error-feedback" />
-              </div>
-            </div>
+  <div v-if="successMessage" class="toast-animated">
+    {{ successMessage }}
+  </div>
+
+  <div class="register-container d-flex align-items-center justify-content-center">
+    <div class="row justify-content-center w-100">
+      <div class="col-10 col-sm-10 col-md-8 col-lg-8">
+
+        <div class="form-container">
+          <div class="text-center mb-4">
+            <h4 class="mb-1 text-dark">Tạo Tài Khoản</h4>
+            <p class="text-secondary-light mb-0">
+              Đăng ký để bắt đầu khám phá thư viện.
+            </p>
           </div>
 
-          <div class="row">
-            <div class="col-md-6">
-              <div class="form-group mb-2">
-                <label for="username" class="form-label">Username</label>
-                <Field name="username" type="text" class="form-control" />
-                <ErrorMessage name="username" class="error-feedback" />
+          <Form
+            @submit="handleRegister"
+            :validation-schema="registerSchema"
+            v-slot="{ resetForm }"
+            :validate-on-input="true"
+          >
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  <label class="form-label">Họ</label>
+                  <div class="input-group-custom">
+                    <span class="input-icon">
+                      <i class="fa-solid fa-user"></i>
+                    </span>
+                    <Field name="HOLOT" type="text" class="form-control" placeholder="Nhập họ của bạn" />
+                  </div>
+                  <ErrorMessage name="HOLOT" class="error-feedback" />
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  <label class="form-label">Tên</label>
+                  <div class="input-group-custom">
+                    <span class="input-icon">
+                      <i class="fa-solid fa-user"></i>
+                    </span>
+                    <Field name="TEN" type="text" class="form-control" placeholder="Nhập tên của bạn" />
+                  </div>
+                  <ErrorMessage name="TEN" class="error-feedback" />
+                </div>
               </div>
             </div>
-            <div class="col-md-6">
-              <div class="form-group mb-2">
-                <label for="DIENTHOAI" class="form-label">Điện thoại</label>
-                <Field name="DIENTHOAI" type="tel" class="form-control" />
-                <ErrorMessage name="DIENTHOAI" class="error-feedback" />
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  <label class="form-label">Tên đăng nhập</label>
+                  <div class="input-group-custom">
+                    <span class="input-icon">
+                      <i class="fa-solid fa-at"></i>
+                    </span>
+                    <Field name="username" type="text" class="form-control" placeholder="Chọn tên đăng nhập" />
+                  </div>
+                  <ErrorMessage name="username" class="error-feedback" />
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  <label class="form-label">Mật khẩu</label>
+                  <div class="input-group-custom password-input">
+                    <span class="input-icon">
+                      <i class="fa-solid fa-lock"></i>
+                    </span>
+                    
+                    <Field 
+                      name="password" 
+                      :type="showPassword ? 'text' : 'password'" 
+                      class="form-control" 
+                      placeholder="Nhập mật khẩu của bạn"
+                      v-model="passwordValue" 
+                    />
+                    
+                    <button v-if="passwordValue" type="button" @click="togglePasswordVisibility" class="password-toggle-btn">
+                      <i :class="showPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"></i>
+                    </button>
+                  </div>
+                  <ErrorMessage name="password" class="error-feedback" />
+                </div>
               </div>
             </div>
-          </div>
 
-          <div class="row">
-            <div class="col-md-7">
-              <div class="form-group mb-2">
-                <label for="NGAYSINH" class="form-label">Ngày sinh</label>
-                <Field name="NGAYSINH" type="date" class="form-control date-input" />
-                <ErrorMessage name="NGAYSINH" class="error-feedback" />
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  <label class="form-label">Điện thoại</label>
+                  <div class="input-group-custom">
+                    <span class="input-icon">
+                      <i class="fa-solid fa-phone"></i>
+                    </span>
+                    <Field name="DIENTHOAI" type="tel" class="form-control" placeholder="Nhập số điện thoại" />
+                  </div>
+                  <ErrorMessage name="DIENTHOAI" class="error-feedback" />
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  <label class="form-label">Ngày sinh</label>
+                  <div class="input-group-custom">
+                    <span class="input-icon">
+                      <i class="fa-solid fa-calendar"></i>
+                    </span>
+                    <Field name="NGAYSINH" type="date" class="form-control date-input" />
+                  </div>
+                  <ErrorMessage name="NGAYSINH" class="error-feedback" />
+                </div>
               </div>
             </div>
-            <div class="col-md-5">
-              <div class="form-group mb-2">
-                <label for="GIOITINH" class="form-label">Giới tính</label>
-                <Field name="GIOITINH" as="select" class="form-select select-input">
-                  <option value="" disabled>-- Chọn --</option>
-                  <option value="Nam">Nam</option>
-                  <option value="Nữ">Nữ</option>
-                </Field>
-                <ErrorMessage name="GIOITINH" class="error-feedback" />
+
+            <div class="row">
+              <div class="col-md-5">
+                <div class="form-group mb-3">
+                  <label class="form-label">Giới tính</label>
+                  <div class="input-group-custom">
+                    <span class="input-icon">
+                      <i class="fa-solid fa-venus-mars"></i>
+                    </span>
+                    <Field name="GIOITINH" as="select" class="form-control select-input">
+                      <option value="" disabled selected>-- Chọn giới tính --</option>
+                      <option value="Nam">Nam</option>
+                      <option value="Nữ">Nữ</option>
+                    </Field>
+                  </div>
+                  <ErrorMessage name="GIOITINH" class="error-feedback" />
+                </div>
+              </div>
+              <div class="col-md-7">
+                <div class="form-group mb-3">
+                  <label class="form-label">Địa chỉ</label>
+                  <div class="input-group-custom">
+                    <span class="input-icon">
+                      <i class="fa-solid fa-map-pin"></i>
+                    </span>
+                    <Field name="DIACHI" type="text" class="form-control" placeholder="Nhập địa chỉ của bạn" />
+                  </div>
+                  <ErrorMessage name="DIACHI" class="error-feedback" />
+                </div>
               </div>
             </div>
+            
+            <div class="form-group mt-3"> 
+              <button class="btn btn-primary w-100" :disabled="loading">
+                <span v-if="!loading">Đăng ký</span>
+                <span v-else>Đang xử lý...</span>
+              </button>
+            </div>
+
+          </Form>
+
+          <div class="text-center mt-3"> 
+            <small class="text-secondary-light">
+              Đã có tài khoản?
+              <router-link to="/login" class="text-link">Đăng nhập ngay</router-link>
+            </small>
           </div>
 
-          <div class="form-group mb-2"> 
-            <label for="password" class="form-label">Password</label>
-            <Field name="password" type="password" class="form-control" />
-            <ErrorMessage name="password" class="error-feedback" />
-          </div> 
-
-          <div class="form-group mb-3">
-            <label for="DIACHI" class="form-label">Địa chỉ</label>
-            <Field name="DIACHI" type="text" class="form-control" />
-            <ErrorMessage name="DIACHI" class="error-feedback" />
-          </div>
-
-          <div class="form-group">
-            <button class="btn btn-primary w-100" :disabled="loading">
-              <span>Đăng ký</span>
-            </button>
-          </div>
-          
           <div class="form-group mt-3" v-if="errorMessage">
             <div class="alert alert-danger">
               {{ errorMessage }}
             </div>
           </div>
-        </Form>
-      </div>
-    </div>
 
-    <div v-if="successMessage" class="toast-animated">
-      {{ successMessage }}
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-// --- PHẦN SCRIPT ĐÃ THAY ĐỔI ---
 import { Form, Field, ErrorMessage } from "vee-validate";
 import * as yup from "yup";
-// 1. ĐỔI IMPORT
 import AuthService from "@/services/auth.service";
 
 export default {
@@ -117,7 +185,6 @@ export default {
     ErrorMessage,
   },
   data() {
-    // Cập nhật schema (giữ nguyên)
     const registerSchema = yup.object().shape({
       username: yup.string().required("Username là bắt buộc!"),
       password: yup.string().required("Password là bắt buộc!").min(6),
@@ -134,102 +201,55 @@ export default {
 
     return {
       loading: false,
-      successMessage: "", // Cho toast
-      errorMessage: "",   // Cho alert
+      successMessage: "", 
+      errorMessage: "",   
       registerSchema,
+      showPassword: false,
+      passwordValue: '', // THAY ĐỔI 3: Thêm biến v-model
     };
   },
   methods: {
     goBackToLogin() {
       this.$router.push("/login");
     },
-    // 2. CẬP NHẬT HÀM NÀY
     async handleRegister(user, { resetForm }) {
       this.loading = true;
       this.successMessage = "";
       this.errorMessage = ""; 
 
       try {
-        // 3. DÙNG AUTHSERVICE.REGISTER
         await AuthService.register(user);
         
         this.loading = false;
-        this.successMessage = "Đăng ký thành công! Đang chuyển hướng..."; // Hiện toast
-        resetForm(); // Xóa form
+        this.successMessage = "Đăng ký thành công! Đang chuyển hướng..."; 
+        resetForm();
 
-        // Tự động chuyển trang sau 3.5 giây
         setTimeout(() => {
           this.$router.push("/login");
-        }, 700); // 3500ms = 3.5 giây
+        }, 700);
 
       } catch (error) {
         this.loading = false;
         this.errorMessage = error.response?.data?.message || "Đã có lỗi xảy ra.";
       }
     },
+    togglePasswordVisibility() {
+      this.showPassword = !this.showPassword;
+    },
   },
 };
 </script>
 
 <style scoped>
-/* Layout wrapper & card */
-.register-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: calc(100vh - 56px);
-  padding: 20px;
-}
-
-.register-card {
-  width: 100%;
-  max-width: 500px;
-  background-color: rgba(0, 0, 0, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-  overflow: hidden;
-}
-
-.form-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 30px;
-  background-color: rgba(0, 0, 0, 0.5);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.form-header h4 {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 600;
-}
-
-.btn-close-white {
-  opacity: 0.8;
-  transition: opacity 0.2s ease;
-}
-
-.btn-close-white:hover {
-  opacity: 1;
-}
-
-.form-container {
-  padding: 30px;
-}
-
-/* Toast animation */
+/* ==== Toast (Giữ nguyên) ==== */
 @keyframes slideInFromRight {
   from { transform: translateX(100%); opacity: 0; }
   to { transform: translateX(0); opacity: 1; }
 }
 @keyframes fadeOut {
   from { opacity: 1; }
-  99% { transform: translateX(0); opacity: 1; }
   to { transform: translateX(50px); opacity: 0; }
 }
-
 .toast-animated {
   position: fixed;
   top: 80px;
@@ -238,80 +258,254 @@ export default {
   color: white;
   padding: 16px 24px;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 1000;
   font-weight: bold;
   animation: slideInFromRight 0.5s ease-out, fadeOut 0.5s ease-in 3s forwards;
 }
 
-/* Form styling */
-.form-label {
-  color: #f8f9fa;
-  font-weight: 500;
+/* ==== Layout ==== */
+.register-container {
+  min-height: 90vh; 
+  background-color: #f9fafb; 
+  padding: 30px 0; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.error-feedback {
-  color: #dc3545;
-  min-height: 1.5em;
+.form-container {
+  background: #ffffff;
+  padding: 30px; 
+  border-radius: 16px;
+  box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.1), 0 4px 10px -4px rgb(0 0 0 / 0.05);
+  max-width: 650px; 
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Tiêu đề */
+.text-center h4 {
+  font-weight: 700;
+  font-size: 28px;
+  color: #1a202c;
+  margin-bottom: 8px;
+}
+.text-secondary-light {
+  color: #6b7280;
+  font-size: 15px;
+  line-height: 1.5;
+}
+.text-dark {
+  color: #1a202c;
+}
+
+.form-label {
+  font-weight: 600;
+  font-size: 14px;
+  color: #374151;
+  margin-bottom: 8px;
+  display: block;
+}
+
+/* ==== Input + Icon ==== */
+.input-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 14px;
+  color: #9ca3af;
+  font-size: 19px;
+  min-width: 40px;
+  transition: color 0.2s ease;
+}
+
+.input-group-custom {
+  display: flex;
+  align-items: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background-color: #f8fafc;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.input-group-custom:focus-within {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+  background-color: #ffffff;
+}
+.input-group-custom:focus-within .input-icon {
+  color: #2563eb;
 }
 
 .form-control {
-  background: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  color: white !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  flex-grow: 1;
+  padding: 13px 14px 13px 12px;
+  height: 48px;
+  font-size: 16px;
+  background-color: transparent;
+  color: #1a202c;
 }
 
-.date-input,
-.select-input {
-  background: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  color: white !important;
+.form-control::placeholder {
+  color: #9ca3af;
 }
 
-.select-input option {
-  background-color: #212529;
-  color: white;
+.date-input {
+  background-color: transparent !important;
 }
 
 .date-input::-webkit-calendar-picker-indicator {
-  filter: invert(1); 
+  filter: invert(0.8);
+  cursor: pointer;
 }
 
-.form-control:focus,
-.date-input:focus,
-.select-input:focus {
-  background: rgba(0, 0, 0, 0.2) !important;
-  border-color: #58a6ff !important;
-  box-shadow: 0 0 0 0.25rem rgba(88, 166, 255, 0.25) !important;
-  color: white !important;
+.select-input {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 20px;
+  padding-right: 40px !important;
 }
 
-input:-webkit-autofill,
-input:-webkit-autofill:hover, 
-input:-webkit-autofill:focus, 
-input:-webkit-autofill:active {
-    -webkit-text-fill-color: white !important; 
-    -webkit-box-shadow: 0 0 0 30px rgba(255, 255, 255, 0.05) inset !important;
-    background-color: rgba(255, 255, 255, 0.05) !important; 
-    transition: background-color 5000s ease-in-out 0s, color 5000s ease-in-out 0s;
+.select-input option {
+  background-color: #ffffff;
+  color: #1a202c;
+}
+
+/* Style cho nút show/hide password */
+.password-input {
+  position: relative;
+}
+
+/* THAY ĐỔI 4: Thêm rule này để text không bị cách quá xa icon */
+.password-input .form-control {
+  padding-right: 0;
+}
+
+.password-toggle-btn {
+  background: none;
+  border: none;
+  padding: 0 14px;
+  cursor: pointer;
+  color: #9ca3af;
+  font-size: 19px;
+  display: flex; 
+  align-items: center; 
+  height: 100%; 
+  outline: none;
+}
+
+.input-group-custom:focus-within .password-toggle-btn {
+  color: #2563eb; 
+}
+
+/* Error */
+.error-feedback {
+  color: #e53e3e;
+  font-size: 13px;
+  margin-top: 6px;
+  min-height: 1.2em;
+}
+
+/* Button */
+.btn-primary {
+  background-color: #2563eb;
+  border: none;
+  font-weight: 600;
+  padding: 14px;
+  border-radius: 10px;
+  font-size: 16px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.25);
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #1d4ed8;
+  box-shadow: 0 6px 20px 0 rgba(37, 99, 235, 0.35);
+}
+
+.btn-primary:disabled {
+  background-color: #cbd5e1;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* Alert */
+.alert {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin: 0;
+}
+
+.alert-danger {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+/* Link */
+.text-link {
+  color: #2563eb;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.text-link:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
 }
 
 /* Responsive */
-@media (max-width: 576px) {
-  .register-card {
+@media (max-width: 767.98px) {
+  .form-container {
+    padding: 30px 20px; 
+  }
+  
+  .row > [class*="col-md-"] {
+    width: 100%;
+    flex: 0 0 100%;
     max-width: 100%;
   }
 
-  .form-header {
-    padding: 15px 20px;
+  .text-center h4 {
+    font-size: 24px;
   }
 
-  .form-container {
-    padding: 20px;
+  .form-control {
+    height: 44px;
+    font-size: 15px;
+    padding: 12px 12px 12px 12px;
+  }
+  
+  /* Cần override lại padding-right cho password trên mobile */
+  .password-input .form-control {
+    padding-right: 0;
   }
 
-  .form-header h4 {
-    font-size: 18px;
+  .btn-primary {
+    padding: 12px;
+    font-size: 15px;
   }
+}
+
+/* ==== KHẮC PHỤC LỖI AUTOFILL (Thêm vào) ==== */
+.form-control:-webkit-autofill,
+.form-control:-webkit-autofill:hover, 
+.form-control:-webkit-autofill:focus, 
+.form-control:-webkit-autofill:active {
+    -webkit-text-fill-color: #1a202c; 
+    transition: background-color 5000s ease-in-out 0s;
+    box-shadow: 0 0 0 1000px #f8fafc inset !important;
+}
+
+.input-group-custom:focus-within .form-control:-webkit-autofill {
+  box-shadow: 0 0 0 1000px #ffffff inset !important; 
 }
 </style>
