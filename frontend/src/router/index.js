@@ -12,6 +12,7 @@ import StaffLayout from "@/layouts/StaffLayout.vue";
 // Trang Public
 import HomePage from "@/views/HomePage.vue";
 import BooksExplore from "@/views/BooksExplore.vue";
+import BookDetail from "@/views/BookDetail.vue";
 import DocGiaRegister from "@/views/DocGiaRegister.vue";
 import Login from "@/views/Login.vue";
 
@@ -48,6 +49,7 @@ const routes = [
     children: [
       { path: "", name: "home", component: HomePage },
       { path: "books", name: "books.explore", component: BooksExplore },
+      { path: "books/:id", name: "books.detail", component: BookDetail },
       { path: "docgia/register", name: "docgia.register", component: DocGiaRegister },
       { path: "login", name: "login", component: Login },
     ],

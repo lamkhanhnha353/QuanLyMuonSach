@@ -14,7 +14,11 @@ class SachService {
             NAMXUATBAN: payload.NAMXUATBAN,
             MANXB: payload.MANXB,
             TACGIA: payload.TACGIA, 
-            HinhAnh: payload.HinhAnh, // <-- FIX 1: THÊM TRƯỜNG HÌNH ẢNH
+            HinhAnh: payload.HinhAnh,
+            SOTRANG: payload.SOTRANG,
+            MOTA: payload.MOTA,
+            NGONNGU: payload.NGONNGU,
+            THELOAI: payload.THELOAI,
         };
 
         // Loại bỏ các trường không xác định (undefined)

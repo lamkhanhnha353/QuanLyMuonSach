@@ -73,6 +73,45 @@
             </div>
           </div>
 
+          <div class="row">
+  
+            <div class="col-md-3">
+              <div class="form-group mb-3">
+                <label for="SOTRANG" class="form-label">Số Trang</label>
+                <Field name="SOTRANG" type="number" class="form-control" />
+                <ErrorMessage name="SOTRANG" class="error-feedback" />
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="form-group mb-3">
+                <label for="NGONNGU" class="form-label">Ngôn Ngữ</label>
+                <Field name="NGONNGU" type="text" class="form-control" placeholder="Tiếng Việt" />
+                <ErrorMessage name="NGONNGU" class="error-feedback" />
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group mb-3">
+                <label for="THELOAI" class="form-label">Thể Loại</label>
+                <Field name="THELOAI" type="text" class="form-control" />
+                <ErrorMessage name="THELOAI" class="error-feedback" />
+              </div>
+            </div>
+            
+          </div>
+
+          <div class="row">
+            <div class="col-md-12">
+              <div class="form-group mb-3">
+                <label for="MOTA" class="form-label">Mô Tả</label>
+                <Field name="MOTA" as="textarea" class="form-control" rows="4" />
+                <ErrorMessage name="MOTA" class="error-feedback" />
+              </div>
+            </div>
+          </div>
+
           <div class="form-group text-end">
             <button class="btn btn-primary" :disabled="loading">
               <i class="fas fa-plus-circle me-1"></i> Tạo Mới
@@ -112,6 +151,12 @@ export default {
       SOQUYEN: yup.number().required("Số quyển là bắt buộc!").typeError("Số quyển phải là số").min(1),
       DONGIA: yup.number().required("Đơn giá là bắt buộc!").typeError("Đơn giá phải là số").min(0),
       HinhAnh: yup.string().url("Phải là URL hợp lệ").optional().nullable(),
+      ISBN: yup.string().optional().nullable(),
+      SOTRANG: yup.number().optional().nullable().typeError("Số trang phải là số"),
+      NGONNGU: yup.string().optional().nullable(),
+      THELOAI: yup.string().optional().nullable(),
+      NHAXUATBAN: yup.string().optional().nullable(),
+      MOTA: yup.string().optional().nullable(),
     });
 
     return {
