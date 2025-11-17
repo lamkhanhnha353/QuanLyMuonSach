@@ -1,6 +1,4 @@
 // Tên tệp: src/router/index.js
-// (Dán đè toàn bộ nội dung tệp)
-
 import { createRouter, createWebHistory } from "vue-router";
 import AuthService from "@/services/auth.service";
 
@@ -36,7 +34,8 @@ import NhaXuatBanAdd from "@/views/NhaXuatBanAdd.vue";
 import NhaXuatBanEdit from "@/views/NhaXuatBanEdit.vue";
 
 // Trang Staff
-import StaffDashboard from "@/views/StaffDashboard.vue";
+// import StaffDashboard from "@/views/StaffDashboard.vue"; // <-- Dòng này không cần nữa
+import StaffOverview from "@/views/StaffOverview.vue"; // <-- THAY ĐỔI 1: IMPORT FILE MỚI
 import StaffSachManagement from "@/views/StaffSachManagement.vue";
 import StaffMuonSachManagement from "@/views/StaffMuonSachManagement.vue";
 
@@ -110,9 +109,14 @@ const routes = [
       }
     },
     children: [
-      { path: "", name: "staff.dashboard", component: StaffDashboard },
+      // THAY ĐỔI 2: Đổi component của trang Tổng quan
+      { path: "", name: "staff.dashboard", component: StaffOverview },
       { path: "sach", name: "staff.sach", component: StaffSachManagement },
       { path: "muonsach", name: "staff.muonsach", component: StaffMuonSachManagement },
+      // Bạn có link "Quản lý Người dùng" trong layout,
+      // nhưng chưa có route cho nó. Bạn cần thêm 1 route
+      // { path: "nguoidung", name: "staff.nguoidung", component: StaffNguoiDungManagement }
+      // khi bạn tạo file component đó.
     ],
   },
 ];

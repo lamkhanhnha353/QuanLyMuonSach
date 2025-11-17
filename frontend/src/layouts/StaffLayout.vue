@@ -16,6 +16,13 @@
       </div>
 
       <ul class="nav nav-pills flex-column mb-auto">
+        
+        <li class="nav-item">
+          <router-link to="/" exact class="nav-link d-flex align-items-center">
+            <i class="fas fa-home"></i> Về Trang chủ
+          </router-link>
+        </li>
+
         <li class="nav-item">
           <router-link to="/staff" exact class="nav-link d-flex align-items-center">
             <i class="fas fa-chart-pie"></i> Tổng quan
