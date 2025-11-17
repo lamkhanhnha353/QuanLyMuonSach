@@ -1,454 +1,692 @@
 <template>
-  <div class="muon-sach-management">
-    <div class="row mb-4">
-      <div class="col-md-4">
-        <div class="stats-card card h-100">
-          <div class="card-body d-flex align-items-center">
-            <div class="stats-icon bg-light-warning me-3">
-              <i class="fas fa-inbox text-warning"></i>
-            </div>
-            <div>
-              <h5 class="card-title fw-bold mb-1">12</h5>
-              <p class="card-text text-muted mb-0">Yêu cầu mượn chờ duyệt</p>
-            </div>
-          </div>
+  <div class="staff-dashboard">
+    <div class="stats-section">
+      <div class="stat-card">
+        <div class="stat-icon pending">
+          <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-label">Yêu Cầu Chờ Xử Lý</div>
+          <div class="stat-value">{{ pendingCount }}</div>
         </div>
       </div>
-      <div class="col-md-4">
-        <div class="stats-card card h-100">
-          <div class="card-body d-flex align-items-center">
-            <div class="stats-icon bg-light-danger me-3">
-              <i class="fas fa-book-dead text-danger"></i>
-            </div>
-            <div>
-              <h5 class="card-title fw-bold mb-1">5</h5>
-              <p class="card-text text-muted mb-0">Sách quá hạn</p>
-            </div>
-          </div>
+
+      <div class="stat-card">
+        <div class="stat-icon borrowed">
+          <i class="fas fa-book"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-label">Sách Đang Mượn</div>
+          <div class="stat-value">{{ borrowedCount }}</div>
         </div>
       </div>
-      <div class="col-md-4">
-        <div class="stats-card card h-100">
-          <div class="card-body d-flex align-items-center">
-            <div class="stats-icon bg-light-info me-3">
-              <i class="fas fa-undo-alt text-info"></i>
-            </div>
-            <div>
-              <h5 class="card-title fw-bold mb-1">8</h5>
-              <p class="card-text text-muted mb-0">Yêu cầu trả chờ xác nhận</p>
-            </div>
-          </div>
+
+      <div class="stat-card">
+        <div class="stat-icon return">
+          <i class="fas fa-undo"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-label">Yêu Cầu Trả</div>
+          <div class="stat-value">{{ returnCount }}</div>
         </div>
       </div>
     </div>
 
-    <div class="card shadow-sm border-0">
-      <div class="card-header bg-white pt-3 pb-0 border-0">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h4 class="mb-0 fw-bold">
-            <i class="fas fa-receipt me-2 text-primary"></i>Quản Lý Phiếu Mượn
-          </h4>
-          <button class="btn btn-primary" @click="openAddModal">
-            <i class="fas fa-plus me-2"></i>Thêm Phiếu Mượn
-          </button>
-        </div>
+    <div class="filter-section">
+      <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input 
+          v-model="searchQuery"
+          type="text" 
+          placeholder="Tìm kiếm theo mã nhân viên, mã độc giả, tên sách..."
+          @keyup.enter="applyFilters"
+        >
+      </div>
+      <div class="filter-box">
+        <i class="fas fa-filter"></i>
+        <select v-model="statusFilter" @change="applyFilters">
+          <option value="all">Tất cả trạng thái</option>
+          <option value="chờ duyệt">Chờ duyệt</option>
+          <option value="đã duyệt">Đã duyệt</option>
+          <option value="đang mượn">Đang mượn</option>
+          <option value="đã trả">Đã trả</option>
+          <option value="từ chối">Từ chối</option>
+          <option value="trễ hạn">Trễ hạn</option>
+        </select>
+      </div>
+    </div>
 
-        <div class="row g-2 mb-3">
-          <div class="col-md-8">
-            <div class="input-group">
-              <span class="input-group-text bg-light border-0">
-                <i class="fas fa-search"></i>
+    <div class="table-container">
+      <div class="table-header">
+        <h4>Yêu cầu mượn/trả</h4>
+        <button class="btn-refresh" @click="fetchData" :disabled="loading">
+          <i class="fas fa-sync" :class="{ 'fa-spin': loading }"></i>
+        </button>
+      </div>
+
+      <div v-if="loading" class="text-center p-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+      
+      <div v-else-if="filteredData.length === 0" class="text-center p-5 text-muted">
+        Không tìm thấy yêu cầu nào phù hợp.
+      </div>
+
+      <table v-else class="main-table">
+        <thead>
+          <tr>
+            <th>STT</th>
+            <th>Mã độc giả</th>
+            <th>Tên độc giả</th>
+            <th>Tên sách</th>
+            <th>Trạng thái</th>
+            <th>Ngày mượn</th>
+            <th>Ngày trả</th>
+            <th>Hành động</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(item, index) in paginatedData" :key="item._id">
+            <td>{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
+            <td>{{ item.docGiaInfo?.username || 'N/A' }}</td>
+            <td>{{ (item.docGiaInfo?.HOLOT || '') + ' ' + (item.docGiaInfo?.TEN || '') }}</td>
+            <td>{{ item.sachInfo?.TENSACH || 'N/A' }}</td>
+            <td>
+              <span :class="['status-badge', getStatusClass(item.trangThai)]">
+                {{ item.trangThai }}
               </span>
-              <input 
-                type="text" 
-                class="form-control bg-light border-0" 
-                placeholder="Tìm kiếm phiếu mượn, độc giả, tên sách..."
-                v-model="searchQuery"
-                @input="filterMuonSach"
-              >
-            </div>
-          </div>
-          <div class="col-md-4">
-            <select class="form-select" v-model="filterStatus" @change="filterMuonSach">
-              <option value="">Tất cả Trạng Thái</option>
-              <option value="Đang mượn">Đang mượn</option>
-              <option value="Đã trả">Đã trả</option>
-              <option value="Quá hạn">Quá hạn</option>
-            </select>
-          </div>
-        </div>
-      </div>
-      <div class="card-body">
-        <div v-if="loading" class="text-center py-5">
-          <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Đang tải...</span>
-          </div>
-        </div>
-
-        <div v-else-if="filteredMuonSach.length === 0" class="alert alert-light text-center">
-          Không có phiếu mượn nào phù hợp.
-        </div>
-
-        <div class="table-responsive" v-else>
-          <table class="table table-hover align-middle">
-            <thead>
-              <tr>
-                <th>Mã Phiếu</th>
-                <th>Độc Giả</th>
-                <th>Sách</th>
-                <th>Ngày Mượn</th>
-                <th>Ngày Trả Dự Kiến</th>
-                <th>Ngày Trả Thực Tế</th>
-                <th>Trạng Thái</th>
-                <th>Hành Động</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="muon in filteredMuonSach" :key="muon.MaPhieu">
-                <td>{{ muon.MaPhieu }}</td>
-                <td>{{ muon.HoTenDG }}</td>
-                <td>{{ muon.TenSach }}</td>
-                <td>{{ formatDate(muon.NgayMuon) }}</td>
-                <td>{{ formatDate(muon.NgayTraDuKien) }}</td>
-                <td>{{ formatDate(muon.NgayTra) }}</td>
-                <td>
-                  <span 
-                    class="badge"
-                    :class="{
-                      'badge-light-warning': muon.TrangThai === 'Đang mượn',
-                      'badge-light-success': muon.TrangThai === 'Đã trả',
-                      'badge-light-danger': muon.TrangThai === 'Quá hạn'
-                    }"
-                  >
-                    {{ muon.TrangThai }}
-                  </span>
-                </td>
-                <td>
-                  <button 
-                    class="btn btn-sm btn-outline-primary me-2" 
-                    @click="openEditModal(muon)"
-                    title="Chỉnh sửa"
-                  >
-                    <i class="fas fa-edit"></i>
+            </td>
+            <td>{{ formatDate(item.ngayMuon) }}</td>
+            <td>{{ formatDate(item.ngayTra) }}</td>
+            <td>
+              <div class="action-buttons">
+                <template v-if="item.trangThai === 'chờ duyệt'">
+                  <button class="btn-action confirm" title="Duyệt yêu cầu" @click="openUpdateModal(item, 'đã duyệt')">
+                    <i class="fas fa-check"></i>
                   </button>
-                  <button 
-                    class="btn btn-sm btn-outline-danger" 
-                    @click="deleteMuonSach(muon.MaPhieu)"
-                    title="Xóa"
-                  >
-                    <i class="fas fa-trash"></i>
+                  <button class="btn-action cancel" title="Từ chối yêu cầu" @click="openUpdateModal(item, 'từ chối')">
+                    <i class="fas fa-times"></i>
                   </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+                </template>
+                
+                <template v-if="item.trangThai === 'đã duyệt'">
+                  <button class="btn-action confirm" title="Xác nhận đã lấy sách" @click="openUpdateModal(item, 'đang mượn')">
+                    <i class="fas fa-hand-holding"></i> Giao sách
+                  </button>
+                </template>
+
+                <template v-if="item.trangThai === 'đang mượn'">
+                  <button class="btn-action return" title="Xác nhận đã trả sách" @click="openUpdateModal(item, 'đã trả')">
+                    <i class="fas fa-undo"></i> Nhận trả
+                  </button>
+                </template>
+                
+                <button class="btn-action detail" title="Xem chi tiết" @click="viewDetails(item)">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <div class="pagination-container" v-if="totalPages > 1">
+        <button 
+          @click="changePage(currentPage - 1)" 
+          :disabled="currentPage === 1"
+          class="page-btn"
+        >
+          &laquo;
+        </button>
+        <button 
+          v-for="page in totalPages" 
+          :key="page" 
+          @click="changePage(page)" 
+          :class="['page-btn', { 'active': currentPage === page }]"
+        >
+          {{ page }}
+        </button>
+        <button 
+          @click="changePage(currentPage + 1)" 
+          :disabled="currentPage === totalPages"
+          class="page-btn"
+        >
+          &raquo;
+        </button>
       </div>
     </div>
 
-    <div class="modal fade" id="muonSachModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-lg">
+    <div class="modal" id="confirmUpdateModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">
-              {{ isEdit ? 'Cập Nhật Phiếu Mượn' : 'Thêm Phiếu Mượn' }}
-            </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <h5 class="modal-title">Xác nhận cập nhật</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <div class="row mb-3">
-              <div class="col-md-6">
-                <label class="form-label">Độc Giả <span class="text-danger">*</span></label>
-                <select class="form-select" v-model="formData.MaDG">
-                  <option value="">Chọn Độc Giả</option>
-                  <option v-for="dg in docGiaList" :key="dg.MaDG" :value="dg.MaDG">
-                    {{ dg.HoTenDG }}
-                  </option>
-                </select>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Sách <span class="text-danger">*</span></label>
-                <select class="form-select" v-model="formData.MaSach">
-                  <option value="">Chọn Sách</option>
-                  <option v-for="sach in sachList" :key="sach.MaSach" :value="sach.MaSach">
-                    {{ sach.TenSach }}
-                  </option>
-                </select>
-              </div>
-            </div>
-            <div class="row mb-3">
-              <div class="col-md-6">
-                <label class="form-label">Ngày Mượn <span class="text-danger">*</span></label>
-                <input type="date" class="form-control" v-model="formData.NgayMuon">
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Ngày Trả Dự Kiến <span class="text-danger">*</span></label>
-                <input type="date" class="form-control" v-model="formData.NgayTraDuKien">
-              </div>
-            </div>
-            <div class="row mb-3" v-if="isEdit">
-              <div class="col-md-6">
-                <label class="form-label">Ngày Trả Thực Tế</label>
-                <input type="date" class="form-control" v-model="formData.NgayTra">
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Trạng Thái</label>
-                <select class="form-select" v-model="formData.TrangThai">
-                  <option value="Đang mượn">Đang mượn</option>
-                  <option value="Đã trả">Đã trả</option>
-                  <option value="Quá hạn">Quá hạn</option>
-                </select>
-              </div>
-            </div>
+            <p v-if="itemToUpdate">
+              Bạn có chắc muốn cập nhật trạng thái của phiếu mượn sách <strong>{{ itemToUpdate.sachInfo?.TENSACH }}</strong>
+              (mượn bởi <strong>{{ (itemToUpdate.docGiaInfo?.HOLOT || '') + ' ' + (itemToUpdate.docGiaInfo?.TEN || '') }}</strong>)
+              thành <strong>"{{ newStatus }}"</strong>?
+            </p>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-            <button type="button" class="btn btn-primary" @click="saveMuonSach">
-              {{ isEdit ? 'Cập Nhật' : 'Thêm' }}
-            </button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+            <button type="button" class="btn btn-primary" @click="handleUpdateStatus">Xác nhận</button>
           </div>
         </div>
       </div>
     </div>
+
+    <div class="modal" id="detailModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Chi tiết Phiếu Mượn</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" v-if="selectedItem">
+            <div class="row">
+              <div class="col-md-5">
+                <h6 class="text-primary fw-bold">Thông Tin Sách</h6>
+                <img :src="selectedItem.sachInfo?.HinhAnh || defaultBookImage" class="img-fluid rounded mb-2" alt="Book cover" @error="onImgError">
+                <p><strong>Tên sách:</strong> {{ selectedItem.sachInfo?.TENSACH }}</p>
+                <p><strong>Tác giả:</strong> {{ selectedItem.sachInfo?.TACGIA }}</p>
+                <p><strong>Năm XB:</strong> {{ selectedItem.sachInfo?.NAMXUATBAN }}</p>
+              </div>
+              <div class="col-md-7">
+                <h6 class="text-primary fw-bold">Thông Tin Độc Giả</h6>
+                <p><strong>Họ tên:</strong> {{ (selectedItem.docGiaInfo?.HOLOT || '') + ' ' + (selectedItem.docGiaInfo?.TEN || '') }}</p>
+                <p><strong>Username:</strong> {{ selectedItem.docGiaInfo?.username }}</p>
+                <p><strong>Điện thoại:</strong> {{ selectedItem.docGiaInfo?.DIENTHOAI }}</p>
+                <p><strong>Địa chỉ:</strong> {{ selectedItem.docGiaInfo?.DIACHI }}</p>
+                
+                <hr>
+                
+                <h6 class="text-primary fw-bold">Thông Tin Phiếu Mượn</h6>
+                <p><strong>Trạng thái:</strong> <span :class="['status-badge', getStatusClass(selectedItem.trangThai)]">{{ selectedItem.trangThai }}</span></p>
+                <p><strong>Ngày mượn (dự kiến):</strong> {{ formatDate(selectedItem.ngayMuon) }}</p>
+                <p><strong>Ngày trả (dự kiến):</strong> {{ formatDate(selectedItem.ngayTra) }}</p>
+                <p><strong>Ngày trả (thực tế):</strong> {{ formatDate(selectedItem.ngayTraThucTe) || 'Chưa trả' }}</p>
+
+                <hr>
+                
+                <h6 class="text-primary fw-bold">Nhân Viên Xử Lý</h6>
+                <p v-if="selectedItem.nhanVienInfo">
+                  <strong>Họ tên:</strong> {{ selectedItem.nhanVienInfo?.HoTenNV }}<br>
+                  <strong>MSNV:</strong> {{ selectedItem.nhanVienInfo?.MSNV }}
+                </p>
+                <p v-else class="text-muted">
+                  (Chưa có nhân viên xử lý)
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
 <script>
 import MuonSachService from "@/services/muonsach.service";
-import SachService from "@/services/sach.service";
 import DocGiaService from "@/services/docgia.service";
-// Import Modal của Bootstrap để xử lý
-import { Modal } from 'bootstrap'; 
+import SachService from "@/services/sach.service";
+import NhanVienService from "@/services/nhanvien.service";
+import AuthService from "@/services/auth.service";
+import { Modal } from "bootstrap";
 
 export default {
-  name: "StaffMuonSachManagement",
+  name: "StaffDashboard",
   data() {
     return {
-      muonSachList: [],
-      filteredMuonSach: [],
-      sachList: [],
-      docGiaList: [],
-      searchQuery: "",
-      filterStatus: "",
+      allData: [], // Chứa tất cả dữ liệu gốc từ API
+      filteredData: [], // Dữ liệu đã lọc
+      
       loading: false,
-      isEdit: false,
-      formData: {
-        MaPhieu: null,
-        MaDG: "",
-        MaSach: "",
-        NgayMuon: "",
-        NgayTraDuKien: "",
-        NgayTra: "",
-        TrangThai: "Đang mượn",
-      },
-      muonSachModalInstance: null, // Để lưu trữ modal
+      searchQuery: "",
+      statusFilter: "all",
+      
+      currentUser: null,
+      
+      // Modals
+      updateModalInstance: null,
+      detailModalInstance: null,
+      itemToUpdate: null,
+      newStatus: "",
+      selectedItem: null,
+      defaultBookImage: "https://via.placeholder.com/300x400.png?text=No+Image",
+      
+      // Pagination
+      currentPage: 1,
+      itemsPerPage: 10,
     };
   },
-  mounted() {
-    this.loadData();
-    // Khởi tạo modal
-    const modalEl = document.getElementById("muonSachModal");
-    if(modalEl) {
-      this.muonSachModalInstance = new Modal(modalEl);
+  computed: {
+    // Thống kê
+    pendingCount() {
+      return this.allData.filter(item => item.trangThai === 'chờ duyệt').length;
+    },
+    borrowedCount() {
+      return this.allData.filter(item => item.trangThai === 'đang mượn').length;
+    },
+    returnCount() {
+      // (Giả sử bạn có trạng thái 'chờ trả' hoặc 'đã trả')
+      // Hiện tại, chúng ta đếm số sách 'đã trả'
+      return this.allData.filter(item => item.trangThai === 'đã trả').length;
+    },
+    
+    // Phân trang
+    totalPages() {
+      return Math.ceil(this.filteredData.length / this.itemsPerPage);
+    },
+    paginatedData() {
+      const start = (this.currentPage - 1) * this.itemsPerPage;
+      const end = start + this.itemsPerPage;
+      return this.filteredData.slice(start, end);
     }
   },
   methods: {
-    async loadData() {
+    async fetchData() {
       this.loading = true;
       try {
-        const [muonData, sachData, docGiaData] = await Promise.all([
-          MuonSachService.getAll(),
-          SachService.getAll(),
-          DocGiaService.getAll(),
-        ]);
-        
-        this.muonSachList = muonData.data || [];
-        this.filteredMuonSach = this.muonSachList;
-        this.sachList = sachData.data || [];
-        this.docGiaList = docGiaData.data || [];
+        // 1. Tải tất cả phiếu mượn
+        const muonSachRes = await MuonSachService.getAll();
+        let muonSachList = muonSachRes.data || [];
 
-        this.filterMuonSach();
+        // 2. Tải tất cả thông tin liên quan (song song)
+        const [docGiaRes, sachRes, nhanVienRes] = await Promise.all([
+          DocGiaService.getAll(),
+          SachService.getAll(),
+          NhanVienService.getAll()
+        ]);
+
+        const docGiaMap = new Map(docGiaRes.data.map(item => [item._id, item]));
+        const sachMap = new Map(sachRes.data.map(item => [item._id, item]));
+        const nhanVienMap = new Map(nhanVienRes.data.map(item => [item._id, item]));
+
+        // 3. Gắn thông tin vào danh sách phiếu mượn
+        muonSachList.forEach(item => {
+          item.docGiaInfo = docGiaMap.get(item.docGiaId);
+          item.sachInfo = sachMap.get(item.sachId);
+          if (item.nhanVienId) {
+            item.nhanVienInfo = nhanVienMap.get(item.nhanVienId);
+          }
+        });
+
+        this.allData = muonSachList;
+        this.applyFilters(); // Áp dụng bộ lọc ban đầu
+        
       } catch (error) {
-        console.error("Lỗi tải dữ liệu:", error);
-        alert("Lỗi khi tải dữ liệu. Vui lòng kiểm tra console.");
+        console.error("Lỗi khi tải dữ liệu:", error);
+        alert("Không thể tải dữ liệu. Vui lòng thử lại.");
       } finally {
         this.loading = false;
       }
     },
-    filterMuonSach() {
-      // Sửa lỗi logic tìm kiếm từ file gốc
-      this.filteredMuonSach = this.muonSachList.filter((muon) => {
-        const matchSearch =
-          (muon.HoTenDG || '').toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-          (muon.TenSach || '').toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-          (muon.MaPhieu || '').toString().toLowerCase().includes(this.searchQuery.toLowerCase());
+    
+    applyFilters() {
+      let result = this.allData;
 
-        const matchStatus =
-          this.filterStatus === "" || muon.TrangThai === this.filterStatus;
+      // 1. Lọc theo trạng thái
+      if (this.statusFilter !== 'all') {
+        result = result.filter(item => item.trangThai === this.statusFilter);
+      }
 
-        return matchSearch && matchStatus;
+      // 2. Lọc theo tìm kiếm
+      if (this.searchQuery) {
+        const query = this.searchQuery.toLowerCase().trim();
+        result = result.filter(item => {
+          const docGiaUser = item.docGiaInfo?.username?.toLowerCase() || '';
+          const docGiaHoTen = `${item.docGiaInfo?.HOLOT} ${item.docGiaInfo?.TEN}`.toLowerCase();
+          const tenSach = item.sachInfo?.TENSACH?.toLowerCase() || '';
+          const msnv = item.nhanVienInfo?.MSNV?.toLowerCase() || '';
+          
+          return docGiaUser.includes(query) || 
+                 docGiaHoTen.includes(query) || 
+                 tenSach.includes(query) ||
+                 msnv.includes(query);
+        });
+      }
+      
+      // Sắp xếp: các phiếu "chờ duyệt" lên đầu
+      result.sort((a, b) => {
+        if (a.trangThai === 'chờ duyệt' && b.trangThai !== 'chờ duyệt') return -1;
+        if (a.trangThai !== 'chờ duyệt' && b.trangThai === 'chờ duyệt') return 1;
+        // (Bạn có thể thêm logic sắp xếp theo ngày tháng ở đây)
+        return 0;
       });
+
+      this.filteredData = result;
+      this.currentPage = 1; // Reset về trang 1
     },
-    openAddModal() {
-      this.isEdit = false;
-      this.resetForm();
-      if(this.muonSachModalInstance) this.muonSachModalInstance.show();
+
+    // Xử lý Modal
+    openUpdateModal(item, newStatus) {
+      this.itemToUpdate = item;
+      this.newStatus = newStatus;
+      this.updateModalInstance.show();
     },
-    openEditModal(muon) {
-      this.isEdit = true;
-      this.formData = { 
-        ...muon,
-        NgayMuon: this.formatDateForInput(muon.NgayMuon),
-        NgayTraDuKien: this.formatDateForInput(muon.NgayTraDuKien),
-        NgayTra: this.formatDateForInput(muon.NgayTra),
-      };
-      if(this.muonSachModalInstance) this.muonSachModalInstance.show();
-    },
-    resetForm() {
-      this.formData = {
-        MaPhieu: null,
-        MaDG: "",
-        MaSach: "",
-        NgayMuon: new Date().toISOString().split('T')[0], // Mặc định hôm nay
-        NgayTraDuKien: "",
-        NgayTra: "",
-        TrangThai: "Đang mượn",
-      };
-    },
-    async saveMuonSach() {
+    
+    async handleUpdateStatus() {
+      if (!this.itemToUpdate || !this.newStatus || !this.currentUser) return;
+      
+      this.loading = true; // (Có thể thêm 1 cờ loading riêng cho modal)
+      
       try {
-        if (this.isEdit) {
-          await MuonSachService.update(this.formData.MaPhieu, this.formData);
-        } else {
-          const { MaPhieu, ...addData } = this.formData;
-          await MuonSachService.create(addData);
-        }
-        await this.loadData();
-        if(this.muonSachModalInstance) this.muonSachModalInstance.hide();
+        const payload = {
+          trangThai: this.newStatus,
+          nhanVienId: this.currentUser._id, // Gửi ID của nhân viên đang đăng nhập
+        };
+
+        // Gọi API
+        await MuonSachService.update(this.itemToUpdate._id, payload);
+        
+        // Cập nhật lại dữ liệu
+        await this.fetchData();
+        
+        this.updateModalInstance.hide();
+        
       } catch (error) {
-        console.error("Lỗi lưu phiếu mượn:", error);
-        alert("Lỗi khi lưu phiếu mượn. Vui lòng kiểm tra console.");
+        console.error("Lỗi khi cập nhật trạng thái:", error);
+        alert("Cập nhật thất bại. Lỗi: " + (error.response?.data?.message || error.message));
+      } finally {
+        this.loading = false;
       }
     },
-    async deleteMuonSach(maPhieu) {
-      if (confirm("Bạn chắc chắn muốn xóa phiếu mượn này?")) {
-        try {
-          await MuonSachService.delete(maPhieu);
-          await this.loadData();
-        } catch (error) {
-          console.error("Lỗi xóa phiếu mượn:", error);
-          alert("Lỗi khi xóa phiếu mượn. Vui lòng kiểm tra console.");
-        }
+    
+    viewDetails(item) {
+      this.selectedItem = item;
+      this.detailModalInstance.show();
+    },
+
+    // Phân trang
+    changePage(page) {
+      if (page >= 1 && page <= this.totalPages) {
+        this.currentPage = page;
       }
     },
-    formatDate(date) {
-      if (!date) return "Chưa có";
+
+    // Tiện ích
+    formatDate(dateString) {
+      if (!dateString) return '';
       try {
-        const d = new Date(date);
-        return d.toLocaleDateString("vi-VN");
+        const date = new Date(dateString);
+        // Kiểm tra nếu ngày không hợp lệ (ví dụ: 'Chưa trả')
+        if (isNaN(date.getTime())) return dateString; 
+        
+        // Tách ngày-tháng-năm
+        let day = date.getDate().toString().padStart(2, '0');
+        let month = (date.getMonth() + 1).toString().padStart(2, '0');
+        let year = date.getFullYear();
+        return `${day}/${month}/${year}`;
       } catch (e) {
-        return date;
+        return dateString; // Trả về nguyên bản nếu không thể định dạng
       }
     },
-    formatDateForInput(date) {
-        if (!date) return "";
-        try {
-            return new Date(date).toISOString().split('T')[0];
-        } catch (e) {
-            return "";
-        }
+    
+    getStatusClass(status) {
+      switch (status) {
+        case 'chờ duyệt': return 'status-pending';
+        case 'đã duyệt': return 'status-approved';
+        case 'đang mượn': return 'status-borrowed';
+        case 'đã trả': return 'status-returned';
+        case 'từ chối': return 'status-cancelled';
+        case 'trễ hạn': return 'status-overdue';
+        default: return 'status-default';
+      }
+    },
+    
+    onImgError(e) {
+      e.target.src = this.defaultBookImage;
     }
+  },
+  mounted() {
+    this.currentUser = AuthService.getCurrentUser();
+    this.fetchData();
+    
+    // Khởi tạo Modals
+    this.updateModalInstance = new Modal(document.getElementById("confirmUpdateModal"));
+    this.detailModalInstance = new Modal(document.getElementById("detailModal"));
   },
 };
 </script>
 
 <style scoped>
-/* Thẻ Thống Kê */
-.stats-card .card-body {
-  padding: 1.5rem;
+.staff-dashboard {
+  padding: 24px;
+  background-color: #f4f7fc;
+  height: 100%;
 }
-.stats-card .stats-icon {
+
+/* Stats Section */
+.stats-section {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+.stat-icon {
   width: 50px;
   height: 50px;
-  border-radius: 10px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-right: 16px;
+  font-size: 20px;
 }
-.stats-icon i {
-  font-size: 1.5rem;
-}
-.bg-light-warning { background-color: #fff8eb; }
-.text-warning { color: #ffc107 !important; }
-.bg-light-danger { background-color: #fff5f5; }
-.text-danger { color: #dc3545 !important; }
-.bg-light-info { background-color: #eef7ff; }
-.text-info { color: #0d6efd !important; }
+.stat-icon.pending { background: #eef7ff; color: #0d6efd; }
+.stat-icon.borrowed { background: #e6f7f0; color: #198754; }
+.stat-icon.return { background: #fff8e6; color: #ffc107; }
 
-/* Bảng và Card chính */
-.card {
+.stat-content .stat-label {
+  font-size: 14px;
+  color: #6c757d;
+  margin-bottom: 4px;
+}
+.stat-content .stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #212529;
+}
+
+/* Filter Section */
+.filter-section {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+  background: #fff;
+  padding: 20px;
   border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
-.card-header {
-  border-radius: 12px 12px 0 0;
-}
-.form-control, .form-select {
+.search-box, .filter-box {
+  display: flex;
+  align-items: center;
+  background: #f8f9fa;
   border-radius: 8px;
+  padding: 0 12px;
+  border: 1px solid #dee2e6;
 }
-.form-control.bg-light, .form-select.bg-light {
-  background-color: #f8f9fa !important;
+.search-box i, .filter-box i {
+  color: #6c757d;
+  margin-right: 10px;
 }
-.form-control:focus, .form-select:focus {
-  background-color: #fff;
-  border-color: #90baff;
-  box-shadow: 0 0 0 0.25rem rgba(63, 131, 255, 0.25);
+.search-box input, .filter-box select {
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 12px 0;
+  font-size: 14px;
 }
-.input-group-text {
-  border-radius: 8px 0 0 8px;
+.search-box input:focus, .filter-box select:focus {
+  outline: none;
+  box-shadow: none;
 }
-.input-group .form-control {
-  border-radius: 0 8px 8px 0;
+.filter-box select {
+  cursor: pointer;
 }
 
-/* Badge Trạng Thái */
-.badge {
-  font-size: 12px;
-  padding: 6px 10px;
-  border-radius: 6px;
+/* Table Container */
+.table-container {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+.table-header {
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e9ecef;
+}
+.table-header h4 {
+  margin: 0;
   font-weight: 600;
 }
-.badge-light-warning {
-  background-color: #fff8eb;
-  color: #ffc107;
+.btn-refresh {
+  border: 1px solid #dee2e6;
+  background: #fff;
+  color: #0d6efd;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  transition: all 0.2s;
 }
-.badge-light-success {
-  background-color: #e6f7f1;
-  color: #198754;
+.btn-refresh:hover {
+  background: #eef7ff;
 }
-.badge-light-danger {
-  background-color: #fff5f5;
-  color: #dc3545;
+.btn-refresh:disabled {
+  color: #6c757d;
+  cursor: not-allowed;
 }
 
-/* Nút bấm */
-.btn-primary {
-  background-color: #303f9f; /* Màu xanh đậm của sidebar */
-  border-color: #303f9f;
+/* Table */
+.main-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.main-table th, .main-table td {
+  padding: 15px 20px;
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid #e9ecef;
+  font-size: 14px;
+}
+.main-table th {
+  font-weight: 600;
+  color: #6c757d;
+  background: #f8f9fa;
+}
+.main-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+/* Status Badge */
+.status-badge {
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
   font-weight: 500;
+  white-space: nowrap;
 }
-.btn-primary:hover {
-  background-color: #24307b;
-  border-color: #24307b;
+.status-pending { background: #fff8e6; color: #ffc107; }
+.status-approved { background: #eef7ff; color: #0d6efd; }
+.status-borrowed { background: #e6f7f0; color: #198754; }
+.status-returned { background: #e9ecef; color: #495057; }
+.status-cancelled, .status-overdue { background: #fdeeee; color: #dc3545; }
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 8px;
 }
-.btn-outline-primary {
-  color: #303f9f;
-  border-color: #303f9f;
-}
-.btn-outline-primary:hover {
-  background-color: #303f9f;
+.btn-action {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
 }
-.text-primary {
-  color: #303f9f !important;
+.btn-action.confirm { background: #198754; }
+.btn-action.confirm:hover { background: #157347; }
+
+.btn-action.cancel { background: #dc3545; }
+.btn-action.cancel:hover { background: #bb2d3b; }
+
+.btn-action.return { background: #ffc107; color: #212529; }
+.btn-action.return:hover { background: #ffca2c; }
+
+.btn-action.detail { background: #0d6efd; }
+.btn-action.detail:hover { background: #0b5ed7; }
+
+/* Pagination */
+.pagination-container {
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+.page-btn {
+  border: 1px solid #dee2e6;
+  background: #fff;
+  color: #0d6efd;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+}
+.page-btn:hover {
+  background: #eef7ff;
+}
+.page-btn:disabled {
+  color: #6c757d;
+  background: #f8f9fa;
+  cursor: not-allowed;
+}
+.page-btn.active {
+  background: #0d6efd;
+  color: #fff;
+  border-color: #0d6efd;
+}
+
+/* Modal Detail */
+.modal-body img {
+  border: 1px solid #e9ecef;
+  margin-bottom: 16px;
+  max-height: 350px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+.modal-body p {
+  font-size: 15px;
+  margin-bottom: 10px;
+}
+.modal-body .text-muted {
+  font-style: italic;
 }
 </style>
