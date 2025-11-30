@@ -40,12 +40,20 @@
 
               <!-- Buttons -->
               <div class="d-flex gap-2 mt-3 mb-4 button-group">
-                <button 
-                  v-if="book.SOQUYEN > 0"
+                <button
+                  v-if="book.SOQUYEN > 0 && isLoggedIn"
                   class="btn borrow-btn d-flex align-items-center"
                   @click="borrowBook"
                 >
                   <i class="fas fa-book me-2"></i> Mượn sách
+                </button>
+
+                <button
+                  v-if="book.SOQUYEN > 0 && !isLoggedIn"
+                  class="btn borrow-btn d-flex align-items-center"
+                  @click="$router.push('/login')"
+                >
+                  <i class="fas fa-sign-in-alt me-2"></i> Đăng nhập để mượn
                 </button>
 
                 <button class="btn favorite-btn d-flex align-items-center">
@@ -112,6 +120,7 @@
 import SachService from "@/services/sach.service";
 import NhaXuatBanService from "@/services/nhaxuatban.service";
 import AuthService from "@/services/auth.service";
+import MuonSachService from "@/services/muonsach.service";
 
 export default {
   name: "BookDetail",
@@ -168,14 +177,46 @@ export default {
       }
     },
 
-    borrowBook() {
+    async borrowBook() {
       const user = AuthService.getCurrentUser();
       if (!user) {
         alert("Vui lòng đăng nhập để mượn sách");
         this.$router.push("/login");
         return;
       }
-      alert("Bạn đã chọn mượn: " + this.book.TENSACH);
+
+      // Confirm borrow request
+      const confirmBorrow = confirm(`Bạn có chắc muốn mượn sách "${this.book.TENSACH}" không?`);
+      if (!confirmBorrow) return;
+
+      try {
+        // Calculate return date (e.g., 14 days from now)
+        const today = new Date();
+        const returnDate = new Date(today);
+        returnDate.setDate(today.getDate() + 14); // Default 14 days
+        const ngayTra = returnDate.toISOString().split('T')[0];
+
+        const borrowData = {
+          docGiaId: user._id,
+          sachId: this.book._id,
+          ngayMuon: today.toISOString().split('T')[0],
+          ngayTra: ngayTra,
+        };
+
+        const response = await MuonSachService.create(borrowData);
+
+        if (response.status === 200 || response.status === 201) {
+          alert("Yêu cầu mượn sách đã được gửi thành công! Vui lòng chờ nhân viên duyệt.");
+          // Refresh book data to update quantity
+          await this.fetchBook();
+        } else {
+          throw new Error("Không thể gửi yêu cầu mượn sách");
+        }
+      } catch (error) {
+        console.error("Error borrowing book:", error);
+        const errorMessage = error.response?.data?.message || error.message || "Có lỗi xảy ra khi mượn sách";
+        alert(`Lỗi: ${errorMessage}`);
+      }
     },
 
     onImgError(e) {

@@ -32,16 +32,9 @@ async create(payload) {
         throw new Error("ID Độc Giả không hợp lệ (Lỗi đọc payload)"); 
     }
 
-    // --- 3. KIỂM TRA LOGIC SÁCH (TRỪ KHO) ---
+    // --- 3. KIỂM TRA LOGIC SÁCH (KHÔNG TRỪ KHO NGAY, CHỈ KIỂM TRA TỒN TẠI) ---
     const sach = await this.Sach.findOne({ _id: sachId });
     if (!sach) throw new Error("Không tìm thấy sách");
-    if (sach.SOQUYEN <= 0) {
-        throw new Error("Sách đã hết, không thể mượn");
-    }
-    await this.Sach.updateOne(
-        { _id: sachId },
-        { $inc: { SOQUYEN: -1 } } 
-    );
 
     // --- 4. NÂNG CẤP LOGIC NHÂN VIÊN ---
     let trangThaiMoi = "chờ duyệt";
@@ -102,34 +95,44 @@ async create(payload) {
         const phieuMuonId = ObjectId.isValid(id) ? new ObjectId(id) : null;
         if (!phieuMuonId) throw new Error("ID Phiếu Mượn không hợp lệ");
 
-        // --- LOGIC TRẢ SÁCH ---
+        // --- LOGIC QUẢN LÝ SÁCH ---
         // A. Lấy phiếu mượn HIỆN TẠI để biết trạng thái cũ
         const currentPhieuMuon = await this.findById(phieuMuonId);
         if (!currentPhieuMuon) throw new Error("Không tìm thấy phiếu mượn");
-        
+
         const newTrangThai = payload.trangThai;
         const oldTrangThai = currentPhieuMuon.trangThai;
         const sachId = currentPhieuMuon.sachId;
 
-        // B. Kiểm tra xem có cần trả sách về kho không?
+        // B. Kiểm tra và cập nhật số lượng sách
+        // Giảm SOQUYEN khi duyệt phiếu mượn
+        if (newTrangThai === "đã duyệt" && oldTrangThai === "chờ duyệt") {
+            const sach = await this.Sach.findOne({ _id: sachId });
+            if (!sach) throw new Error("Không tìm thấy sách");
+            if (sach.SOQUYEN <= 0) throw new Error("Sách đã hết, không thể duyệt");
+            await this.Sach.updateOne(
+                { _id: sachId },
+                { $inc: { SOQUYEN: -1 } }
+            );
+        }
+
         // Trả sách (+1 SOQUYEN) nếu:
         // 1. Trạng thái mới là "đã trả" (VÀ trạng thái cũ chưa phải là "đã trả")
-        // 2. Trạng thái mới là "từ chối" (VÀ trạng thái cũ là "chờ duyệt")
-        
-        const isReturning = (newTrangThai === "đã trả" && oldTrangThai !== "đã trả");
-        const isRejected = (newTrangThai === "từ chối" && oldTrangThai === "chờ duyệt");
-        
-        // Chỉ cộng lại sách nếu sách ĐANG ở ngoài (chưa được trả/từ chối)
-        const isBookOut = ["chờ duyệt", "đã duyệt", "đang mượn"].includes(oldTrangThai);
+        // 2. Trạng thái mới là "từ chối" (VÀ trạng thái cũ là "chờ duyệt" hoặc "đã duyệt" hoặc "đang mượn")
+        // 3. Trạng thái mới là "đang chờ trả" (độc giả yêu cầu trả sách)
 
-        if ((isReturning || isRejected) && isBookOut) {
+        const isReturning = (newTrangThai === "đã trả" && oldTrangThai !== "đã trả");
+        const isRejected = (newTrangThai === "từ chối" && ["chờ duyệt", "đã duyệt", "đang mượn", "đang chờ trả"].includes(oldTrangThai));
+        const isReturnRequested = (newTrangThai === "đang chờ trả" && oldTrangThai === "đang mượn");
+
+        if (isReturning || isRejected || isReturnRequested) {
             // Cộng 1 trả lại SOQUYEN cho sách
             await this.Sach.updateOne(
                 { _id: sachId },
                 { $inc: { SOQUYEN: +1 } }
             );
         }
-        // --- KẾT THÚC LOGIC TRẢ SÁCH ---
+        // --- KẾT THÚC LOGIC QUẢN LÝ SÁCH ---
 
         // C. Cập nhật phiếu mượn
         const filter = { _id: phieuMuonId };

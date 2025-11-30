@@ -12,6 +12,9 @@ import HomePage from "@/views/HomePage.vue";
 import BooksExplore from "@/views/BooksExplore.vue";
 import BookDetail from "@/views/BookDetail.vue";
 import DocGiaRegister from "@/views/DocGiaRegister.vue";
+import DocGiaMuonSachRequests from "@/views/DocGiaMuonSachRequests.vue";
+import DocGiaBorrowedBooks from "@/views/DocGiaBorrowedBooks.vue";
+import DocGiaBorrowHistory from "@/views/DocGiaBorrowHistory.vue";
 import Login from "@/views/Login.vue";
 
 // Trang Admin
@@ -50,6 +53,9 @@ const routes = [
       { path: "books", name: "books.explore", component: BooksExplore },
       { path: "books/:id", name: "books.detail", component: BookDetail },
       { path: "docgia/register", name: "docgia.register", component: DocGiaRegister },
+      { path: "docgia/requests", name: "docgia.requests", component: DocGiaMuonSachRequests, meta: { requiresAuth: true, role: 'DocGia' } },
+      { path: "docgia/borrowed", name: "docgia.borrowed", component: DocGiaBorrowedBooks, meta: { requiresAuth: true, role: 'DocGia' } },
+      { path: "docgia/history", name: "docgia.history", component: DocGiaBorrowHistory, meta: { requiresAuth: true, role: 'DocGia' } },
       { path: "login", name: "login", component: Login },
     ],
   },
@@ -124,6 +130,37 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
   routes,
+});
+
+// Route guard for authentication and role checking
+router.beforeEach((to, from, next) => {
+  const user = AuthService.getCurrentUser();
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
+  const requiredRole = to.matched.some(record => record.meta.role);
+
+  if (requiresAuth) {
+    if (!user) {
+      // User not logged in, redirect to login
+      next('/login');
+      return;
+    }
+
+    if (requiredRole && to.meta.role) {
+      // Check if user has the required role
+      if (to.meta.role === 'DocGia' && user.ChucVu) {
+        // DocGia should not have ChucVu property
+        next('/');
+        return;
+      }
+      if (to.meta.role !== 'DocGia' && user.ChucVu !== to.meta.role) {
+        // User doesn't have the required role
+        next('/');
+        return;
+      }
+    }
+  }
+
+  next();
 });
 
 export default router;

@@ -34,6 +34,11 @@ class MuonSachService {
   getForDocGia(docGiaId) {
     return http.get(`/muonsach/docgia/${docGiaId}`);
   }
+
+  // 7. Độc giả: Yêu cầu trả sách
+  requestReturn(id) {
+    return http.put(`/muonsach/${id}/request-return`);
+  }
 }
 
 export default new MuonSachService();

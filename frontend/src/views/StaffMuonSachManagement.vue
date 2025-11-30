@@ -122,6 +122,12 @@
                     <i class="fas fa-undo"></i> Nhận trả
                   </button>
                 </template>
+
+                <template v-if="item.trangThai === 'đang chờ trả'">
+                  <button class="btn-action return" title="Xác nhận đã trả sách" @click="openUpdateModal(item, 'đã trả')">
+                    <i class="fas fa-check"></i> Duyệt trả
+                  </button>
+                </template>
                 
                 <button class="btn-action detail" title="Xem chi tiết" @click="viewDetails(item)">
                   <i class="fas fa-eye"></i>
@@ -433,6 +439,7 @@ export default {
         case 'chờ duyệt': return 'status-pending';
         case 'đã duyệt': return 'status-approved';
         case 'đang mượn': return 'status-borrowed';
+        case 'đang chờ trả': return 'status-return-requested';
         case 'đã trả': return 'status-returned';
         case 'từ chối': return 'status-cancelled';
         case 'trễ hạn': return 'status-overdue';

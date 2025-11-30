@@ -12,6 +12,9 @@
       <nav class="d-none d-md-flex align-items-center gap-4 ms-5">
         <router-link to="/" class="text-dark text-decoration-none nav-link-item">Trang chủ</router-link>
         <router-link to="/books" class="text-dark text-decoration-none nav-link-item">Khám phá</router-link>
+        <router-link v-if="currentUser && !currentUser.ChucVu" to="/docgia/requests" class="text-dark text-decoration-none nav-link-item">Yêu cầu mượn của tôi</router-link>
+        <router-link v-if="currentUser && !currentUser.ChucVu" to="/docgia/borrowed" class="text-dark text-decoration-none nav-link-item">Sách đang mượn</router-link>
+        <router-link v-if="currentUser && !currentUser.ChucVu" to="/docgia/history" class="text-dark text-decoration-none nav-link-item">Lịch sử mượn sách</router-link>
       </nav>
 
       <div class="ms-auto d-flex align-items-center gap-2">
@@ -21,8 +24,21 @@
         </div>
 
         <div v-else class="d-flex align-items-center gap-2">
-          <span class="text-muted d-none d-md-block" style="font-size: 0.9rem;">Xin chào, <strong class="text-dark">{{ displayName }}</strong></span>
-          <button class="btn btn-outline-danger btn-sm" @click="logOut"><i class="fas fa-sign-out-alt"></i></button>
+          <div class="dropdown" v-if="currentUser.ChucVu === 'DocGia'">
+            <button class="btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="fas fa-user-circle me-1"></i>{{ displayName }}
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="userDropdown">
+              <li><router-link to="/docgia/requests" class="dropdown-item"><i class="fas fa-list me-2"></i>Yêu cầu mượn của tôi</router-link></li>
+              <li><router-link to="/docgia/history" class="dropdown-item"><i class="fas fa-history me-2"></i>Lịch sử mượn</router-link></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><button class="dropdown-item" @click="logOut"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</button></li>
+            </ul>
+          </div>
+          <div v-else>
+            <span class="text-muted d-none d-md-block" style="font-size: 0.9rem;">Xin chào, <strong class="text-dark">{{ displayName }}</strong></span>
+            <button class="btn btn-outline-danger btn-sm" @click="logOut"><i class="fas fa-sign-out-alt"></i></button>
+          </div>
         </div>
       </div>
     </div>
@@ -125,6 +141,30 @@ export default {
 
 .btn-link:hover {
   color: #0b5ed7;
+}
+
+.dropdown-toggle {
+  border: none;
+  background: none;
+  color: #6c757d;
+  font-size: 0.9rem;
+  padding: 0;
+}
+
+.dropdown-toggle:hover {
+  color: #0d6efd;
+}
+
+.dropdown-menu {
+  min-width: 200px;
+}
+
+.dropdown-item {
+  padding: 0.5rem 1rem;
+}
+
+.dropdown-item:hover {
+  background-color: #f8f9fa;
 }
 
 @media (max-width: 767px) {

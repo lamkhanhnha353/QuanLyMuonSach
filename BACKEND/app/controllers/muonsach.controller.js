@@ -97,12 +97,30 @@ exports.update = async (req, res, next) => {
     }
 };
 
-// 6. Delete (Xóa 1 phiếu)
+// 6. Request Return (Độc giả yêu cầu trả sách)
+exports.requestReturn = async (req, res, next) => {
+    try {
+        const muonSachService = new MuonSachService(MongoDB.client);
+        // Độc giả chỉ cần gửi trạng thái "đang chờ trả", không cần nhanVienId
+        const payload = {
+            trangThai: "đang chờ trả",
+            nhanVienId: null, // Không cần nhân viên cho yêu cầu trả
+        };
+        const document = await muonSachService.update(req.params.id, payload);
+        return res.send({ message: "Yêu cầu trả sách đã được gửi", data: document });
+    } catch (error) {
+        return next(
+            new ApiError(500, `Lỗi khi gửi yêu cầu trả sách: ${error.message}`)
+        );
+    }
+};
+
+// 7. Delete (Xóa 1 phiếu)
 exports.delete = async (req, res, next) => {
     try {
         const muonSachService = new MuonSachService(MongoDB.client);
         const document = await muonSachService.delete(req.params.id);
-        
+
         if (!document || (document.value === null && document.ok !== 1)) {
             return next(new ApiError(404, "Không tìm thấy phiếu mượn để xóa"));
         }
