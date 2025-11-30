@@ -2,6 +2,7 @@ const { ObjectId } = require("mongodb");
 
 class MuonSachService {
     constructor(client) {
+        this.client = client;
         this.MuonSach = client.db().collection("THEODOIMUONSACH");
         // Phải truy cập được collection "SACH" để kiểm tra số quyển
         this.Sach = client.db().collection("SACH");
@@ -84,7 +85,61 @@ async create(payload) {
         const filter = {
              docGiaId: ObjectId.isValid(docGiaId) ? new ObjectId(docGiaId) : null
         };
-        return await this.find(filter);
+        const records = await this.find(filter);
+
+        // Populate nhanVienId with staff name and NXB with publisher name
+        const populated = await Promise.all(records.map(async (rec) => {
+            const out = { ...rec };
+
+            // Populate staff name if nhanVienId exists
+            if (rec.nhanVienId) {
+                try {
+                    const nhanVien = await this.client.db().collection("NHANVIEN").findOne({ _id: rec.nhanVienId });
+                    if (nhanVien) {
+                        // Try multiple field combinations
+                        out.nhanVienName = (nhanVien.HOLOT || nhanVien.HoTenNV || '') + ' ' + (nhanVien.TEN || '');
+                        out.nhanVienName = out.nhanVienName.trim() || 'Nhân viên không xác định';
+                    }
+                } catch (error) {
+                    console.error("Error fetching staff:", error);
+                }
+            }
+
+            // Populate publisher name from book
+            if (rec.sachId) {
+                try {
+                    const sach = await this.Sach.findOne({ _id: rec.sachId });
+                    if (sach) {
+                        out.TENSACH = sach.TENSACH || out.TENSACH;
+                        out.TACGIA = sach.TACGIA || out.TACGIA;
+                        out.NAMXB = sach.NAMXUATBAN || sach.NAMXB || out.NAMXB;
+                        
+                        // Populate NXB name - find by MANXB (code) or _id
+                        if (sach.MANXB) {
+                            // Try to find by MANXB first (string field)
+                            let nxb = await this.client.db().collection("NHAXUATBAN").findOne({ MANXB: sach.MANXB });
+                            
+                            // If not found and MANXB is valid ObjectId, try by _id
+                            if (!nxb && ObjectId.isValid(sach.MANXB)) {
+                                nxb = await this.client.db().collection("NHAXUATBAN").findOne({ _id: new ObjectId(sach.MANXB) });
+                            }
+                            
+                            if (nxb) {
+                                out.nxbName = nxb.TENNXB;
+                            } else {
+                                out.nxbName = sach.MANXB || 'N/A';
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error fetching publisher:", error);
+                }
+            }
+
+            return out;
+        }));
+
+        return populated;
     }
 
     /**

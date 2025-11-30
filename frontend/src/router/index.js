@@ -14,8 +14,6 @@ import BookDetail from "@/views/BookDetail.vue";
 import DocGiaRegister from "@/views/DocGiaRegister.vue";
 // replaced: use new improved requests view
 import DocGiaBorrowRequests from "@/views/DocGiaBorrowRequests.vue";
-import DocGiaBorrowRequestDetail from "@/views/DocGiaBorrowRequestDetail.vue";
-import DocGiaBorrowedBooks from "@/views/DocGiaBorrowedBooks.vue";
 import DocGiaBorrowHistory from "@/views/DocGiaBorrowHistory.vue";
 import DocGiaAccount from "@/views/DocGiaAccount.vue";
 import Login from "@/views/Login.vue";
@@ -57,8 +55,6 @@ const routes = [
       { path: "books/:id", name: "books.detail", component: BookDetail },
       { path: "docgia/register", name: "docgia.register", component: DocGiaRegister },
       { path: "docgia/requests", name: "docgia.requests", component: DocGiaBorrowRequests, meta: { requiresAuth: true, role: 'DocGia' } },
-      { path: "docgia/requests/:id", name: "docgia.requests.detail", component: DocGiaBorrowRequestDetail, meta: { requiresAuth: true, role: 'DocGia' } },
-      { path: "docgia/borrowed", name: "docgia.borrowed", component: DocGiaBorrowedBooks, meta: { requiresAuth: true, role: 'DocGia' } },
       { path: "docgia/history", name: "docgia.history", component: DocGiaBorrowHistory, meta: { requiresAuth: true, role: 'DocGia' } },
       { path: "docgia/account", name: "docgia.account", component: DocGiaAccount, meta: { requiresAuth: true, role: 'DocGia' } },
       { path: "login", name: "login", component: Login },

@@ -1,4 +1,4 @@
-﻿<template>
+﻿﻿<template>
   <header class="app-header">
     <div class="container-fluid px-4 d-flex align-items-center py-2">
       <router-link to="/" class="d-flex align-items-center text-decoration-none me-auto logo">
@@ -14,7 +14,6 @@
         <router-link to="/books" class="text-dark text-decoration-none nav-link-item">Khám phá</router-link>
         <router-link v-if="currentUser && !currentUser.ChucVu" to="/docgia/account" class="text-dark text-decoration-none nav-link-item">Tài khoản của tôi</router-link>
         <router-link v-if="currentUser && !currentUser.ChucVu" to="/docgia/requests" class="text-dark text-decoration-none nav-link-item">Yêu cầu mượn của tôi</router-link>
-        <router-link v-if="currentUser && !currentUser.ChucVu" to="/docgia/borrowed" class="text-dark text-decoration-none nav-link-item">Sách đang mượn</router-link>
         <router-link v-if="currentUser && !currentUser.ChucVu" to="/docgia/history" class="text-dark text-decoration-none nav-link-item">Lịch sử mượn sách</router-link>
       </nav>
 
