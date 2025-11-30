@@ -15,6 +15,7 @@ import DocGiaRegister from "@/views/DocGiaRegister.vue";
 import DocGiaMuonSachRequests from "@/views/DocGiaMuonSachRequests.vue";
 import DocGiaBorrowedBooks from "@/views/DocGiaBorrowedBooks.vue";
 import DocGiaBorrowHistory from "@/views/DocGiaBorrowHistory.vue";
+import DocGiaAccount from "@/views/DocGiaAccount.vue";
 import Login from "@/views/Login.vue";
 
 // Trang Admin
@@ -56,6 +57,7 @@ const routes = [
       { path: "docgia/requests", name: "docgia.requests", component: DocGiaMuonSachRequests, meta: { requiresAuth: true, role: 'DocGia' } },
       { path: "docgia/borrowed", name: "docgia.borrowed", component: DocGiaBorrowedBooks, meta: { requiresAuth: true, role: 'DocGia' } },
       { path: "docgia/history", name: "docgia.history", component: DocGiaBorrowHistory, meta: { requiresAuth: true, role: 'DocGia' } },
+      { path: "docgia/account", name: "docgia.account", component: DocGiaAccount, meta: { requiresAuth: true, role: 'DocGia' } },
       { path: "login", name: "login", component: Login },
     ],
   },

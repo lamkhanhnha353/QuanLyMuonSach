@@ -12,6 +12,7 @@
       <nav class="d-none d-md-flex align-items-center gap-4 ms-5">
         <router-link to="/" class="text-dark text-decoration-none nav-link-item">Trang chủ</router-link>
         <router-link to="/books" class="text-dark text-decoration-none nav-link-item">Khám phá</router-link>
+        <router-link v-if="currentUser && !currentUser.ChucVu" to="/docgia/account" class="text-dark text-decoration-none nav-link-item">Tài khoản của tôi</router-link>
         <router-link v-if="currentUser && !currentUser.ChucVu" to="/docgia/requests" class="text-dark text-decoration-none nav-link-item">Yêu cầu mượn của tôi</router-link>
         <router-link v-if="currentUser && !currentUser.ChucVu" to="/docgia/borrowed" class="text-dark text-decoration-none nav-link-item">Sách đang mượn</router-link>
         <router-link v-if="currentUser && !currentUser.ChucVu" to="/docgia/history" class="text-dark text-decoration-none nav-link-item">Lịch sử mượn sách</router-link>
