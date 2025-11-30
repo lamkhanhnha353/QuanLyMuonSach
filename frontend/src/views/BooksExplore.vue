@@ -170,7 +170,7 @@ export default {
     return {
       books: [],
       searchText: "",
-      categories: ["Văn học", "Khoa học", "Lịch sử", "Kinh tế", "Tâm lý học"],
+      categories: ["Văn Học", "Khoa Học", "Lịch Sử", "Kinh Tế", "Tâm Lý Học"],
       selectedCategories: [],
       statusFilter: "all",
       sortOption: "newest",
