@@ -5,149 +5,175 @@
         <div class="search-bar py-3">
           <div class="row g-2 align-items-center">
             
-            <div class="col-md-3 d-flex align-items-center gap-2">
-              <div class="library-icon">
-                <i class="fas fa-book-open"></i>
-              </div>
-              <h4 class="mb-0 fw-bold library-title">Khám phá thư viện</h4>
+            <div class="col-md-3 d-flex align-items-center brand-area">
+              <i class="fas fa-book-open fa-2x text-dark me-2"></i>
+              <h4 class="mb-0 fw-bold text-dark library-title">Khám phá thư viện</h4>
             </div>
-
             <div class="col-md-6">
-              <div class="input-group search-input">
-                <input type="text" class="form-control" placeholder="Tìm theo tên sách, tác giả, ISBN" v-model="searchText" @keyup.enter="applySearch">
-                <button class="btn btn-primary" @click="applySearch"><i class="fas fa-search"></i></button>
+              <div class="input-group search-input shadow-sm">
+                <span class="input-group-text bg-white border-end-0 text-muted">
+                    <i class="fas fa-search"></i>
+                </span>
+                <input 
+                    type="text" 
+                    class="form-control border-start-0 ps-0 bg-white" 
+                    placeholder="Tìm kiếm sách, tác giả, ISBN..." 
+                    v-model="searchText" 
+                    @keyup.enter="applySearch"
+                >
+                <button class="btn btn-primary px-4 fw-bold" @click="applySearch">Tìm</button>
               </div>
             </div>
             
             <div class="col-md-3">
-              <div class="d-flex align-items-center gap-2 justify-content-end">
-                <label class="mb-0 sort-label">Sắp xếp:</label>
-                <select class="form-select sort-select" v-model="sortOption">
+              <div class="d-flex align-items-center gap-2 justify-content-end sort-area">
+                <label class="mb-0 sort-label text-muted" style="white-space: nowrap;">Sắp xếp:</label>
+                <select class="form-select form-select-sm sort-select" v-model="sortOption">
                   <option value="newest">Mới nhất</option>
                   <option value="title">Tên A-Z</option>
                   <option value="author">Tác giả</option>
                 </select>
               </div>
             </div>
+
           </div>
         </div>
       </div>
     </header>
 
-    <div class="container-fluid px-3">
+    <div class="container-fluid px-3 main-content">
       <div class="row g-4 py-4">
+        
         <aside class="col-xl-2 col-lg-3">
-          <div class="filter-panel">
+          <div class="filter-panel sticky-top" style="top: 100px; z-index: 1000;">
             <div class="filter-header">
-              <i class="fas fa-filter me-2"></i>
-              <span>Bộ lọc</span>
+              <i class="fas fa-sliders-h me-2"></i>
+              <span>Bộ lọc tìm kiếm</span>
             </div>
 
-            <div class="filter-section">
-              <div class="filter-section-title">Thể loại</div>
-              <div class="filter-options">
-                <div class="form-check" v-for="cat in categories" :key="cat">
-                  <input class="form-check-input" type="checkbox" :id="`cat-${cat}`" :value="cat" v-model="selectedCategories">
-                  <label class="form-check-label" :for="`cat-${cat}`">{{ cat }}</label>
+            <div class="filter-body">
+              <div class="filter-section">
+                <div class="filter-section-title">Thể loại</div>
+                <div class="filter-options custom-scrollbar">
+                  <div class="form-check" v-for="cat in categories" :key="cat">
+                    <input class="form-check-input" type="checkbox" :id="`cat-${cat}`" :value="cat" v-model="selectedCategories">
+                    <label class="form-check-label" :for="`cat-${cat}`">{{ cat }}</label>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div class="filter-section">
-              <div class="filter-section-title">Tình trạng</div>
-              <div class="filter-options">
-                <div class="form-check">
-                  <input class="form-check-input" type="radio" id="status-all" value="all" v-model="statusFilter">
-                  <label class="form-check-label" for="status-all">Tất cả</label>
-                </div>
-                <div class="form-check">
-                  <input class="form-check-input" type="radio" id="status-available" value="available" v-model="statusFilter">
-                  <label class="form-check-label" for="status-available">Còn sách</label>
-                </div>
-                <div class="form-check">
-                  <input class="form-check-input" type="radio" id="status-borrowed" value="borrowed" v-model="statusFilter">
-                  <label class="form-check-label" for="status-borrowed">Đã mượn hết</label>
+              <div class="filter-divider"></div>
+
+              <div class="filter-section">
+                <div class="filter-section-title">Tình trạng</div>
+                <div class="filter-options">
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" id="status-all" value="all" v-model="statusFilter">
+                    <label class="form-check-label" for="status-all">Tất cả</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" id="status-available" value="available" v-model="statusFilter">
+                    <label class="form-check-label" for="status-available">Sẵn sàng cho mượn</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" id="status-borrowed" value="borrowed" v-model="statusFilter">
+                    <label class="form-check-label" for="status-borrowed">Đã hết sách</label>
+                  </div>
                 </div>
               </div>
+              
+              <button class="btn btn-light w-100 btn-sm mt-3 text-muted border" @click="clearFilters">
+                <i class="fas fa-undo me-1"></i> Đặt lại bộ lọc
+              </button>
             </div>
-
-            <button class="btn btn-outline-secondary w-100 btn-sm" @click="clearFilters">
-              <i class="fas fa-times me-1"></i>Xóa bộ lọc
-            </button>
           </div>
         </aside>
 
         <main class="col-xl-10 col-lg-9">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+             <span class="text-muted small">Hiển thị <b>{{ paginatedBooks.length }}</b> trên tổng số <b>{{ filteredBooks.length }}</b> sách</span>
+          </div>
+
           <div class="books-grid">
             <div class="book-item" v-for="book in paginatedBooks" :key="book._id">
+              
               <div class="book-card">
-                <div class="book-img-container">
-                  <img :src="book.HinhAnh || placeholderImage" :alt="book.TENSACH" @error="onImgError">
+                <div class="book-cover">
+                  <img 
+                    :src="book.HinhAnh || placeholderImage" 
+                    :alt="book.TENSACH" 
+                    class="book-image" 
+                    @error="onImgError"
+                  >
+                  
+                  <div class="status-badge" :class="book.SOQUYEN > 0 ? 'available' : 'out'">
+                    {{ book.SOQUYEN > 0 ? 'Còn hàng' : 'Hết hàng' }}
+                  </div>
+
                   <div class="book-overlay">
                     <div class="overlay-buttons">
                         <button 
-                            v-if="book.SOQUYEN > 0"
-                            class="btn btn-primary btn-sm borrow-overlay-btn" 
-                            @click="requestLogin(book)"
-                            title="Mượn sách"
+                            class="btn btn-light btn-sm action-btn" 
+                            @click="viewDetails(book)"
+                            title="Xem chi tiết"
                         >
-                          <i class="fas fa-hand-pointer me-1"></i>Mượn
+                          <i class="fas fa-eye"></i>
                         </button>
-                        <button class="btn btn-light btn-sm" @click="viewDetails(book)">
-                          <i class="fas fa-info-circle me-1"></i>Chi tiết
+                        
+                        <button 
+                            v-if="book.SOQUYEN > 0"
+                            class="btn btn-primary btn-sm action-btn" 
+                            @click="requestLogin(book)"
+                            title="Đăng ký mượn"
+                        >
+                          <i class="fas fa-book-medical"></i>
                         </button>
                     </div>
                   </div>
                 </div>
+
                 <div class="book-info">
-                  <h6 class="book-title">{{ book.TENSACH }}</h6>
-                  <p class="book-author">{{ book.TACGIA }}</p>
-                  <div class="book-footer d-flex align-items-center justify-content-between">
-                    <span :class="['badge', 'fw-bold', book.SOQUYEN > 0 ? 'bg-success' : 'bg-danger']">
-                      {{ book.SOQUYEN > 0 ? 'Còn sách' : 'Hết sách' }}
-                    </span>
-                    <button
-                        class="btn btn-sm btn-outline-secondary detail-btn"
-                        @click="viewDetails(book)"
-                    >
-                      Chi tiết
-                    </button>
-                    </div>
+                  <div class="book-meta mb-1">
+                    <span class="badge bg-light text-dark border">{{ book.THELOAI || 'Tổng hợp' }}</span>
+                  </div>
+                  <h6 class="book-title" :title="book.TENSACH">{{ book.TENSACH }}</h6>
+                  <p class="book-author">
+                    <i class="fas fa-pen-nib me-1 small"></i>{{ book.TACGIA }}
+                  </p>
+                  
+                  <div class="book-footer">
+                     <button class="btn btn-outline-primary btn-sm w-100 mt-2 rounded-pill" @click="viewDetails(book)">
+                       Xem chi tiết
+                     </button>
                   </div>
                 </div>
               </div>
-            </div>
+              </div>
+          </div>
 
-          <div class="pagination-container mt-5 mb-4">
+          <div v-if="paginatedBooks.length === 0" class="text-center py-5 empty-state">
+            <div class="mb-3">
+                <i class="fas fa-search text-muted display-4"></i>
+            </div>
+            <h5 class="text-muted">Không tìm thấy sách nào</h5>
+            <p class="text-muted small">Thử thay đổi từ khóa hoặc bộ lọc của bạn.</p>
+            <button class="btn btn-primary btn-sm mt-2" @click="clearFilters">Xóa bộ lọc</button>
+          </div>
+
+          <div class="pagination-container mt-5 mb-4" v-if="totalPages > 1">
             <ul class="pagination justify-content-center">
               <li class="page-item prev-next" :class="{ disabled: currentPage === 1 }">
-                <a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)" aria-label="Previous">
+                <a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)">
                   <i class="fas fa-chevron-left"></i>
                 </a>
-              </li>
-
-              <li v-if="totalPages > 0 && currentPage > 1" class="page-item" :class="{ 'd-none': currentPage === 1 }">
-                <a class="page-link" href="#" @click.prevent="changePage(1)">1</a>
-              </li>
-
-              <li v-if="currentPage > 3" class="page-item disabled d-none d-sm-block">
-                <span class="page-link ellipsis">...</span>
               </li>
 
               <li v-for="page in pageRange" :key="page" class="page-item" :class="{ active: page === currentPage }">
                 <a class="page-link" href="#" @click.prevent="changePage(page)">{{ page }}</a>
               </li>
-
-              <li v-if="currentPage < totalPages - 2" class="page-item disabled d-none d-sm-block">
-                <span class="page-link ellipsis">...</span>
-              </li>
-
-              <li v-if="totalPages > 1 && currentPage < totalPages" class="page-item" :class="{ 'd-none': currentPage === totalPages }">
-                <a class="page-link" href="#" @click.prevent="changePage(totalPages)">{{ totalPages }}</a>
-              </li>
               
               <li class="page-item prev-next" :class="{ disabled: currentPage === totalPages }">
-                <a class="page-link" href="#" @click.prevent="changePage(currentPage + 1)" aria-label="Next">
+                <a class="page-link" href="#" @click.prevent="changePage(currentPage + 1)">
                   <i class="fas fa-chevron-right"></i>
                 </a>
               </li>
@@ -161,7 +187,6 @@
 
 <script>
 import SachService from "@/services/sach.service";
-// 💡 THAY ĐỔI 1: Import AuthService
 import AuthService from "@/services/auth.service";
 
 export default {
@@ -170,14 +195,14 @@ export default {
     return {
       books: [],
       searchText: "",
-      categories: ["Văn Học", "Khoa Học", "Lịch Sử", "Kinh Tế", "Tâm Lý Học"],
+      categories: ["Văn Học", "Khoa Học", "Lịch Sử", "Kinh Tế", "Tâm Lý Học", "Tiểu Thuyết", "Công Nghệ", "Thiếu Nhi"],
       selectedCategories: [],
       statusFilter: "all",
       sortOption: "newest",
-      currentPage: 1,
+      currentPage: this.$route.query.page ? parseInt(this.$route.query.page) : 1,
       itemsPerPage: 12,
-      placeholderImage: "https://via.placeholder.com/240x360?text=No+Cover",
-      isLoggedIn: false, 
+      placeholderImage: "https://via.placeholder.com/300x450?text=Book+Cover",
+      isLoggedIn: false,
     };
   },
   computed: {
@@ -214,28 +239,13 @@ export default {
       return this.filteredBooks.slice(start, start + this.itemsPerPage);
     },
     pageRange() {
-      const delta = 2;
       const range = [];
-      const rangeStart = Math.max(2, this.currentPage - delta);
-      const rangeEnd = Math.min(this.totalPages - 1, this.currentPage + delta);
-
-      if (this.currentPage === 1 && this.totalPages > 1) {
-          range.push(1);
-      }
-      
-      for (let i = rangeStart; i <= rangeEnd; i++) {
-        if (i > 1 && i < this.totalPages) {
-          range.push(i);
-        } else if (this.totalPages <= 5 && i >= 1 && i <= this.totalPages) {
+      for (let i = 1; i <= this.totalPages; i++) {
+        if (i === 1 || i === this.totalPages || (i >= this.currentPage - 1 && i <= this.currentPage + 1)) {
           range.push(i);
         }
       }
-      
-      if (this.currentPage === this.totalPages && this.totalPages > 1) {
-          range.push(this.totalPages);
-      }
-
-      return [...new Set(range)].filter(p => p >= 1 && p <= this.totalPages);
+      return [...new Set(range)].sort((a, b) => a - b);
     }
   },
   methods: {
@@ -258,27 +268,19 @@ export default {
       this.currentPage = 1;
     },
     changePage(page) {
-      if (page < 1) page = 1;
-      if (page > this.totalPages) page = this.totalPages;
+      if (page < 1 || page > this.totalPages) return;
       this.currentPage = page;
+      this.$router.push({ query: { page: page } });
       window.scrollTo({ top: 0, behavior: "smooth" });
     },
-    
-    // 💡 THAY ĐỔI 3: Cập nhật phương thức requestLogin
-    requestLogin(book) { // Thêm 'book' làm tham số nếu bạn cần dùng
+    requestLogin(book) { 
       if (this.isLoggedIn) {
-        // Người dùng đã đăng nhập:
-        alert("Người dùng đã đăng nhập. Tiến hành mượn sách: " + book.TENSACH); 
-        // TODO: Thêm logic mượn sách thực tế ở đây
+        alert("Đã thêm '" + book.TENSACH + "' vào phiếu đăng ký mượn!"); 
       } else {
-        // Người dùng chưa đăng nhập: Thông báo và chuyển hướng
-        alert("Vui lòng đăng nhập để thực hiện chức năng mượn sách.");
-        // Chuyển hướng đến trang đăng nhập
+        alert("Vui lòng đăng nhập để mượn sách.");
         this.$router.push("/login"); 
-        // Hoặc dùng tên route: this.$router.push({ name: 'login' });
       }
     },
-
     viewDetails(book) {
       this.$router.push({ name: 'books.detail', params: { id: book._id } });
     },
@@ -288,8 +290,6 @@ export default {
   },
   mounted() {
     this.retrieveBooks();
-    
-    // 💡 THAY ĐỔI 2: Kiểm tra trạng thái đăng nhập khi component được tải
     const user = AuthService.getCurrentUser();
     this.isLoggedIn = !!user;
   }
@@ -297,248 +297,233 @@ export default {
 </script>
 
 <style scoped>
-/* (Style của bạn vẫn giữ nguyên, không thay đổi) */
-
-/* Header Title and Icon Style */
-.library-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #1f2937;
-  font-size: 1.4rem;
-}
-
-.library-title {
-  font-size: 1.5rem;
-  color: #1f2937;
-  white-space: nowrap;
-}
-
-.sort-label {
-  font-size: 0.85rem;
-  color: #6b7280;
-  white-space: nowrap;
-  font-weight: 500;
-}
-
-.sort-select {
-  max-width: 130px;
-  height: 36px;
-  font-size: 0.85rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  padding: 0.375rem 0.75rem;
-}
-
+/* --- 1. Global & Page Setup --- */
 .books-explore {
-  background-color: #f5f6f7;
+  background-color: #f8f9fa;
   min-height: 100vh;
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
-/* Header Sticky */
+/* --- 2. Header Sticky --- */
 .header-sticky {
   position: sticky;
   top: 0;
   z-index: 1020;
-  background: white;
-  border-bottom: 1px solid #e5e7eb;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid #eaeaea;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
 }
 
-.search-bar {
-  padding: 12px 0;
+/* Đã xóa .library-icon cũ vì không còn dùng background gradient */
+
+.library-title {
+  font-size: 1.5rem; /* Tăng kích thước chữ cho giống tiêu đề chính */
+  color: #1f2937;
+  letter-spacing: -0.5px;
 }
 
+/* Search Input: Nền trắng */
 .search-input .form-control {
-  height: 44px;
-  font-size: 0.95rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
+  background-color: #fff; 
+  border: 1px solid #dee2e6;
+  border-left: none;
+}
+.search-input .form-control:focus {
+  background-color: #fff;
+  box-shadow: none;
+  border-color: #dee2e6;
+}
+.search-input .input-group-text {
+  background-color: #fff; 
+  border: 1px solid #dee2e6;
+  border-right: none;
 }
 
-.search-input .btn-primary {
-  height: 44px;
-  width: 48px;
-  background-color: #2563eb;
-  border: none;
+/* --- SORT SELECT: CHỈNH DÀI RA --- */
+.sort-select {
+  border-color: #dee2e6;
+  cursor: pointer;
+  max-width: 160px; /* Độ dài vừa phải để lấp khoảng trống */
+}
+.sort-select:focus {
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
 }
 
-.search-input .form-select-sm {
-  height: 40px;
-  font-size: 0.9rem;
-}
 
-/* Sidebar Filters */
+/* --- 3. Sidebar Filter --- */
 .filter-panel {
   background: white;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  padding: 16px;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+  border: 1px solid #f0f0f0;
 }
 
 .filter-header {
-  display: flex;
-  align-items: center;
-  font-weight: 600;
-  font-size: 1rem;
-  color: #1f2937;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 2px solid #f3f4f6;
-}
-
-.filter-section {
-  margin-bottom: 18px;
-}
-
-.filter-section:last-of-type {
+  font-weight: 700;
+  color: #111827;
   margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px dashed #e5e7eb;
+  font-size: 1rem;
 }
 
 .filter-section-title {
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: #374151;
-  margin-bottom: 10px;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+  color: #9ca3af;
+  margin-bottom: 12px;
 }
 
-.filter-options .form-check {
-  margin-bottom: 8px;
+.filter-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.filter-options .form-check-input {
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
+.custom-scrollbar {
+  max-height: 250px;
+  overflow-y: auto;
+  padding-right: 5px;
 }
 
-.filter-options .form-check-label {
-  font-size: 0.875rem;
-  color: #4b5563;
-  cursor: pointer;
-  margin-bottom: 0;
-  margin-left: 6px;
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #e5e7eb;
+  border-radius: 4px;
 }
 
-/* Books Grid - COMPACT */
+.form-check-input:checked {
+  background-color: #4f46e5;
+  border-color: #4f46e5;
+}
+
+.filter-divider {
+  height: 1px;
+  background-color: #f3f4f6;
+  margin: 20px 0;
+}
+
+/* --- 4. BOOKS GRID --- */
 .books-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-  margin-bottom: 30px;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); 
+  gap: 24px;
+  margin-bottom: 40px;
 }
 
-.book-item {
-  height: 100%;
-}
-
+/* === CARD STYLE (Giống trang Favorites) === */
 .book-card {
   background: white;
-  border-radius: 6px;
+  border-radius: 12px;
   overflow: hidden;
-  border: 1px solid #e5e7eb;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   height: 100%;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  position: relative;
 }
 
-.book-img-container {
+/* Hiệu ứng Nổi lên khi Hover */
+.book-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Cover Image */
+.book-cover {
   position: relative;
   width: 100%;
-  height: 220px;
+  padding-top: 140%; /* Giữ tỷ lệ khung hình */
   overflow: hidden;
-  background: #f3f4f6;
+  background-color: #f1f5f9;
 }
 
-.book-img-container img {
-  width: 100%;
-  height: 100%;
+.book-image {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
+  /* Không cần zoom ảnh nữa để giống trang favorites */
 }
 
-.book-card:hover .book-img-container img {
-  transform: scale(1.06);
+/* Status Badge */
+.status-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  z-index: 2;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
+.status-badge.available { background-color: rgba(16, 185, 129, 0.9); color: white; }
+.status-badge.out { background-color: rgba(239, 68, 68, 0.9); color: white; }
 
+/* === OVERLAY: ĐEN MỜ 0.7 (KHÔNG BLUR) === */
 .book-overlay {
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  width: 100%;
+  height: 100%;
+  /* Màu đen với độ trong suốt 0.7 */
+  background: rgba(0, 0, 0, 0.7); 
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0;
   transition: opacity 0.3s ease;
+  backdrop-filter: none; /* Bỏ blur */
 }
 
 .book-card:hover .book-overlay {
   opacity: 1;
 }
 
-/* THÊM CONTAINER CHO NÚT BÊN TRONG OVERLAY */
 .overlay-buttons {
-    display: flex;
-    flex-direction: column; /* Xếp nút theo chiều dọc */
-    gap: 8px; /* Khoảng cách giữa các nút */
-    align-items: center;
+  display: flex;
+  gap: 12px;
 }
 
-/* Nút MƯỢN SÁCH trong Overlay */
-.borrow-overlay-btn {
-    background: #2563eb !important;
-    color: white !important;
-    border: 1px solid #2563eb !important;
-    font-weight: 600 !important;
-    padding: 8px 16px !important;
-    border-radius: 6px !important;
-    font-size: 0.9rem !important;
-    transition: all 0.2s;
-}
-
-.borrow-overlay-btn:hover {
-    background: #1d4ed8 !important;
-    border-color: #1d4ed8 !important;
-    transform: scale(1.05);
-}
-
-/* Nút CHI TIẾT trong Overlay (điều chỉnh nhẹ) */
-.book-overlay .btn-light {
-  background: white;
-  color: #2563eb;
+/* Nút tròn trong overlay */
+.action-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: none;
-  font-weight: 500;
-  padding: 6px 12px;
-  border-radius: 4px;
-  font-size: 0.8rem;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+.action-btn:hover {
+  transform: scale(1.1);
 }
 
-.book-overlay .btn-light:hover {
-  background: #f3f4f6;
-}
-
+/* Book Info */
 .book-info {
-  padding: 11px;
+  padding: 16px;
   flex-grow: 1;
   display: flex;
   flex-direction: column;
 }
 
 .book-title {
-  font-weight: 600;
-  font-size: 0.88rem;
+  font-size: 1rem;
+  font-weight: 700;
   color: #1f2937;
-  line-height: 1.3;
+  line-height: 1.4;
   margin-bottom: 4px;
-  min-height: 2.6em;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
@@ -547,187 +532,61 @@ export default {
 }
 
 .book-author {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: #6b7280;
-  margin-bottom: 8px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  margin-bottom: auto;
 }
 
-.book-footer {
-  margin-top: auto;
-  display: flex; 
-  align-items: center;
-  justify-content: space-between;
+/* Pagination */
+.pagination-container .pagination {
+  gap: 6px;
 }
-
-/* Nút Chi tiết ở Footer */
-.detail-btn {
-    font-size: 0.75rem; 
-    padding: 4px 8px;
-    font-weight: 500;
-    border-radius: 4px;
-    white-space: nowrap;
-    transition: all 0.2s;
-}
-
-.badge {
-  font-size: 0.7rem;
-  padding: 4px 8px;
-  font-weight: 600;
-}
-
-/* Pagination - Updated Style */
-.pagination-container {
-  display: flex;
-  justify-content: center;
-}
-
-.pagination {
-  gap: 8px; 
-}
-
-.page-item {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .page-link {
-  color: #4b5563;
   border: none;
-  background-color: transparent;
-  border-radius: 50%; 
-  width: 38px;
-  height: 38px;
-  padding: 0;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  line-height: 1;
-}
-
-/* Kiểu cho số trang đang hoạt động (active) */
-.page-item.active .page-link {
-  background-color: #2563eb; 
-  color: white;
-  border-color: #2563eb;
-  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
-}
-
-/* Kiểu khi di chuột (hover) */
-.page-item:not(.active) .page-link:not(.ellipsis):hover {
-  background-color: #f3f4f6;
-  color: #1f2937;
-}
-
-/* Kiểu cho nút mũi tên (prev/next) */
-.page-item.prev-next .page-link {
   color: #4b5563;
-  width: 32px;
-  height: 32px;
-  font-size: 0.8rem;
+  font-weight: 600;
+  margin: 0 2px;
+  transition: all 0.2s;
 }
-
-.page-item.prev-next .page-link:hover {
+.page-item.active .page-link {
+  background-color: #4f46e5;
+  color: white;
+  box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+}
+.page-item:not(.active) .page-link:hover {
   background-color: #e5e7eb;
-}
-
-/* Kiểu cho dấu ... và disabled */
-.page-item.disabled .page-link {
-  color: #9ca3af;
-  background-color: transparent;
-  border-color: transparent;
-  cursor: not-allowed;
-  box-shadow: none;
+  color: #111827;
 }
 
 /* Responsive */
-@media (max-width: 1400px) {
+@media (max-width: 991px) {
   .books-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 13px;
+    gap: 16px;
   }
-}
-
-@media (max-width: 1024px) {
-  .books-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-  }
-  
-  .col-xl-2 { width: 100%; }
-  .col-xl-10 { width: 100%; }
-}
-
-@media (max-width: 768px) {
-  .books-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-  }
-
   .filter-panel {
-    margin-bottom: 24px;
-    margin-top: 0;
-  }
-
-  .books-grid {
-    margin-top: 0;
-  }
-
-  .search-bar .col-md-4 {
-    margin-top: 8px;
+    margin-bottom: 20px;
+    z-index: 1;
   }
 }
 
 @media (max-width: 576px) {
   .books-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
     gap: 12px;
   }
-
-  .book-img-container {
-    height: 240px;
+  .book-info {
+    padding: 12px;
   }
-
-  .page-link {
-    padding: 6px 10px;
-    font-size: 0.85rem;
-  }
-
-  .search-bar {
-    padding: 8px 0;
-  }
-
-  .search-input .form-control,
-  .search-input .btn-primary,
-  .search-input .form-select-sm {
-    height: 36px;
-  }
-
-  /* Responsive update for Pagination */
-  .pagination {
-    gap: 4px;
-  }
-  .page-link {
-    width: 34px;
-    height: 34px;
+  .book-title {
     font-size: 0.9rem;
   }
-
-  /* Hide Icon and Title, make search wider on small screens */
-  .header-sticky .col-md-3:first-child {
-      display: none !important;
-  }
-  .header-sticky .col-md-6 {
-      width: 75% !important;
-  }
-  .header-sticky .col-md-3:last-child {
-      width: 25% !important;
-  }
+  .brand-area h4 { display: none; }
+  .sort-area label { display: none; }
 }
 </style>

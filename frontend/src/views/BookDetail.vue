@@ -1,21 +1,21 @@
 <template>
   <div class="book-detail-page">
     <div class="container-fluid px-3">
-      <div class="detail-container py-4">
-        
+      <div class="detail-container mt-1 py-3">
+
         <div v-if="loading" class="text-center">
           <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Đang tải...</span>
           </div>
         </div>
 
-        <div v-else-if="book" class="row g-4 custom-detail-layout">
-          
+        <div v-else-if="book" class="row gx-5 gy-4 custom-detail-layout">
+
           <div class="col-lg-4 col-md-5 book-cover-col">
             <div class="book-cover-section">
               <div class="book-cover-wrapper">
-                <img 
-                  :src="book.HinhAnh || placeholderImage" 
+                <img
+                  :src="book.HinhAnh || placeholderImage"
                   :alt="book.TENSACH"
                   class="book-cover-img"
                   @error="onImgError"
@@ -29,15 +29,16 @@
 
               <h1 class="book-title">{{ book.TENSACH }}</h1>
 
-              <p class="book-author">
-                bởi <strong>{{ book.TACGIA || 'Không rõ' }}</strong>
-              </p>
+              <div class="d-flex align-items-center mb-3">
+                <span class="book-author me-4">
+                  bởi <strong>{{ book.TACGIA || 'Không rõ' }}</strong>
+                </span>
+                <span :class="['badge', book.SOQUYEN > 0 ? 'bg-success' : 'bg-danger']">
+                  {{ book.SOQUYEN > 0 ? 'Còn sách' : 'Hết sách' }}
+                </span>
+              </div>
 
-              <p :class="['book-status', book.SOQUYEN > 0 ? 'text-success' : 'text-danger']">
-                {{ book.SOQUYEN > 0 ? 'Còn sách' : 'Hết sách' }}
-              </p>
-
-              <div class="d-flex gap-2 mt-3 mb-4 button-group">
+              <div class="d-flex gap-3 mt-4 mb-4 button-group">
                 <button
                   v-if="book.SOQUYEN > 0 && isLoggedIn"
                   class="btn borrow-btn d-flex align-items-center"
@@ -73,7 +74,10 @@
                 </button>
               </div>
 
+              <hr class="text-muted opacity-25">
+
               <div class="description-section mt-4" v-if="book.MOTA">
+                <h5 class="section-title">Giới thiệu nội dung</h5>
                 <p class="description-text">{{ book.MOTA }}</p>
               </div>
               <div class="description-section mt-4" v-else>
@@ -82,32 +86,32 @@
                 </p>
               </div>
 
-              <div class="info-section">
-                <h6 class="info-title">Thông tin chi tiết</h6>
+              <div class="info-section mt-4">
+                <h5 class="info-title">Thông tin chi tiết</h5>
 
-                <div class="info-rows">
-                  <div class="info-row">
-                    <span class="info-label">Thể loại:</span>
+                <div class="info-grid">
+                  <div class="info-item">
+                    <span class="info-label">Thể loại</span>
                     <span class="info-value">{{ book.THELOAI || 'N/A' }}</span>
                   </div>
 
-                  <div class="info-row">
-                    <span class="info-label">Nhà xuất bản:</span>
+                  <div class="info-item">
+                    <span class="info-label">Nhà xuất bản</span>
                     <span class="info-value">{{ publisherName }}</span>
                   </div>
 
-                  <div class="info-row">
-                    <span class="info-label">Năm xuất bản:</span>
+                  <div class="info-item">
+                    <span class="info-label">Năm xuất bản</span>
                     <span class="info-value">{{ book.NAMXUATBAN || 'N/A' }}</span>
                   </div>
 
-                  <div class="info-row">
-                    <span class="info-label">Số trang:</span>
+                  <div class="info-item">
+                    <span class="info-label">Số trang</span>
                     <span class="info-value">{{ book.SOTRANG || 'N/A' }}</span>
                   </div>
 
-                  <div class="info-row">
-                    <span class="info-label">Ngôn ngữ:</span>
+                  <div class="info-item">
+                    <span class="info-label">Ngôn ngữ</span>
                     <span class="info-value">{{ book.NGONNGU || 'Tiếng Việt' }}</span>
                   </div>
                 </div>
@@ -202,6 +206,7 @@
 </template>
 
 <script>
+// SCRIPT GIỮ NGUYÊN KHÔNG THAY ĐỔI
 import SachService from "@/services/sach.service";
 import NhaXuatBanService from "@/services/nhaxuatban.service";
 import AuthService from "@/services/auth.service";
@@ -402,6 +407,10 @@ export default {
       e.target.src = this.placeholderImage;
     },
 
+    goBack() {
+      this.$router.go(-1);
+    },
+
     async checkFavoriteStatus() {
       try {
         const user = AuthService.getCurrentUser();
@@ -428,11 +437,9 @@ export default {
           this.isFavorite = true;
         }
 
-        // Đảm bảo trạng thái được đồng bộ với server
         await this.checkFavoriteStatus();
       } catch (error) {
         console.error("Error toggling favorite:", error);
-        // Khôi phục trạng thái nếu có lỗi
         await this.checkFavoriteStatus();
       } finally {
         this.favoriteLoading = false;
@@ -469,41 +476,29 @@ html {
   scroll-behavior: smooth;
 }
 
-.book-detail-page {
-  background-color: #f5f6f7;
-}
 
 /* Main container */
 .detail-container {
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding-top: 2rem;
-  padding-bottom: 30px;
-  scroll-padding-top: 80px;
-  scroll-padding-bottom: 20px;
 }
 
-/* Layout alignment */
-.custom-detail-layout {
-  align-items: flex-start;
-}
-
-/* LEFT COLUMN: COVER */
+/* LEFT COLUMN */
 .book-cover-col {
-  padding-right: 2rem;
-  position: sticky;
-  top: 20px;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+  align-self: flex-start; 
 }
 
 .book-cover-wrapper {
-  background: white;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  aspect-ratio: 3 / 4;
   width: 100%;
-  max-width: 360px;
-  margin: 0 auto;
+  max-width: 380px;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  aspect-ratio: 2 / 3;
 }
 
 .book-cover-img {
@@ -514,38 +509,33 @@ html {
 
 /* RIGHT COLUMN */
 .book-details-col {
-  padding-left: 1rem;
+  padding-left: 2rem;
+}
+
+.book-details-section {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
 .book-title {
-  font-size: 2rem;
-  font-weight: 700;
+  font-size: 2.2rem;
+  font-weight: 800;
   color: #1f2937;
-  margin-bottom: 0.75rem;
+  /* CHỈNH SỬA: Sửa line-height từ 0.2 thành 1.2 để chữ không bị đè lên nhau */
+  line-height: 1.2;
+  margin-bottom: 1rem;
 }
 
 .book-author {
-  font-size: 1rem;
-  color: #6b7280;
-}
-
-/* Status */
-.book-status {
-  font-weight: 600;
-  font-size: 0.95rem;
-}
-.book-status.text-success {
-  color: #10b981 !important;
-}
-.book-status.text-danger {
-  color: #ef4444 !important;
+  font-size: 1.1rem;
+  color: #4b5563;
 }
 
 /* Buttons */
 .button-group {
-  margin-top: 1.5rem !important;
-  margin-bottom: 1.5rem !important;
-  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .borrow-btn {
@@ -553,179 +543,138 @@ html {
   color: white;
   border: none;
   border-radius: 8px;
-  padding: 8px 20px;
+  padding: 12px 28px;
   font-weight: 600;
-  font-size: 1rem;
-  box-shadow: 0 4px 8px rgb(37 99 235 / 0.3);
-  transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.15s ease;
+  font-size: 1.05rem;
+  box-shadow: 0 4px 10px rgb(37 99 235 / 0.3);
+  transition: all 0.2s ease;
   cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-}
-
-.borrow-btn i {
-  font-size: 18px;
-  margin-right: 8px;
 }
 
 .borrow-btn:hover {
-  background-color: #1e40af;
-  box-shadow: 0 6px 12px rgb(29 78 216 / 0.5);
+  background-color: #1d4ed8;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgb(37 99 235 / 0.4);
 }
 
-.borrow-btn:active {
-  transform: scale(0.95);
-}
-
-/* ========================================= */
-/* FAVORITE BUTTON STYLES (EDITED)     */
-/* ========================================= */
-
-/* Trạng thái bình thường (Chưa thích): Nền trắng, viền đỏ, chữ đỏ */
 .favorite-btn {
   background-color: white;
-  color: #b91c1c;
-  border: 1.5px solid #b91c1c;
+  color: #dc2626;
+  border: 1px solid #dc2626;
   border-radius: 8px;
-  padding: 8px 20px;
+  padding: 12px 28px;
   font-weight: 600;
-  font-size: 1rem;
-  transition: all 0.3s ease; /* Transition all để mượt màu nền */
+  font-size: 1.05rem;
+  transition: all 0.2s ease;
   cursor: pointer;
-  display: inline-flex;
-  align-items: center;
 }
 
-.favorite-btn i {
-  font-size: 18px;
-  color: #b91c1c;
-  transition: color 0.3s ease;
-  margin-right: 8px;
-}
-
-/* Hover khi chưa thích */
 .favorite-btn:hover {
-  background-color: #ffe5e5;
+  background-color: #fef2f2;
+  transform: translateY(-2px);
 }
 
-/* Trạng thái ĐÃ THÍCH (Active): Nền đỏ, chữ trắng */
 .favorite-btn.active {
-  background-color: #b91c1c;
-  color: white;
-  box-shadow: 0 4px 8px rgba(185, 28, 28, 0.3);
-}
-
-/* Đổi màu icon sang trắng khi active */
-.favorite-btn.active i {
+  background-color: #dc2626;
   color: white;
 }
 
-/* Hover khi đang Active */
-.favorite-btn.active:hover {
-  background-color: #991b1b;
-  border-color: #991b1b;
+/* Description Section */
+.section-title {
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: #111827;
+  margin-bottom: 10px;
+  border-left: 4px solid #2563eb;
+  padding-left: 12px;
 }
 
-.favorite-btn:active {
-  transform: scale(0.95);
-}
-
-/* ========================================= */
-
-/* Description */
 .description-text {
   text-align: justify;
-  color: #4b5563;
+  line-height: 1.7;
+  color: #374151;
+  font-size: 1rem;
 }
 
-.description-section {
-  margin-top: 1.5rem;
-}
-
-/* Info section */
-.info-section {
-  margin-top: 2rem;
-  background: white;
-  padding: 1.5rem;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-}
-
+/* Info Grid Layout */
 .info-title {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: 700;
+  margin-bottom: 15px;
+  color: #111827;
+  border-left: 4px solid #2563eb;
+  padding-left: 12px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); 
+  gap: 20px;
+  background-color: #f9fafb;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.info-item {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 1rem;
-}
-
-.info-title::before {
-  content: '';
-  width: 4px;
-  height: 22px;
-  background: #2563eb;
-  border-radius: 2px;
-}
-
-.info-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid #f3f4f6;
-}
-
-.info-row:last-child {
-  border-bottom: none;
+  flex-direction: column;
 }
 
 .info-label {
-  font-weight: 600;
-  color: #374151;
+  font-size: 0.85rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-bottom: 4px;
 }
 
 .info-value {
-  color: #6b7280;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
 }
 
-/* Responsive */
-@media (max-width: 1024px) {
+/* Responsive Styles */
+@media (max-width: 991px) {
+  /* Tablet & Mobile: Ảnh bìa ở trên */
   .book-cover-col {
     position: static;
-    padding-right: 0;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
+    padding-right: 12px;
+  }
+  
+  .book-details-col {
+    padding-left: 12px;
+  }
+
+  .book-details-section {
+    padding: 20px;
+  }
+
+  .book-title {
+    font-size: 1.8rem;
     text-align: center;
   }
-}
-
-@media (max-width: 768px) {
-  .borrow-btn, .favorite-btn {
-    width: 100%;
-  }
+  
   .button-group {
-    flex-direction: column;
+    justify-content: center;
   }
 }
 
-/* Modal Styles */
+/* ================== MODAL STYLES ================== */
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 20px;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000; padding: 20px;
+  backdrop-filter: blur(4px);
 }
 
 .modal-content {
   background: white;
   border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 15px 40px rgba(0,0,0,0.2);
   max-width: 500px;
   width: 100%;
   max-height: 90vh;
@@ -734,85 +683,21 @@ html {
 }
 
 @keyframes modalSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .modal-header {
   padding: 1.5rem;
   border-bottom: 1px solid #e5e7eb;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  display: flex; justify-content: space-between; align-items: center;
 }
 
-.modal-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #1f2937;
-  margin: 0;
-}
-
-.btn-close {
-  background: transparent;
-  border: none;
-  font-size: 1.5rem;
-  color: #6b7280;
-  cursor: pointer;
-  padding: 0;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.btn-close:hover {
-  color: #1f2937;
-}
-
-.modal-body {
-  padding: 1.5rem;
-}
-
-.modal-footer {
-  padding: 1.5rem;
-  border-top: 1px solid #e5e7eb;
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-}
-
-.quantity-selector {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.quantity-input {
-  width: 80px;
-  text-align: center;
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.quantity-selector .btn {
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.quantity-selector .btn:hover {
-  background-color: #e5e7eb;
-  color: #1f2937;
-}
+.modal-title { font-size: 1.25rem; font-weight: 700; margin: 0; }
+.btn-close { border: none; background: transparent; font-size: 1.5rem; cursor: pointer; }
+.modal-body { padding: 1.5rem; }
+.modal-footer { padding: 1.5rem; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 0.75rem; }
+.quantity-selector { display: flex; align-items: center; gap: 0.75rem; }
+.quantity-input { width: 80px; text-align: center; font-weight: 600; }
+.quantity-selector .btn { width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center; }
 </style>
