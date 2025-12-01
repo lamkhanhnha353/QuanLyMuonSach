@@ -43,7 +43,7 @@
                 <button
                   v-if="book.SOQUYEN > 0 && isLoggedIn"
                   class="btn borrow-btn d-flex align-items-center"
-                  @click="borrowBook"
+                  @click="openBorrowModal"
                 >
                   <i class="fas fa-book me-2"></i> Mượn sách
                 </button>
@@ -113,6 +113,86 @@
 
       </div>
     </div>
+
+    <!-- Modal Chọn Số Lượng Mượn -->
+    <div v-if="showBorrowModal" class="modal-overlay" @click.self="showBorrowModal = false">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Mượn sách: {{ book?.TENSACH }}</h5>
+          <button type="button" class="btn-close" @click="showBorrowModal = false"></button>
+        </div>
+        
+        <div class="modal-body">
+          <!-- Thông tin sách còn lại -->
+          <div class="alert alert-info mb-3">
+            <p class="mb-1"><strong>Số quyển còn lại:</strong> {{ book?.SOQUYEN }} quyển</p>
+            <p class="mb-1"><strong>Đang mượn (đã duyệt):</strong> {{ userBorrowCount }} quyển</p>
+            <p class="mb-1"><strong>Đang yêu cầu (chờ duyệt):</strong> {{ pendingBorrowCount }} quyển</p>
+            <p class="mb-1"><strong>Tổng hạn mức:</strong> {{ userBorrowCount + pendingBorrowCount }} / 10 quyển</p>
+            <p class="mb-0"><strong>Đã mượn cuốn sách này:</strong> {{ bookBorrowCount }} / 3 quyển</p>
+          </div>
+
+          <!-- Chọn số lượng -->
+          <div class="form-group mb-3">
+            <label for="borrowQuantity" class="form-label"><strong>Chọn số lượng mượn:</strong></label>
+            <div class="quantity-selector">
+              <button 
+                type="button" 
+                class="btn btn-outline-secondary"
+                @click="borrowQuantity = Math.max(1, borrowQuantity - 1)"
+              >
+                <i class="fas fa-minus"></i>
+              </button>
+              
+              <input 
+                id="borrowQuantity"
+                v-model.number="borrowQuantity"
+                type="number"
+                class="form-control quantity-input"
+                :min="1"
+                :max="maxBorrowQuantity"
+                @change="validateQuantity"
+              >
+              
+              <button 
+                type="button" 
+                class="btn btn-outline-secondary"
+                @click="borrowQuantity = Math.min(maxBorrowQuantity, borrowQuantity + 1)"
+              >
+                <i class="fas fa-plus"></i>
+              </button>
+            </div>
+            <small class="text-muted d-block mt-2">
+              Tối đa {{ maxBorrowQuantity }} quyển (Max 3/cuốn, còn lại: {{ book?.SOQUYEN }} quyển, hạn mức: {{ 10 - userBorrowCount - pendingBorrowCount }}/10)
+            </small>
+          </div>
+
+          <!-- Cảnh báo nếu mượn quá hạn -->
+          <div v-if="borrowWarning" class="alert alert-warning">
+            {{ borrowWarning }}
+          </div>
+
+          <!-- Lỗi validation -->
+          <div v-if="borrowError" class="alert alert-danger">
+            {{ borrowError }}
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" @click="showBorrowModal = false">
+            Hủy
+          </button>
+          <button 
+            type="button" 
+            class="btn btn-primary"
+            @click="confirmBorrow"
+            :disabled="!borrowQuantity || borrowQuantity < 1"
+          >
+            Xác nhận mượn {{ borrowQuantity }} quyển
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -131,6 +211,13 @@ export default {
       placeholderImage: "https://via.placeholder.com/400x600?text=No+Cover",
       isLoggedIn: false,
       publishers: [],
+      showBorrowModal: false,
+      borrowQuantity: 1,
+      userBorrowCount: 0,
+      pendingBorrowCount: 0, // Số quyển đang yêu cầu mượn (chờ duyệt)
+      bookBorrowCount: 0, // Số quyển đã mượn của cuốn sách này
+      borrowError: "",
+      borrowWarning: "",
     };
   },
   computed: {
@@ -152,6 +239,21 @@ export default {
       });
 
       return publisher ? (publisher.TENNXB || "N/A") : "N/A";
+    },
+    maxBorrowQuantity() {
+      if (!this.book) return 0;
+      
+      // Tối đa 3 quyển mỗi lần
+      const maxPerBook = 3;
+      // Còn bao nhiêu quyển
+      const available = this.book.SOQUYEN || 0;
+      // Hạn mức còn lại cho độc giả = 10 - (số đã mượn + số đang yêu cầu)
+      const totalBorrowAndPending = this.userBorrowCount + this.pendingBorrowCount;
+      const remainingQuota = Math.max(0, 10 - totalBorrowAndPending);
+      // Max còn lại cho cuốn sách này (3 - số quyển đã mượn của sách này)
+      const remainingPerBook = Math.max(0, 3 - this.bookBorrowCount);
+
+      return Math.min(maxPerBook, available, remainingQuota, remainingPerBook);
     }
   },
   methods: {
@@ -177,7 +279,97 @@ export default {
       }
     },
 
-    async borrowBook() {
+    async fetchUserBorrowCount() {
+      try {
+        const user = AuthService.getCurrentUser();
+        if (!user) return;
+
+        const res = await MuonSachService.getForDocGia(user._id);
+        const borrowRecords = res.data || [];
+        
+        // Tính tổng số quyển đang mượn (CHỈ "đã duyệt" hoặc "đang mượn", không tính "chờ duyệt")
+        const totalQuantity = borrowRecords
+          .filter(record => record.trangThai === "đã duyệt" || record.trangThai === "đang mượn")
+          .reduce((sum, record) => sum + (record.soLuong || 1), 0);
+        
+        this.userBorrowCount = totalQuantity;
+      } catch (error) {
+        console.error("Error fetching user borrow count:", error);
+      }
+    },
+
+    async fetchBookBorrowCount() {
+      // Kiểm tra người dùng đã mượn bao nhiêu quyển của CUỐN SÁCH NÀY
+      try {
+        const user = AuthService.getCurrentUser();
+        if (!user) return 0;
+
+        const res = await MuonSachService.getForDocGia(user._id);
+        const borrowRecords = res.data || [];
+        
+        // Lọc các phiếu mượn của cuốn sách này với trạng thái đang hoạt động (CHỈ "đã duyệt" hoặc "đang mượn")
+        const bookBorrowCount = borrowRecords
+          .filter(record => 
+            String(record.sachId) === String(this.book._id) &&
+            (record.trangThai === "đã duyệt" || record.trangThai === "đang mượn")
+          )
+          .reduce((sum, record) => sum + (record.soLuong || 1), 0);
+        
+        return bookBorrowCount;
+      } catch (error) {
+        console.error("Error fetching book borrow count:", error);
+        return 0;
+      }
+    },
+
+    async fetchPendingBorrowCount() {
+      // Lấy tổng số quyển đang YÊU CẦU mượn (trạng thái "chờ duyệt")
+      try {
+        const user = AuthService.getCurrentUser();
+        if (!user) return 0;
+
+        const res = await MuonSachService.getForDocGia(user._id);
+        const borrowRecords = res.data || [];
+        
+        // Tính tổng số quyển với trạng thái "chờ duyệt"
+        const pendingQuantity = borrowRecords
+          .filter(record => record.trangThai === "chờ duyệt")
+          .reduce((sum, record) => sum + (record.soLuong || 1), 0);
+        
+        return pendingQuantity;
+      } catch (error) {
+        console.error("Error fetching pending borrow count:", error);
+        return 0;
+      }
+    },
+
+    async openBorrowModal() {
+      // Lấy số lượng đã mượn của cuốn sách này trước khi mở modal
+      // Refresh lại tất cả dữ liệu để phản ánh trạng thái mới nhất
+      this.bookBorrowCount = await this.fetchBookBorrowCount();
+      await this.fetchUserBorrowCount();
+      this.pendingBorrowCount = await this.fetchPendingBorrowCount();
+      
+      this.borrowQuantity = 1;
+      this.borrowError = "";
+      this.borrowWarning = "";
+      this.showBorrowModal = true;
+    },
+
+    validateQuantity() {
+      if (this.borrowQuantity < 1) {
+        this.borrowQuantity = 1;
+      } else if (this.borrowQuantity > this.maxBorrowQuantity) {
+        this.borrowQuantity = this.maxBorrowQuantity;
+      }
+      this.borrowError = "";
+      this.borrowWarning = "";
+    },
+
+    async confirmBorrow() {
+      this.borrowError = "";
+      this.borrowWarning = "";
+
       const user = AuthService.getCurrentUser();
       if (!user) {
         alert("Vui lòng đăng nhập để mượn sách");
@@ -185,15 +377,26 @@ export default {
         return;
       }
 
+      // Validate số lượng
+      if (!this.borrowQuantity || this.borrowQuantity < 1) {
+        this.borrowError = "Vui lòng chọn số lượng hợp lệ";
+        return;
+      }
+
+      if (this.borrowQuantity > this.maxBorrowQuantity) {
+        this.borrowError = `Không thể mượn quá ${this.maxBorrowQuantity} quyển`;
+        return;
+      }
+
       // Confirm borrow request
-      const confirmBorrow = confirm(`Bạn có chắc muốn mượn sách "${this.book.TENSACH}" không?`);
+      const confirmBorrow = confirm(`Bạn có chắc muốn mượn ${this.borrowQuantity} quyển sách "${this.book.TENSACH}" không?`);
       if (!confirmBorrow) return;
 
       try {
-        // Calculate return date (e.g., 14 days from now)
+        // Calculate return date (14 days from now)
         const today = new Date();
         const returnDate = new Date(today);
-        returnDate.setDate(today.getDate() + 14); // Default 14 days
+        returnDate.setDate(today.getDate() + 14);
         const ngayTra = returnDate.toISOString().split('T')[0];
 
         const borrowData = {
@@ -201,21 +404,26 @@ export default {
           sachId: this.book._id,
           ngayMuon: today.toISOString().split('T')[0],
           ngayTra: ngayTra,
+          soLuong: this.borrowQuantity,
         };
 
         const response = await MuonSachService.create(borrowData);
 
         if (response.status === 200 || response.status === 201) {
-          alert("Yêu cầu mượn sách đã được gửi thành công! Vui lòng chờ nhân viên duyệt.");
+          alert(`Yêu cầu mượn ${this.borrowQuantity} quyển sách đã được gửi thành công! Vui lòng chờ nhân viên duyệt.`);
+          this.showBorrowModal = false;
+          this.borrowQuantity = 1;
+          
           // Refresh book data to update quantity
           await this.fetchBook();
+          await this.fetchUserBorrowCount();
         } else {
           throw new Error("Không thể gửi yêu cầu mượn sách");
         }
       } catch (error) {
         console.error("Error borrowing book:", error);
         const errorMessage = error.response?.data?.message || error.message || "Có lỗi xảy ra khi mượn sách";
-        alert(`Lỗi: ${errorMessage}`);
+        this.borrowError = `Lỗi: ${errorMessage}`;
       }
     },
 
@@ -237,6 +445,9 @@ export default {
     this.fetchPublishers();
     const user = AuthService.getCurrentUser();
     this.isLoggedIn = !!user;
+    if (this.isLoggedIn) {
+      this.fetchUserBorrowCount();
+    }
   }
 };
 </script>
@@ -462,4 +673,114 @@ html {
     flex-direction: column;
   }
 }
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.btn-close {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-close:hover {
+  color: #1f2937;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.modal-footer {
+  padding: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.quantity-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.quantity-input {
+  width: 80px;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.quantity-selector .btn {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quantity-selector .btn:hover {
+  background-color: #e5e7eb;
+  color: #1f2937;
+}
+
 </style>
