@@ -16,9 +16,17 @@ router.route("/docgia/:id")
 
 // Route cho Nhân Viên: Quản lý 1 phiếu mượn cụ thể
 // :id ở đây là ID của Phiếu Mượn
-router.route("/:id") 
+router.route("/:id")
     .get(muonsach.findOne)
     .put(muonsach.update) // Dùng để duyệt/trả/từ chối
     .delete(muonsach.delete);
+
+// Route cho Độc Giả: Yêu cầu trả sách
+router.route("/:id/request-return")
+    .put(muonsach.requestReturn);
+
+// Route cho Nhân Viên: Xác nhận trả sách (cập nhật ngayTraThucTe và tăng SOQUYEN)
+router.route("/:id/confirm-return")
+    .put(muonsach.confirmReturn);
 
 module.exports = router;

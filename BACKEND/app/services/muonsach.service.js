@@ -192,7 +192,7 @@ async create(payload) {
         // C. Cập nhật phiếu mượn
         const filter = { _id: phieuMuonId };
         const updateData = {};
-        const validStates = ["chờ duyệt", "đã duyệt", "đang mượn", "đã trả", "từ chối"];
+        const validStates = ["chờ duyệt", "đã duyệt", "đang mượn", "đang chờ trả", "đã trả", "từ chối"];
         
         if (newTrangThai && validStates.includes(newTrangThai)) {
             updateData.trangThai = newTrangThai;
@@ -200,11 +200,20 @@ async create(payload) {
              throw new Error("Trạng thái cập nhật không hợp lệ");
         }
         
-        if (payload.nhanVienId) {
-            updateData.nhanVienId = ObjectId.isValid(payload.nhanVienId) ? new ObjectId(payload.nhanVienId) : null;
+        // Chỉ yêu cầu nhanVienId khi không phải yêu cầu trả sách từ độc giả
+        if (newTrangThai === "đang chờ trả") {
+            // Độc giả yêu cầu trả - không cần nhanVienId
+            // Giữ nhanVienId cũ nếu có
+            if (payload.nhanVienId) {
+                updateData.nhanVienId = ObjectId.isValid(payload.nhanVienId) ? new ObjectId(payload.nhanVienId) : null;
+            }
         } else {
-            // Bất kỳ ai cập nhật (trừ độc giả) đều phải có ID
-             throw new Error("ID Nhân viên xử lý là bắt buộc");
+            // Nhân viên cập nhật - yêu cầu nhanVienId
+            if (payload.nhanVienId) {
+                updateData.nhanVienId = ObjectId.isValid(payload.nhanVienId) ? new ObjectId(payload.nhanVienId) : null;
+            } else {
+                throw new Error("ID Nhân viên xử lý là bắt buộc");
+            }
         }
 
         if (newTrangThai === "đã trả") {

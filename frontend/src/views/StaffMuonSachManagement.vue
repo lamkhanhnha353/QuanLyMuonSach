@@ -128,6 +128,8 @@
                     <i class="fas fa-check"></i> Duyệt trả
                   </button>
                 </template>
+                 <!-- UPDATED: Use confirmReturn modal instead -->
+                 <!-- Replaced openUpdateModal(item, 'đã trả') with openConfirmReturnModal(item) -->
                 
                 <button class="btn-action detail" title="Xem chi tiết" @click="viewDetails(item)">
                   <i class="fas fa-eye"></i>
@@ -380,6 +382,11 @@ export default {
     async handleUpdateStatus() {
       if (!this.itemToUpdate || !this.newStatus || !this.currentUser) return;
       
+        // Check if this is a return confirmation
+        if (this.newStatus === 'đã trả' && this.itemToUpdate.trangThai === 'đang chờ trả') {
+          return this.handleConfirmReturn();
+        }
+      
       this.loading = true; // (Có thể thêm 1 cờ loading riêng cho modal)
       
       try {
@@ -408,6 +415,35 @@ export default {
       this.selectedItem = item;
       this.detailModalInstance.show();
     },
+    
+      openConfirmReturnModal(item) {
+        this.itemToUpdate = item;
+        this.newStatus = 'đã trả';
+        this.updateModalInstance.show();
+      },
+
+      async handleConfirmReturn() {
+        if (!this.itemToUpdate || !this.currentUser) return;
+      
+        this.loading = true;
+      
+        try {
+          // Call confirmReturn API instead of update
+          await MuonSachService.confirmReturn(this.itemToUpdate._id, this.currentUser._id);
+        
+          // Reload data
+          await this.fetchData();
+        
+          this.updateModalInstance.hide();
+          alert('Xác nhận trả sách thành công! SOQUYEN đã được cập nhật.');
+        
+        } catch (error) {
+          console.error("Lỗi khi xác nhận trả sách:", error);
+          alert("Xác nhận trả sách thất bại. Lỗi: " + (error.response?.data?.message || error.message));
+        } finally {
+          this.loading = false;
+        }
+      },
 
     // Phân trang
     changePage(page) {

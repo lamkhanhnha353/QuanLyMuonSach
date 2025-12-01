@@ -202,6 +202,7 @@ export default {
         { value: 'chờ duyệt', label: 'Chờ duyệt' },
         { value: 'đã duyệt', label: 'Đã duyệt' },
         { value: 'đang mượn', label: 'Đang mượn' },
+        { value: 'đang chờ trả', label: 'Đang chờ trả' },
         { value: 'đã trả', label: 'Đã trả' },
         { value: 'từ chối', label: 'Từ chối' },
         { value: 'trễ hạn', label: 'Trễ hạn' }
@@ -285,7 +286,7 @@ export default {
       return new Date(d).toLocaleDateString('vi-VN');
     },
     statusLabel(s) {
-      const map = { 'chờ duyệt': 'Chờ duyệt', 'đã duyệt': 'Đã duyệt', 'đang mượn': 'Đang mượn', 'đã trả': 'Đã trả', 'từ chối': 'Bị từ chối', 'trễ hạn': 'Quá hạn' };
+      const map = { 'chờ duyệt': 'Chờ duyệt', 'đã duyệt': 'Đã duyệt', 'đang mượn': 'Đang mượn', 'đang chờ trả': 'Đang chờ trả', 'đã trả': 'Đã trả', 'từ chối': 'Bị từ chối', 'trễ hạn': 'Quá hạn' };
       return map[(s||'').toLowerCase()] || s;
     },
     getStatusBadgeClass(s) {
@@ -293,6 +294,7 @@ export default {
       if (st === 'chờ duyệt') return 'bg-warning-soft text-warning';
       if (st === 'đã duyệt') return 'bg-info-soft text-info';
       if (st === 'đang mượn') return 'bg-primary-soft text-primary';
+      if (st === 'đang chờ trả') return 'bg-info-soft text-info';
       if (st === 'đã trả') return 'bg-success-soft text-success';
       if (st === 'từ chối') return 'bg-danger-soft text-danger';
       if (st === 'trễ hạn') return 'bg-danger-soft text-danger border-danger';
@@ -319,14 +321,14 @@ export default {
       }
     },
     async returnRequest(r) {
-      if (confirm('Bạn có chắc chắn muốn trả sách này?')) {
+      if (confirm('Bạn có chắc chắn muốn yêu cầu trả sách này?')) {
         try {
-          await MuonSachService.returnBook(r._id);
-          alert('Trả sách thành công!');
+          await MuonSachService.requestReturn(r._id);
+          alert('Yêu cầu trả sách đã được gửi thành công! Vui lòng chờ nhân viên duyệt.');
           await this.fetch();
           this.closeDetail();
         } catch (e) {
-          alert('Lỗi trả sách: ' + (e.response?.data?.message || e.message));
+          alert('Lỗi gửi yêu cầu trả sách: ' + (e.response?.data?.message || e.message));
         }
       }
     }

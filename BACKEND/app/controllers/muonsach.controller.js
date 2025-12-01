@@ -116,6 +116,27 @@ exports.requestReturn = async (req, res, next) => {
     }
 };
 
+// 6.5. Confirm Return (Nhân viên xác nhận trả sách - cập nhật ngayTraThucTe + SOQUYEN)
+exports.confirmReturn = async (req, res, next) => {
+    try {
+        if (!req.body?.nhanVienId) {
+            return next(new ApiError(400, "ID Nhân viên xử lý là bắt buộc"));
+        }
+        
+        const muonSachService = new MuonSachService(MongoDB.client);
+        const payload = {
+            trangThai: "đã trả",
+            nhanVienId: req.body.nhanVienId,
+        };
+        const document = await muonSachService.update(req.params.id, payload);
+        return res.send({ message: "Xác nhận trả sách thành công", data: document });
+    } catch (error) {
+        return next(
+            new ApiError(500, `Lỗi khi xác nhận trả sách: ${error.message}`)
+        );
+    }
+};
+
 // 7. Delete (Xóa 1 phiếu)
 exports.delete = async (req, res, next) => {
     try {

@@ -39,6 +39,11 @@ class MuonSachService {
   requestReturn(id) {
     return http.put(`/muonsach/${id}/request-return`);
   }
+
+  // 8. Nhân viên: Xác nhận trả sách (cập nhật ngayTraThucTe + SOQUYEN)
+  confirmReturn(id, nhanVienId) {
+    return http.put(`/muonsach/${id}/confirm-return`, { nhanVienId });
+  }
 }
 
 export default new MuonSachService();
