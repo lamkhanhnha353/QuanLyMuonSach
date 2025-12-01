@@ -24,6 +24,21 @@ class DocGiaService {
   delete(id) {
     return http.delete(`/docgia/${id}`);
   }
+
+  // Thêm sách vào yêu thích
+  addFavorite(docGiaId, sachId) {
+    return http.post(`/docgia/${docGiaId}/favorites`, { sachId });
+  }
+
+  // Xóa sách khỏi yêu thích
+  removeFavorite(docGiaId, sachId) {
+    return http.delete(`/docgia/${docGiaId}/favorites/${sachId}`);
+  }
+
+  // Lấy danh sách sách yêu thích
+  getFavorites(docGiaId) {
+    return http.get(`/docgia/${docGiaId}/favorites`);
+  }
 }
 
 export default new DocGiaService();

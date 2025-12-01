@@ -13,6 +13,7 @@
         <router-link to="/" class="text-dark text-decoration-none nav-link-item">Trang chủ</router-link>
         <router-link to="/books" class="text-dark text-decoration-none nav-link-item">Khám phá</router-link>
         <router-link v-if="currentUser && !currentUser.ChucVu" to="/docgia/account" class="text-dark text-decoration-none nav-link-item">Tài khoản của tôi</router-link>
+        <router-link v-if="currentUser && !currentUser.ChucVu" to="/docgia/favorites" class="text-dark text-decoration-none nav-link-item">Danh sách yêu thích</router-link>
         <router-link v-if="currentUser && !currentUser.ChucVu" to="/docgia/requests" class="text-dark text-decoration-none nav-link-item">Yêu cầu mượn của tôi</router-link>
         <router-link v-if="currentUser && !currentUser.ChucVu" to="/docgia/history" class="text-dark text-decoration-none nav-link-item">Lịch sử mượn sách</router-link>
       </nav>
@@ -24,21 +25,8 @@
         </div>
 
         <div v-else class="d-flex align-items-center gap-2">
-          <div class="dropdown" v-if="currentUser.ChucVu === 'DocGia'">
-            <button class="btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="fas fa-user-circle me-1"></i>{{ displayName }}
-            </button>
-            <ul class="dropdown-menu" aria-labelledby="userDropdown">
-              <li><router-link to="/docgia/requests" class="dropdown-item"><i class="fas fa-list me-2"></i>Yêu cầu mượn của tôi</router-link></li>
-              <li><router-link to="/docgia/history" class="dropdown-item"><i class="fas fa-history me-2"></i>Lịch sử mượn</router-link></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><button class="dropdown-item" @click="logOut"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</button></li>
-            </ul>
-          </div>
-          <div v-else>
-            <span class="text-muted d-none d-md-block" style="font-size: 0.9rem;">Xin chào, <strong class="text-dark">{{ displayName }}</strong></span>
-            <button class="btn btn-outline-danger btn-sm" @click="logOut"><i class="fas fa-sign-out-alt"></i></button>
-          </div>
+          <span class="text-muted d-none d-md-block" style="font-size: 0.9rem;">Xin chào, <strong class="text-dark">{{ displayName }}</strong></span>
+          <button class="btn btn-outline-danger btn-sm" @click="logOut"><i class="fas fa-sign-out-alt"></i></button>
         </div>
       </div>
     </div>

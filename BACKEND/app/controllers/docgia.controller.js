@@ -134,3 +134,58 @@ exports.deleteAll = async (_req, res, next) => {
         );
     }
 };
+
+// 8. Add Favorite: Thêm sách vào yêu thích
+exports.addFavorite = async (req, res, next) => {
+    try {
+        const docGiaService = new DocGiaService(MongoDB.client);
+        const document = await docGiaService.addFavorite(req.params.id, req.body.sachId);
+        return res.send({ message: "Đã thêm sách vào yêu thích", data: document });
+    } catch (error) {
+        return next(
+            new ApiError(500, `Lỗi khi thêm sách vào yêu thích cho độc giả với id=${req.params.id}`)
+        );
+    }
+};
+
+// 9. Remove Favorite: Xóa sách khỏi yêu thích
+exports.removeFavorite = async (req, res, next) => {
+    console.log("=== BACKEND: removeFavorite START ===");
+    console.log("docGiaId:", req.params.id);
+    console.log("sachId:", req.params.sachId);
+    
+    try {
+        const docGiaService = new DocGiaService(MongoDB.client);
+        const document = await docGiaService.removeFavorite(req.params.id, req.params.sachId);
+        
+        console.log("✅ Remove successful");
+        console.log("Updated document:", document);
+        console.log("Sending response with status 200");
+        
+        return res.status(200).json({ 
+            message: "Đã xóa sách khỏi yêu thích", 
+            data: document 
+        });
+    } catch (error) {
+        console.error("❌ Error in removeFavorite:", error.message);
+        console.error("Error stack:", error.stack);
+        return next(
+            new ApiError(500, `Lỗi khi xóa sách khỏi yêu thích cho độc giả với id=${req.params.id}`)
+        );
+    } finally {
+        console.log("=== BACKEND: removeFavorite END ===\n");
+    }
+};
+
+// 10. Get Favorites: Lấy danh sách sách yêu thích
+exports.getFavorites = async (req, res, next) => {
+    try {
+        const docGiaService = new DocGiaService(MongoDB.client);
+        const favorites = await docGiaService.getFavorites(req.params.id);
+        return res.send(favorites);
+    } catch (error) {
+        return next(
+            new ApiError(500, `Lỗi khi lấy danh sách yêu thích cho độc giả với id=${req.params.id}`)
+        );
+    }
+};

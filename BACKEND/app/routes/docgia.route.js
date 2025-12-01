@@ -16,4 +16,12 @@ router.route("/:id")
     .put(docgia.update)
     .delete(docgia.delete);
 
+// Favorites routes
+router.route("/:id/favorites")
+    .get(docgia.getFavorites)
+    .post(docgia.addFavorite);
+
+router.route("/:id/favorites/:sachId")
+    .delete(docgia.removeFavorite);
+
 module.exports = router;

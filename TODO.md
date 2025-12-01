@@ -1,21 +1,17 @@
-# TODO: Implement Borrow Book Feature
+# TODO: Implement Favorite Books Feature
 
-## Overview
-Implement the borrow book feature where readers can request to borrow a book from the BookDetail page, creating a request that staff can approve.
+## Backend Changes
+- [x] Update DocGiaService to include favorites array and methods
+- [x] Add favorites endpoints in DocGiaController
+- [x] Update DocGia routes for favorites
 
-## Steps
-- [x] Update BookDetail.vue borrowBook method to send borrow request via API
-- [x] Add success/error handling and user feedback in BookDetail.vue
-- [x] Ensure borrow button is only enabled for logged-in readers and available books
-- [x] Update MuonSachService to decrement book quantity only when staff approves (status "đã duyệt")
-- [ ] Test the borrow request creation and staff approval flow
+## Frontend Changes
+- [x] Update BookDetail.vue to toggle favorites
+- [x] Create FavoriteBooks.vue view
+- [x] Add favorites route in router
+- [x] Update AppHeader.vue to include favorites link
+- [x] Update DocGiaService (frontend) for favorites API calls
 
-## Dependent Files
-- frontend/src/views/BookDetail.vue
-- frontend/src/services/muonsach.service.js (if modifications needed)
-
-## Followup
-- Run frontend and backend
-- Test borrow request from BookDetail
-- Verify request appears in StaffMuonSachManagement for approval
-- Check book quantity decrement on approval
+## Testing
+- [x] Test adding/removing favorites
+- [x] Test viewing favorites list

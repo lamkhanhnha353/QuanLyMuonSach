@@ -1,7 +1,8 @@
-<template> 
+<template>
   <div class="book-detail-page">
     <div class="container-fluid px-3">
       <div class="detail-container py-4">
+        
         <div v-if="loading" class="text-center">
           <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Đang tải...</span>
@@ -10,7 +11,6 @@
 
         <div v-else-if="book" class="row g-4 custom-detail-layout">
           
-          <!-- Left: Book Cover -->
           <div class="col-lg-4 col-md-5 book-cover-col">
             <div class="book-cover-section">
               <div class="book-cover-wrapper">
@@ -24,7 +24,6 @@
             </div>
           </div>
 
-          <!-- Right: Details -->
           <div class="col-lg-8 col-md-7 book-details-col">
             <div class="book-details-section">
 
@@ -38,7 +37,6 @@
                 {{ book.SOQUYEN > 0 ? 'Còn sách' : 'Hết sách' }}
               </p>
 
-              <!-- Buttons -->
               <div class="d-flex gap-2 mt-3 mb-4 button-group">
                 <button
                   v-if="book.SOQUYEN > 0 && isLoggedIn"
@@ -56,12 +54,25 @@
                   <i class="fas fa-sign-in-alt me-2"></i> Đăng nhập để mượn
                 </button>
 
-                <button class="btn favorite-btn d-flex align-items-center">
-                  <i class="fas fa-heart me-2"></i> Thêm vào yêu thích
+                <button
+                  v-if="isLoggedIn"
+                  :class="['btn favorite-btn d-flex align-items-center', { 'active': isFavorite }]"
+                  @click="toggleFavorite"
+                  :disabled="favoriteLoading"
+                >
+                  <i class="fas fa-heart me-2"></i>
+                  {{ isFavorite ? 'Đã yêu thích' : 'Thêm vào yêu thích' }}
+                </button>
+
+                <button
+                  v-else
+                  class="btn favorite-btn d-flex align-items-center"
+                  @click="$router.push('/login')"
+                >
+                  <i class="fas fa-heart me-2"></i> Đăng nhập để yêu thích
                 </button>
               </div>
 
-              <!-- Description -->
               <div class="description-section mt-4" v-if="book.MOTA">
                 <p class="description-text">{{ book.MOTA }}</p>
               </div>
@@ -71,7 +82,6 @@
                 </p>
               </div>
 
-              <!-- Info Section -->
               <div class="info-section">
                 <h6 class="info-title">Thông tin chi tiết</h6>
 
@@ -114,7 +124,6 @@
       </div>
     </div>
 
-    <!-- Modal Chọn Số Lượng Mượn -->
     <div v-if="showBorrowModal" class="modal-overlay" @click.self="showBorrowModal = false">
       <div class="modal-content">
         <div class="modal-header">
@@ -123,7 +132,6 @@
         </div>
         
         <div class="modal-body">
-          <!-- Thông tin sách còn lại -->
           <div class="alert alert-info mb-3">
             <p class="mb-1"><strong>Số quyển còn lại:</strong> {{ book?.SOQUYEN }} quyển</p>
             <p class="mb-1"><strong>Đang mượn (đã duyệt):</strong> {{ userBorrowCount }} quyển</p>
@@ -132,7 +140,6 @@
             <p class="mb-0"><strong>Đã mượn cuốn sách này:</strong> {{ bookBorrowCount }} / 3 quyển</p>
           </div>
 
-          <!-- Chọn số lượng -->
           <div class="form-group mb-3">
             <label for="borrowQuantity" class="form-label"><strong>Chọn số lượng mượn:</strong></label>
             <div class="quantity-selector">
@@ -167,12 +174,10 @@
             </small>
           </div>
 
-          <!-- Cảnh báo nếu mượn quá hạn -->
           <div v-if="borrowWarning" class="alert alert-warning">
             {{ borrowWarning }}
           </div>
 
-          <!-- Lỗi validation -->
           <div v-if="borrowError" class="alert alert-danger">
             {{ borrowError }}
           </div>
@@ -201,6 +206,7 @@ import SachService from "@/services/sach.service";
 import NhaXuatBanService from "@/services/nhaxuatban.service";
 import AuthService from "@/services/auth.service";
 import MuonSachService from "@/services/muonsach.service";
+import DocGiaService from "@/services/docgia.service";
 
 export default {
   name: "BookDetail",
@@ -214,10 +220,12 @@ export default {
       showBorrowModal: false,
       borrowQuantity: 1,
       userBorrowCount: 0,
-      pendingBorrowCount: 0, // Số quyển đang yêu cầu mượn (chờ duyệt)
-      bookBorrowCount: 0, // Số quyển đã mượn của cuốn sách này
+      pendingBorrowCount: 0,
+      bookBorrowCount: 0,
       borrowError: "",
       borrowWarning: "",
+      isFavorite: false,
+      favoriteLoading: false,
     };
   },
   computed: {
@@ -226,33 +234,22 @@ export default {
     },
     publisherName() {
       if (!this.book || !this.book.MANXB) return "N/A";
-
       const target = String(this.book.MANXB);
-
       const publisher = this.publishers.find(p => {
         const pid = p._id && (p._id.$oid || p._id);
         const pidStr = pid !== undefined && pid !== null ? String(pid) : null;
-
         const pManxb = p.MANXB !== undefined && p.MANXB !== null ? String(p.MANXB) : null;
-
         return (pidStr && pidStr === target) || (pManxb && pManxb === target);
       });
-
       return publisher ? (publisher.TENNXB || "N/A") : "N/A";
     },
     maxBorrowQuantity() {
       if (!this.book) return 0;
-      
-      // Tối đa 3 quyển mỗi lần
       const maxPerBook = 3;
-      // Còn bao nhiêu quyển
       const available = this.book.SOQUYEN || 0;
-      // Hạn mức còn lại cho độc giả = 10 - (số đã mượn + số đang yêu cầu)
       const totalBorrowAndPending = this.userBorrowCount + this.pendingBorrowCount;
       const remainingQuota = Math.max(0, 10 - totalBorrowAndPending);
-      // Max còn lại cho cuốn sách này (3 - số quyển đã mượn của sách này)
       const remainingPerBook = Math.max(0, 3 - this.bookBorrowCount);
-
       return Math.min(maxPerBook, available, remainingQuota, remainingPerBook);
     }
   },
@@ -283,15 +280,11 @@ export default {
       try {
         const user = AuthService.getCurrentUser();
         if (!user) return;
-
         const res = await MuonSachService.getForDocGia(user._id);
         const borrowRecords = res.data || [];
-        
-        // Tính tổng số quyển đang mượn (CHỈ "đã duyệt" hoặc "đang mượn", không tính "chờ duyệt")
         const totalQuantity = borrowRecords
           .filter(record => record.trangThai === "đã duyệt" || record.trangThai === "đang mượn")
           .reduce((sum, record) => sum + (record.soLuong || 1), 0);
-        
         this.userBorrowCount = totalQuantity;
       } catch (error) {
         console.error("Error fetching user borrow count:", error);
@@ -299,22 +292,17 @@ export default {
     },
 
     async fetchBookBorrowCount() {
-      // Kiểm tra người dùng đã mượn bao nhiêu quyển của CUỐN SÁCH NÀY
       try {
         const user = AuthService.getCurrentUser();
         if (!user) return 0;
-
         const res = await MuonSachService.getForDocGia(user._id);
         const borrowRecords = res.data || [];
-        
-        // Lọc các phiếu mượn của cuốn sách này với trạng thái đang hoạt động (CHỈ "đã duyệt" hoặc "đang mượn")
         const bookBorrowCount = borrowRecords
           .filter(record => 
             String(record.sachId) === String(this.book._id) &&
             (record.trangThai === "đã duyệt" || record.trangThai === "đang mượn")
           )
           .reduce((sum, record) => sum + (record.soLuong || 1), 0);
-        
         return bookBorrowCount;
       } catch (error) {
         console.error("Error fetching book borrow count:", error);
@@ -323,19 +311,14 @@ export default {
     },
 
     async fetchPendingBorrowCount() {
-      // Lấy tổng số quyển đang YÊU CẦU mượn (trạng thái "chờ duyệt")
       try {
         const user = AuthService.getCurrentUser();
         if (!user) return 0;
-
         const res = await MuonSachService.getForDocGia(user._id);
         const borrowRecords = res.data || [];
-        
-        // Tính tổng số quyển với trạng thái "chờ duyệt"
         const pendingQuantity = borrowRecords
           .filter(record => record.trangThai === "chờ duyệt")
           .reduce((sum, record) => sum + (record.soLuong || 1), 0);
-        
         return pendingQuantity;
       } catch (error) {
         console.error("Error fetching pending borrow count:", error);
@@ -344,12 +327,9 @@ export default {
     },
 
     async openBorrowModal() {
-      // Lấy số lượng đã mượn của cuốn sách này trước khi mở modal
-      // Refresh lại tất cả dữ liệu để phản ánh trạng thái mới nhất
       this.bookBorrowCount = await this.fetchBookBorrowCount();
       await this.fetchUserBorrowCount();
       this.pendingBorrowCount = await this.fetchPendingBorrowCount();
-      
       this.borrowQuantity = 1;
       this.borrowError = "";
       this.borrowWarning = "";
@@ -369,31 +349,25 @@ export default {
     async confirmBorrow() {
       this.borrowError = "";
       this.borrowWarning = "";
-
       const user = AuthService.getCurrentUser();
       if (!user) {
         alert("Vui lòng đăng nhập để mượn sách");
         this.$router.push("/login");
         return;
       }
-
-      // Validate số lượng
       if (!this.borrowQuantity || this.borrowQuantity < 1) {
         this.borrowError = "Vui lòng chọn số lượng hợp lệ";
         return;
       }
-
       if (this.borrowQuantity > this.maxBorrowQuantity) {
         this.borrowError = `Không thể mượn quá ${this.maxBorrowQuantity} quyển`;
         return;
       }
 
-      // Confirm borrow request
       const confirmBorrow = confirm(`Bạn có chắc muốn mượn ${this.borrowQuantity} quyển sách "${this.book.TENSACH}" không?`);
       if (!confirmBorrow) return;
 
       try {
-        // Calculate return date (14 days from now)
         const today = new Date();
         const returnDate = new Date(today);
         returnDate.setDate(today.getDate() + 14);
@@ -408,13 +382,10 @@ export default {
         };
 
         const response = await MuonSachService.create(borrowData);
-
         if (response.status === 200 || response.status === 201) {
           alert(`Yêu cầu mượn ${this.borrowQuantity} quyển sách đã được gửi thành công! Vui lòng chờ nhân viên duyệt.`);
           this.showBorrowModal = false;
           this.borrowQuantity = 1;
-          
-          // Refresh book data to update quantity
           await this.fetchBook();
           await this.fetchUserBorrowCount();
         } else {
@@ -429,6 +400,43 @@ export default {
 
     onImgError(e) {
       e.target.src = this.placeholderImage;
+    },
+
+    async checkFavoriteStatus() {
+      try {
+        const user = AuthService.getCurrentUser();
+        if (!user) return;
+        const res = await DocGiaService.getFavorites(user._id);
+        this.isFavorite = res.data.includes(this.bookId);
+      } catch (error) {
+        console.error("Error checking favorite status:", error);
+      }
+    },
+
+    async toggleFavorite() {
+      if (this.favoriteLoading) return;
+      try {
+        this.favoriteLoading = true;
+        const user = AuthService.getCurrentUser();
+        if (!user) return;
+
+        if (this.isFavorite) {
+          await DocGiaService.removeFavorite(user._id, this.bookId);
+          this.isFavorite = false;
+        } else {
+          await DocGiaService.addFavorite(user._id, this.bookId);
+          this.isFavorite = true;
+        }
+
+        // Đảm bảo trạng thái được đồng bộ với server
+        await this.checkFavoriteStatus();
+      } catch (error) {
+        console.error("Error toggling favorite:", error);
+        // Khôi phục trạng thái nếu có lỗi
+        await this.checkFavoriteStatus();
+      } finally {
+        this.favoriteLoading = false;
+      }
     }
   },
 
@@ -437,6 +445,9 @@ export default {
       immediate: true,
       handler() {
         this.fetchBook();
+        if (this.isLoggedIn) {
+          this.checkFavoriteStatus();
+        }
       }
     }
   },
@@ -447,6 +458,7 @@ export default {
     this.isLoggedIn = !!user;
     if (this.isLoggedIn) {
       this.fetchUserBorrowCount();
+      this.checkFavoriteStatus();
     }
   }
 };
@@ -454,7 +466,7 @@ export default {
 
 <style scoped>
 html {
-  scroll-behavior: smooth; /* cuộn mượt */
+  scroll-behavior: smooth;
 }
 
 .book-detail-page {
@@ -467,7 +479,7 @@ html {
   margin: 0 auto;
   padding-top: 2rem;
   padding-bottom: 30px;
-  scroll-padding-top: 80px; /* scroll tới gần đầu tự nhiên */
+  scroll-padding-top: 80px;
   scroll-padding-bottom: 20px;
 }
 
@@ -480,7 +492,7 @@ html {
 .book-cover-col {
   padding-right: 2rem;
   position: sticky;
-  top: 20px; /* sticky khi cuộn */
+  top: 20px;
 }
 
 .book-cover-wrapper {
@@ -565,6 +577,11 @@ html {
   transform: scale(0.95);
 }
 
+/* ========================================= */
+/* FAVORITE BUTTON STYLES (EDITED)     */
+/* ========================================= */
+
+/* Trạng thái bình thường (Chưa thích): Nền trắng, viền đỏ, chữ đỏ */
 .favorite-btn {
   background-color: white;
   color: #b91c1c;
@@ -573,7 +590,7 @@ html {
   padding: 8px 20px;
   font-weight: 600;
   font-size: 1rem;
-  transition: border-color 0.3s ease, color 0.3s ease, background-color 0.3s ease, transform 0.15s ease;
+  transition: all 0.3s ease; /* Transition all để mượt màu nền */
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -586,18 +603,34 @@ html {
   margin-right: 8px;
 }
 
-.favorite-btn:hover, .favorite-btn:focus {
+/* Hover khi chưa thích */
+.favorite-btn:hover {
+  background-color: #ffe5e5;
+}
+
+/* Trạng thái ĐÃ THÍCH (Active): Nền đỏ, chữ trắng */
+.favorite-btn.active {
   background-color: #b91c1c;
+  color: white;
+  box-shadow: 0 4px 8px rgba(185, 28, 28, 0.3);
+}
+
+/* Đổi màu icon sang trắng khi active */
+.favorite-btn.active i {
   color: white;
 }
 
-.favorite-btn:hover i, .favorite-btn:focus i {
-  color: white;
+/* Hover khi đang Active */
+.favorite-btn.active:hover {
+  background-color: #991b1b;
+  border-color: #991b1b;
 }
 
 .favorite-btn:active {
   transform: scale(0.95);
 }
+
+/* ========================================= */
 
 /* Description */
 .description-text {
@@ -611,9 +644,9 @@ html {
 
 /* Info section */
 .info-section {
-  margin-top: 2rem; /* cách content trên */
+  margin-top: 2rem;
   background: white;
-  padding: 1.5rem; /* padding rộng hơn để dễ nhìn */
+  padding: 1.5rem;
   border-radius: 8px;
   border: 1px solid #e5e7eb;
 }
@@ -624,7 +657,7 @@ html {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 1rem; /* khoảng cách xuống nội dung */
+  margin-bottom: 1rem;
 }
 
 .info-title::before {
@@ -782,5 +815,4 @@ html {
   background-color: #e5e7eb;
   color: #1f2937;
 }
-
 </style>

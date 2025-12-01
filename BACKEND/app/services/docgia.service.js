@@ -8,14 +8,15 @@ class DocGiaService {
 
     #extractDocGiaData(payload) {
         const docgia = {
-            username: payload.username, 
+            username: payload.username,
             password: payload.password,
             HOLOT: payload.HOLOT,
             TEN: payload.TEN,
             NGAYSINH: payload.NGAYSINH,
             GIOITINH: payload.GIOITINH, // <-- Dùng GIOITINH (theo code của bạn)
             DIACHI: payload.DIACHI,
-            DIENTHOAI: payload.DIENTHOAI, 
+            DIENTHOAI: payload.DIENTHOAI,
+            favorites: payload.favorites || [], // Array of book IDs
         };
 
         Object.keys(docgia).forEach(
@@ -100,15 +101,28 @@ class DocGiaService {
 
     //Tìm độc giả bằng ID
     async findById(id) {
+        let objectId;
+        if (ObjectId.isValid(id)) {
+            objectId = new ObjectId(id);
+        } else {
+            objectId = id;
+        }
         return await this.DocGia.findOne({
-            _id: ObjectId.isValid(id) ? new ObjectId(id) : null,
+            _id: objectId,
         });
     }
  
-      // Cập nhật thông tin độc giả (dùng cho Admin). 
+      // Cập nhật thông tin độc giả (dùng cho Admin).
     async update(id, payload) {
+        let objectId;
+        if (ObjectId.isValid(id)) {
+            objectId = new ObjectId(id);
+        } else {
+            objectId = id;
+        }
+
         const filter = {
-            _id: ObjectId.isValid(id) ? new ObjectId(id) : null,
+            _id: objectId,
         };
         const update = this.#extractDocGiaData(payload);
 
@@ -131,23 +145,122 @@ class DocGiaService {
             { $set: update },
             { returnDocument: "after" }
         );
-        
+
         if (result.value) delete result.value.password;
         return result;
     }
 
-     // Xóa độc giả (dùng cho Admin).   
+     // Xóa độc giả (dùng cho Admin).
     async delete(id) {
+        let objectId;
+        if (ObjectId.isValid(id)) {
+            objectId = new ObjectId(id);
+        } else {
+            objectId = id;
+        }
+
         const result = await this.DocGia.findOneAndDelete({
-            _id: ObjectId.isValid(id) ? new ObjectId(id) : null,
+            _id: objectId,
         });
-        return result; 
+        return result;
     }
 
      //Xóa tất cả độc giả (dùng cho Admin).
     async deleteAll() {
         const result = await this.DocGia.deleteMany({});
         return result.deletedCount;
+    }
+
+    // --- Chức năng YÊU THÍCH SÁCH ---
+
+    /**
+     * Thêm sách vào danh sách yêu thích của độc giả
+     * @param {string} docGiaId ID của độc giả
+     * @param {string} sachId ID của sách
+     * @returns {object} Thông tin độc giả đã cập nhật
+     */
+    async addFavorite(docGiaId, sachId) {
+        let objectId;
+        if (ObjectId.isValid(docGiaId)) {
+            objectId = new ObjectId(docGiaId);
+        } else {
+            objectId = docGiaId;
+        }
+
+        const filter = {
+            _id: objectId,
+        };
+
+        const update = {
+            $addToSet: { favorites: sachId } // $addToSet để tránh trùng lặp
+        };
+
+        await this.DocGia.updateOne(filter, update);
+        const updatedDoc = await this.DocGia.findOne({ _id: objectId });
+
+        if (!updatedDoc) {
+            throw new Error("Không tìm thấy độc giả");
+        }
+
+        delete updatedDoc.password;
+        return updatedDoc;
+    }
+
+    /**
+     * Xóa sách khỏi danh sách yêu thích của độc giả
+     * @param {string} docGiaId ID của độc giả
+     * @param {string} sachId ID của sách
+     * @returns {object} Thông tin độc giả đã cập nhật
+     */
+    async removeFavorite(docGiaId, sachId) {
+        let objectId;
+        if (ObjectId.isValid(docGiaId)) {
+            objectId = new ObjectId(docGiaId);
+        } else {
+            objectId = docGiaId;
+        }
+
+        const filter = {
+            _id: objectId,
+        };
+
+        const update = {
+            $pull: { favorites: sachId }
+        };
+
+        await this.DocGia.updateOne(filter, update);
+        const updatedDoc = await this.DocGia.findOne({ _id: objectId });
+
+        if (!updatedDoc) {
+            throw new Error("Không tìm thấy độc giả");
+        }
+
+        delete updatedDoc.password;
+        return updatedDoc;
+    }
+
+    /**
+     * Lấy danh sách sách yêu thích của độc giả
+     * @param {string} docGiaId ID của độc giả
+     * @returns {array} Danh sách ID sách yêu thích
+     */
+    async getFavorites(docGiaId) {
+        let objectId;
+        if (ObjectId.isValid(docGiaId)) {
+            objectId = new ObjectId(docGiaId);
+        } else {
+            objectId = docGiaId;
+        }
+
+        const docgia = await this.DocGia.findOne({
+            _id: objectId,
+        });
+
+        if (!docgia) {
+            throw new Error("Không tìm thấy độc giả");
+        }
+
+        return docgia.favorites || [];
     }
 }
 
