@@ -20,6 +20,11 @@ class DocGiaService {
     return http.put(`/docgia/${id}`, data);
   }
 
+  // Admin/Staff: Tạo mới độc giả
+  create(data) {
+    return http.post(`/docgia`, data);
+  }
+
   // Admin: Xóa độc giả
   delete(id) {
     return http.delete(`/docgia/${id}`);
