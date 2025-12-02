@@ -45,16 +45,16 @@
 
               <div class="user-info-list mb-4">
                 <div class="info-row">
-                  <i class="fas fa-id-card me-3"></i>
-                  <span>ID: {{ docgia._id }}</span>
-                </div>
-                <div class="info-row">
                   <i class="fas fa-user-circle me-3"></i>
                   <span>User: {{ docgia.username }}</span>
                 </div>
                 <div class="info-row">
                   <i class="fas fa-phone-alt me-3"></i>
                   <span>{{ docgia.DIENTHOAI }}</span>
+                </div>
+                <div class="info-row">
+                  <i class="fas fa-map-marker-alt me-3"></i>
+                  <span>{{ docgia.DIACHI }}</span>
                 </div>
               </div>
 

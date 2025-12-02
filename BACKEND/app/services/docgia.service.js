@@ -16,8 +16,12 @@ class DocGiaService {
             GIOITINH: payload.GIOITINH, // <-- Dùng GIOITINH (theo code của bạn)
             DIACHI: payload.DIACHI,
             DIENTHOAI: payload.DIENTHOAI,
-            favorites: payload.favorites || [], // Array of book IDs
         };
+
+        // Only include favorites if explicitly provided in payload
+        if (payload.favorites !== undefined) {
+            docgia.favorites = payload.favorites;
+        }
 
         Object.keys(docgia).forEach(
             (key) => docgia[key] === undefined && delete docgia[key]
