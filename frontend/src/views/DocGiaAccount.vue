@@ -39,7 +39,7 @@
                 </div>
                 <div>
                   <h5 class="user-name mb-1">{{ docgia.HOLOT }} {{ docgia.TEN }}</h5>
-                  <p class="text-muted small mb-0">Thành viên từ 12/2023</p>
+                  <p class="text-muted small mb-0">Thành viên từ 11/2025</p>
                 </div>
               </div>
 
@@ -74,11 +74,11 @@
                   <i class="fas fa-lock me-3 text-purple"></i>
                   <span class="fw-500">Đổi mật khẩu</span>
                 </button>
-                <button class="list-group-item list-group-item-action d-flex align-items-center px-4 py-3 border-0">
+                <button class="list-group-item list-group-item-action d-flex align-items-center px-4 py-3 border-0" @click="showDevelopmentMessage">
                   <i class="fas fa-bell me-3 text-purple"></i>
                   <span class="fw-500">Cài đặt thông báo</span>
                 </button>
-                <button class="list-group-item list-group-item-action d-flex align-items-center px-4 py-3 border-0">
+                <button class="list-group-item list-group-item-action d-flex align-items-center px-4 py-3 border-0" @click="showDevelopmentMessage">
                   <i class="fas fa-globe me-3 text-purple"></i>
                   <span class="fw-500">Ngôn ngữ</span>
                 </button>
@@ -541,6 +541,10 @@ export default {
         } finally {
             this.loading = false;
         }
+    },
+
+    showDevelopmentMessage() {
+        alert("Tính năng này đang trong giai đoạn phát triển");
     }
   },
   mounted() {
