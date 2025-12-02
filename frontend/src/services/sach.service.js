@@ -16,6 +16,12 @@ class SachService {
     return http.post("/sach", data);
   }
 
+  // Upload ảnh (gửi imageUrl - có thể là data URL hoặc remote URL)
+  uploadImage(imageUrl, signal = null) {
+    const config = signal ? { signal } : {};
+    return http.post("/sach/upload/image", { imageUrl }, config);
+  }
+
   // Cập nhật sách
   update(id, data) {
     return http.put(`/sach/${id}`, data);

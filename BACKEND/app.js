@@ -8,7 +8,9 @@ const ApiError = require("./app/api-error");
 const app = express();
 
 app.use(cors());
-app.use(express.json()); // Middleware xử lý JSON
+// Tăng giới hạn kích thước body để chấp nhận dữ liệu ảnh Base64 lớn
+app.use(express.json({ limit: "10mb" })); // Middleware xử lý JSON với limit
+app.use(express.urlencoded({ extended: true, limit: "10mb" })); // Middleware xử lý URL-encoded bodies
 
 // --- IMPORT TẤT CẢ 5 ROUTES ---
 const nhanvienRouter = require("./app/routes/nhanvien.route");

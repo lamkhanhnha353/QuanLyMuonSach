@@ -13,4 +13,7 @@ router.route("/:id")
     .put(sach.update)
     .delete(sach.delete);
 
+// Route để upload ảnh
+router.post("/upload/image", sach.uploadImage);
+
 module.exports = router;

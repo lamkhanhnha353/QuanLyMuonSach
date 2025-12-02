@@ -1,6 +1,7 @@
 const SachService = require("../services/sach.service");
 const MongoDB = require("../utils/mongodb.util");
 const ApiError = require("../api-error");
+const { uploadImageFromBase64 } = require("../utils/cloudinary.util");
 
 //1. Tạo một cuốn sách mới
 exports.create = async (req, res, next) => {
@@ -113,6 +114,33 @@ exports.deleteAll = async (_req, res, next) => {
     } catch (error) {
         return next(
             new ApiError(500, "Lỗi xảy ra khi xóa tất cả sách")
+        );
+    }
+};
+
+// 7. Upload ảnh lên Cloudinary
+exports.uploadImage = async (req, res, next) => {
+    try {
+        if (!req.body?.imageUrl) {
+            return next(new ApiError(400, "URL ảnh không được để trống"));
+        }
+
+        const result = await uploadImageFromBase64(req.body.imageUrl);
+
+        if (result.success) {
+            return res.send({
+                message: "Upload ảnh thành công",
+                data: {
+                    url: result.url,
+                    publicId: result.publicId,
+                }
+            });
+        } else {
+            return next(new ApiError(500, result.message));
+        }
+    } catch (error) {
+        return next(
+            new ApiError(500, "Lỗi khi upload ảnh")
         );
     }
 };

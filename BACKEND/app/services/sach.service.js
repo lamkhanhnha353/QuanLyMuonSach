@@ -1,4 +1,5 @@
 const { ObjectId } = require("mongodb");
+const { uploadImageFromUrl, deleteImage } = require("../utils/cloudinary.util");
 
 class SachService {
     constructor(client) {
@@ -15,6 +16,7 @@ class SachService {
             MANXB: payload.MANXB,
             TACGIA: payload.TACGIA, 
             HinhAnh: payload.HinhAnh,
+            CloudinaryPublicId: payload.CloudinaryPublicId,
             SOTRANG: payload.SOTRANG,
             MOTA: payload.MOTA,
             NGONNGU: payload.NGONNGU,
@@ -38,10 +40,20 @@ class SachService {
             throw new Error("Tên sách đã tồn tại");
         }
 
-        // B. Chèn sách mới vào CSDL
+        // B. Nếu có hình ảnh, upload lên Cloudinary
+        if (sachData.HinhAnh) {
+            const uploadResult = await uploadImageFromUrl(sachData.HinhAnh);
+            if (uploadResult.success) {
+                sachData.HinhAnh = uploadResult.url;
+                sachData.CloudinaryPublicId = uploadResult.publicId; // Lưu ID để xóa sau
+            } else {
+                throw new Error(`Lỗi upload ảnh: ${uploadResult.message}`);
+            }
+        }
+
+        // C. Chèn sách mới vào CSDL
         const result = await this.Sach.insertOne(sachData);
 
-        // FIX 2: SỬA LỖI (Không trả về 'result' mà trả về document)
         const newDocument = await this.Sach.findOne({ _id: result.insertedId });
         return newDocument;
     }
@@ -72,21 +84,49 @@ class SachService {
             _id: ObjectId.isValid(id) ? new ObjectId(id) : null,
         };
         const update = this.#extractSachData(payload);
-        
+
+        // Lấy sách cũ để kiểm tra ảnh
+        const oldBook = await this.Sach.findOne(filter);
+
+        // Nếu có ảnh mới, upload lên Cloudinary và xóa ảnh cũ
+        if (update.HinhAnh && update.HinhAnh !== oldBook?.HinhAnh) {
+            // Xóa ảnh cũ từ Cloudinary nếu có
+            if (oldBook?.CloudinaryPublicId) {
+                await deleteImage(oldBook.CloudinaryPublicId);
+            }
+
+            // Upload ảnh mới
+            const uploadResult = await uploadImageFromUrl(update.HinhAnh);
+            if (uploadResult.success) {
+                update.HinhAnh = uploadResult.url;
+                update.CloudinaryPublicId = uploadResult.publicId;
+            } else {
+                throw new Error(`Lỗi upload ảnh: ${uploadResult.message}`);
+            }
+        }
+
         const result = await this.Sach.findOneAndUpdate(
             filter,
             { $set: update },
-            { returnDocument: "after" } // Trả về document sau khi update
+            { returnDocument: "after" }
         );
         return result;
     }
 
     // 6. Xóa sách
     async delete(id) {
-        const result = await this.Sach.findOneAndDelete({
+        const filter = {
             _id: ObjectId.isValid(id) ? new ObjectId(id) : null,
-        });
-        return result; 
+        };
+
+        // Lấy sách để xóa ảnh từ Cloudinary
+        const book = await this.Sach.findOne(filter);
+        if (book?.CloudinaryPublicId) {
+            await deleteImage(book.CloudinaryPublicId);
+        }
+
+        const result = await this.Sach.findOneAndDelete(filter);
+        return result;
     }
 
     // 7. Xóa tất cả
