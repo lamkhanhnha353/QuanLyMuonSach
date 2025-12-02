@@ -290,12 +290,12 @@ export default {
       this.$router.push({ query: { page: page } });
       window.scrollTo({ top: 0, behavior: "smooth" });
     },
-    requestLogin(book) { 
+    requestLogin(book) {
       if (this.isLoggedIn) {
-        alert("Đã thêm '" + book.TENSACH + "' vào phiếu đăng ký mượn!"); 
+        this.viewDetails(book);
       } else {
         alert("Vui lòng đăng nhập để mượn sách.");
-        this.$router.push("/login"); 
+        this.$router.push("/login");
       }
     },
     viewDetails(book) {
