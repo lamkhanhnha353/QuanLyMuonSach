@@ -140,6 +140,10 @@
                         </div>
                       </div>
                       <div class="row mb-2">
+                        <div class="col-4 text-muted fw-medium small">Số lượng:</div>
+                        <div class="col-8 text-dark small fw-bold">{{ selectedRequest.soLuong || selectedRequest.SOLUONG || 1 }}</div>
+                      </div>
+                      <div class="row mb-2">
                         <div class="col-4 text-muted fw-medium small">Ngày mượn:</div>
                         <div class="col-8 text-dark small">{{ formatDate(selectedRequest.ngayMuon || selectedRequest.NGAYMUON) }}</div>
                       </div>

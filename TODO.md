@@ -1,4 +1,4 @@
-# TODO: Update Borrow Request Behavior
+# TODO: Add Quantity Field to Borrow Request Details
 
-- [x] Change requestLogin method to navigate to book detail page instead of showing alert
-- [ ] Test the navigation to book detail page
+- [x] Add quantity field to borrow request details modal in DocGiaBorrowRequests.vue
+- [ ] Test the quantity field display in borrow request details
