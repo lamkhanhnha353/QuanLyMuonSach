@@ -1,17 +1,10 @@
-# TODO: Implement Favorite Books Feature
+# TODO: Add Voice Search to BooksExplore.vue
 
-## Backend Changes
-- [x] Update DocGiaService to include favorites array and methods
-- [x] Add favorites endpoints in DocGiaController
-- [x] Update DocGia routes for favorites
-
-## Frontend Changes
-- [x] Update BookDetail.vue to toggle favorites
-- [x] Create FavoriteBooks.vue view
-- [x] Add favorites route in router
-- [x] Update AppHeader.vue to include favorites link
-- [x] Update DocGiaService (frontend) for favorites API calls
-
-## Testing
-- [x] Test adding/removing favorites
-- [x] Test viewing favorites list
+- [x] Add microphone button to the search input group in the template
+- [x] Add data properties for voice recognition state (isListening, recognition)
+- [x] Implement startVoiceSearch method to initialize SpeechRecognition
+- [x] Implement stopVoiceSearch method to stop recognition
+- [x] Add event handlers for recognition results and errors
+- [x] Update applySearch to handle voice input
+- [x] Add CSS styles for the microphone button and listening state
+- [ ] Test voice search functionality

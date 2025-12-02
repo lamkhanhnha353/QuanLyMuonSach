@@ -9,22 +9,37 @@
               <i class="fas fa-book-open fa-2x text-dark me-2"></i>
               <h4 class="mb-0 fw-bold text-dark library-title">Khám phá thư viện</h4>
             </div>
+
             <div class="col-md-6">
               <div class="input-group search-input shadow-sm">
                 <span class="input-group-text bg-white border-end-0 text-muted">
                     <i class="fas fa-search"></i>
                 </span>
-                <input 
-                    type="text" 
-                    class="form-control border-start-0 ps-0 bg-white" 
-                    placeholder="Tìm kiếm sách, tác giả, ISBN..." 
-                    v-model="searchText" 
+
+                <input
+                    type="text"
+                    class="form-control border-start-0 border-end-0 ps-0 bg-white"
+                    placeholder="Tìm kiếm sách, tác giả, ISBN..."
+                    v-model="searchText"
                     @keyup.enter="applySearch"
                 >
+
+                <button
+                    class="btn bg-white border border-start-0 border-end-0"
+                    style="border-color: #dee2e6;"
+                    type="button"
+                    @click="toggleVoiceSearch"
+                    :title="isListening ? 'Đang nghe...' : 'Tìm kiếm bằng giọng nói'"
+                >
+                  <i 
+                    class="fas fa-microphone" 
+                    :class="{ 'text-danger fa-pulse': isListening, 'text-secondary': !isListening }"
+                  ></i>
+                </button>
+
                 <button class="btn btn-primary px-4 fw-bold" @click="applySearch">Tìm</button>
               </div>
             </div>
-            
             <div class="col-md-3">
               <div class="d-flex align-items-center gap-2 justify-content-end sort-area">
                 <label class="mb-0 sort-label text-muted" style="white-space: nowrap;">Sắp xếp:</label>
@@ -91,7 +106,7 @@
 
         <main class="col-xl-10 col-lg-9">
           <div class="d-flex justify-content-between align-items-center mb-3">
-             <span class="text-muted small">Hiển thị <b>{{ paginatedBooks.length }}</b> trên tổng số <b>{{ filteredBooks.length }}</b> sách</span>
+              <span class="text-muted small">Hiển thị <b>{{ paginatedBooks.length }}</b> trên tổng số <b>{{ filteredBooks.length }}</b> sách</span>
           </div>
 
           <div class="books-grid">
@@ -107,7 +122,7 @@
                   >
                   
                   <div class="status-badge" :class="book.SOQUYEN > 0 ? 'available' : 'out'">
-                    {{ book.SOQUYEN > 0 ? 'Còn hàng' : 'Hết hàng' }}
+                    {{ book.SOQUYEN > 0 ? 'Còn Sách' : 'Hết Sách' }}
                   </div>
 
                   <div class="book-overlay">
@@ -142,9 +157,9 @@
                   </p>
                   
                   <div class="book-footer">
-                     <button class="btn btn-outline-primary btn-sm w-100 mt-2 rounded-pill" @click="viewDetails(book)">
-                       Xem chi tiết
-                     </button>
+                      <button class="btn btn-outline-primary btn-sm w-100 mt-2 rounded-pill" @click="viewDetails(book)">
+                        Xem chi tiết
+                      </button>
                   </div>
                 </div>
               </div>
@@ -203,6 +218,8 @@ export default {
       itemsPerPage: 12,
       placeholderImage: "https://via.placeholder.com/300x450?text=Book+Cover",
       isLoggedIn: false,
+      isListening: false,
+      recognition: null,
     };
   },
   computed: {
@@ -286,6 +303,53 @@ export default {
     },
     onImgError(e) {
       e.target.src = this.placeholderImage;
+    },
+    toggleVoiceSearch() {
+      if (this.isListening) {
+        this.stopVoiceSearch();
+      } else {
+        this.startVoiceSearch();
+      }
+    },
+    startVoiceSearch() {
+      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        alert('Trình duyệt của bạn không hỗ trợ tìm kiếm bằng giọng nói.');
+        return;
+      }
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      this.recognition = new SpeechRecognition();
+      this.recognition.continuous = false;
+      this.recognition.interimResults = false;
+      this.recognition.lang = 'vi-VN'; // Vietnamese language
+
+      this.recognition.onstart = () => {
+        this.isListening = true;
+      };
+
+      this.recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        this.searchText = transcript;
+        this.applySearch();
+      };
+
+      this.recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        this.isListening = false;
+        alert('Có lỗi xảy ra khi nhận dạng giọng nói. Vui lòng thử lại.');
+      };
+
+      this.recognition.onend = () => {
+        this.isListening = false;
+      };
+
+      this.recognition.start();
+    },
+    stopVoiceSearch() {
+      if (this.recognition) {
+        this.recognition.stop();
+        this.isListening = false;
+      }
     }
   },
   mounted() {
@@ -315,10 +379,8 @@ export default {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
 }
 
-/* Đã xóa .library-icon cũ vì không còn dùng background gradient */
-
 .library-title {
-  font-size: 1.5rem; /* Tăng kích thước chữ cho giống tiêu đề chính */
+  font-size: 1.5rem;
   color: #1f2937;
   letter-spacing: -0.5px;
 }
@@ -328,6 +390,8 @@ export default {
   background-color: #fff; 
   border: 1px solid #dee2e6;
   border-left: none;
+  /* Bỏ border phải để nối với nút micro */
+  border-right: none; 
 }
 .search-input .form-control:focus {
   background-color: #fff;
@@ -340,11 +404,17 @@ export default {
   border-right: none;
 }
 
-/* --- SORT SELECT: CHỈNH DÀI RA --- */
+/* Thêm style cho nút khi hover */
+.search-input button.btn-light:hover, 
+.search-input button.bg-white:hover {
+    background-color: #f8f9fa !important;
+}
+
+/* --- SORT SELECT --- */
 .sort-select {
   border-color: #dee2e6;
   cursor: pointer;
-  max-width: 160px; /* Độ dài vừa phải để lấp khoảng trống */
+  max-width: 160px;
 }
 .sort-select:focus {
     box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
@@ -417,7 +487,7 @@ export default {
   margin-bottom: 40px;
 }
 
-/* === CARD STYLE (Giống trang Favorites) === */
+/* === CARD STYLE === */
 .book-card {
   background: white;
   border-radius: 12px;
@@ -430,7 +500,6 @@ export default {
   position: relative;
 }
 
-/* Hiệu ứng Nổi lên khi Hover */
 .book-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
@@ -440,7 +509,7 @@ export default {
 .book-cover {
   position: relative;
   width: 100%;
-  padding-top: 140%; /* Giữ tỷ lệ khung hình */
+  padding-top: 140%;
   overflow: hidden;
   background-color: #f1f5f9;
 }
@@ -449,7 +518,6 @@ export default {
   position: absolute;
   top: 0; left: 0; width: 100%; height: 100%;
   object-fit: cover;
-  /* Không cần zoom ảnh nữa để giống trang favorites */
 }
 
 /* Status Badge */
@@ -468,21 +536,19 @@ export default {
 .status-badge.available { background-color: rgba(16, 185, 129, 0.9); color: white; }
 .status-badge.out { background-color: rgba(239, 68, 68, 0.9); color: white; }
 
-/* === OVERLAY: ĐEN MỜ 0.7 (KHÔNG BLUR) === */
+/* === OVERLAY === */
 .book-overlay {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  /* Màu đen với độ trong suốt 0.7 */
   background: rgba(0, 0, 0, 0.7); 
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0;
   transition: opacity 0.3s ease;
-  backdrop-filter: none; /* Bỏ blur */
 }
 
 .book-card:hover .book-overlay {
@@ -494,7 +560,6 @@ export default {
   gap: 12px;
 }
 
-/* Nút tròn trong overlay */
 .action-btn {
   width: 42px;
   height: 42px;
