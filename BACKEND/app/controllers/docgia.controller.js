@@ -150,30 +150,18 @@ exports.addFavorite = async (req, res, next) => {
 
 // 9. Remove Favorite: Xóa sách khỏi yêu thích
 exports.removeFavorite = async (req, res, next) => {
-    console.log("=== BACKEND: removeFavorite START ===");
-    console.log("docGiaId:", req.params.id);
-    console.log("sachId:", req.params.sachId);
-    
     try {
         const docGiaService = new DocGiaService(MongoDB.client);
         const document = await docGiaService.removeFavorite(req.params.id, req.params.sachId);
-        
-        console.log("✅ Remove successful");
-        console.log("Updated document:", document);
-        console.log("Sending response with status 200");
         
         return res.status(200).json({ 
             message: "Đã xóa sách khỏi yêu thích", 
             data: document 
         });
     } catch (error) {
-        console.error("❌ Error in removeFavorite:", error.message);
-        console.error("Error stack:", error.stack);
         return next(
             new ApiError(500, `Lỗi khi xóa sách khỏi yêu thích cho độc giả với id=${req.params.id}`)
         );
-    } finally {
-        console.log("=== BACKEND: removeFavorite END ===\n");
     }
 };
 

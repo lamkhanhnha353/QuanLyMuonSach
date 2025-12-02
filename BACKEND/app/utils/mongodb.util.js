@@ -8,7 +8,7 @@ class MongoDB {
         try {
             this.client = new MongoClient(uri);
             await this.client.connect();
-            console.log("Connected to MongoDB");
+    
             return this.client;
         } catch (error) {
             console.error("Failed to connect to MongoDB", error);

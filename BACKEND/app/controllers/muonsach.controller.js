@@ -44,7 +44,6 @@ exports.findByDocGia = async (req, res, next) => {
         const muonSachService = new MuonSachService(MongoDB.client);
         // Lấy ID độc giả từ URL (ví dụ: /api/muonsach/docgia/12345)
         const documents = await muonSachService.findByDocGia(req.params.id); 
-        console.log('findByDocGia result:', JSON.stringify(documents, null, 2));
         return res.send(documents);
     } catch (error) {
         return next(

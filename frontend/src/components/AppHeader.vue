@@ -12,10 +12,8 @@
       <nav class="d-none d-md-flex align-items-center gap-4 ms-5">
         <router-link to="/" class="text-dark text-decoration-none nav-link-item">Trang chủ</router-link>
         <router-link to="/books" class="text-dark text-decoration-none nav-link-item">Khám phá</router-link>
-        <router-link v-if="currentUser && !currentUser.ChucVu" to="/docgia/account" class="text-dark text-decoration-none nav-link-item">Tài khoản của tôi</router-link>
-        <router-link v-if="currentUser && !currentUser.ChucVu" to="/docgia/favorites" class="text-dark text-decoration-none nav-link-item">Danh sách yêu thích</router-link>
-        <router-link v-if="currentUser && !currentUser.ChucVu" to="/docgia/requests" class="text-dark text-decoration-none nav-link-item">Yêu cầu mượn của tôi</router-link>
-        <router-link v-if="currentUser && !currentUser.ChucVu" to="/docgia/history" class="text-dark text-decoration-none nav-link-item">Lịch sử mượn sách</router-link>
+        <router-link v-if="currentUser && !currentUser.ChucVu" to="/docgia/favorites" class="text-dark text-decoration-none nav-link-item">Yêu thích</router-link>
+        <router-link v-if="currentUser && !currentUser.ChucVu" to="/docgia/requests" class="text-dark text-decoration-none nav-link-item">Yêu cầu mượn</router-link>
       </nav>
 
       <div class="ms-auto d-flex align-items-center gap-2">
@@ -25,8 +23,24 @@
         </div>
 
         <div v-else class="d-flex align-items-center gap-2">
-          <span class="text-muted d-none d-md-block" style="font-size: 0.9rem;">Xin chào, <strong class="text-dark">{{ displayName }}</strong></span>
-          <button class="btn btn-outline-danger btn-sm" @click="logOut"><i class="fas fa-sign-out-alt"></i></button>
+          <!-- Dropdown cho độc giả -->
+          <div v-if="!currentUser.ChucVu" class="dropdown">
+            <button class="btn dropdown-toggle text-dark" type="button" id="readerDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="fas fa-user me-1"></i>{{ displayName }}
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="readerDropdown">
+              <li><router-link to="/docgia/account" class="dropdown-item"><i class="fas fa-user-circle me-2"></i>Tài khoản của tôi</router-link></li>
+              <li><router-link to="/docgia/history" class="dropdown-item"><i class="fas fa-history me-2"></i>Lịch sử mượn sách</router-link></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><button class="dropdown-item text-danger" @click="logOut"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</button></li>
+            </ul>
+          </div>
+
+          <!-- Cho nhân viên/admin -->
+          <div v-else class="d-flex align-items-center gap-2">
+            <span class="text-muted d-none d-md-block" style="font-size: 0.9rem;">Xin chào, <strong class="text-dark">{{ displayName }}</strong></span>
+            <button class="btn btn-outline-danger btn-sm" @click="logOut"><i class="fas fa-sign-out-alt"></i></button>
+          </div>
         </div>
       </div>
     </div>
