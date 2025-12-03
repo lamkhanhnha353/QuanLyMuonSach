@@ -43,6 +43,11 @@
             <i class="fas fa-users"></i> Quản lý Người dùng
           </router-link>
         </li>
+        <li class="nav-item">
+          <router-link to="/staff/nhaxuatban" class="nav-link d-flex align-items-center">
+            <i class="fas fa-building"></i> Quản lý Nhà Xuất Bản
+          </router-link>
+        </li>
       </ul>
 
       <div class="nav-bottom">
