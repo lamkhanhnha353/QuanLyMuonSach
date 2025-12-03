@@ -46,6 +46,7 @@ import StaffMuonSachManagement from "@/views/StaffMuonSachManagement.vue";
 import StaffDocGiaManagement from "@/views/StaffDocGiaManagement.vue";
 import StaffDocGiaAdd from "@/views/StaffDocGiaAdd.vue";
 import StaffNhaXuatBanManagement from "@/views/StaffNhaXuatBanManagement.vue";
+import NhanVienAccount from "@/views/NhanVienAccount.vue";
 
 
 
@@ -131,6 +132,8 @@ const routes = [
       { path: "nguoidung/add", name: "staff.nguoidung.add", component: StaffDocGiaAdd },
       // Quản lý Nhà Xuất Bản
       { path: "nhaxuatban", name: "staff.nhaxuatban", component: StaffNhaXuatBanManagement },
+      // Tài khoản nhân viên
+      { path: "account", name: "staff.account", component: NhanVienAccount },
       // Removed staff.docgia.detail route as per user request
       // Bạn có link "Quản lý Người dùng" trong layout,
       // nhưng chưa có route cho nó. Bạn cần thêm 1 route

@@ -38,8 +38,17 @@
 
           <!-- Cho nhân viên/admin -->
           <div v-else class="d-flex align-items-center gap-2">
-            <span class="text-muted d-none d-md-block" style="font-size: 0.9rem;">Xin chào, <strong class="text-dark">{{ displayName }}</strong></span>
-            <button class="btn btn-outline-danger btn-sm" @click="logOut"><i class="fas fa-sign-out-alt"></i></button>
+            <div class="dropdown">
+              <button class="btn dropdown-toggle text-dark" type="button" id="staffDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-user me-1"></i>{{ displayName }}
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="staffDropdown">
+                <li><router-link v-if="currentUser.ChucVu === 'Staff'" to="/staff" class="dropdown-item"><i class="fas fa-arrow-left me-2"></i>Trở về Staff</router-link></li>
+                <li><router-link v-if="currentUser.ChucVu === 'Admin'" to="/admin" class="dropdown-item"><i class="fas fa-arrow-left me-2"></i>Trở về Admin</router-link></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><button class="dropdown-item text-danger" @click="logOut"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</button></li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
