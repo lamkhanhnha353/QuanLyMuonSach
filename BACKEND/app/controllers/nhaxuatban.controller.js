@@ -4,8 +4,14 @@ const ApiError = require("../api-error");
 
 // 1. Create: Tạo NXB
 exports.create = async (req, res, next) => {
+    if (!req.body?.MANXB) {
+        return next(new ApiError(400, "Mã NXB không được để trống"));
+    }
     if (!req.body?.TENNXB) {
         return next(new ApiError(400, "Tên NXB không được để trống"));
+    }
+    if (!req.body?.DIACHI) {
+        return next(new ApiError(400, "Địa chỉ không được để trống"));
     }
 
     try {
@@ -73,6 +79,10 @@ exports.update = async (req, res, next) => {
         }
         return res.send({ message: "NXB được cập nhật thành công", data: document });
     } catch (error) {
+        // Kiểm tra nếu là lỗi trùng lặp từ service
+        if (error.message.includes("đã tồn tại")) {
+            return next(new ApiError(409, error.message));
+        }
         return next(
             new ApiError(500, `Lỗi khi cập nhật NXB với id=${req.params.id}`)
         );

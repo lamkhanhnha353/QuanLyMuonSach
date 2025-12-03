@@ -88,6 +88,23 @@ exports.update = async (req, res, next) => {
 
     try {
         const docGiaService = new DocGiaService(MongoDB.client);
+
+        // Kiểm tra username trùng nếu có cập nhật username
+        if (req.body.username) {
+            const existingDocGia = await docGiaService.findById(req.params.id);
+            if (!existingDocGia) {
+                return next(new ApiError(404, "Không tìm thấy độc giả để cập nhật"));
+            }
+
+            // Nếu username thay đổi, kiểm tra trùng
+            if (req.body.username !== existingDocGia.username) {
+                const usernameExists = await docGiaService.checkUsernameExists(req.body.username);
+                if (usernameExists) {
+                    return next(new ApiError(409, "Tên đăng nhập đã tồn tại. Vui lòng chọn tên khác."));
+                }
+            }
+        }
+
         const document = await docGiaService.update(req.params.id, req.body);
         if (!document) {
             return next(new ApiError(404, "Không tìm thấy độc giả để cập nhật"));
@@ -174,6 +191,19 @@ exports.getFavorites = async (req, res, next) => {
     } catch (error) {
         return next(
             new ApiError(500, `Lỗi khi lấy danh sách yêu thích cho độc giả với id=${req.params.id}`)
+        );
+    }
+};
+
+// 11. Check Username Exists: Kiểm tra username có tồn tại không
+exports.checkUsernameExists = async (req, res, next) => {
+    try {
+        const docGiaService = new DocGiaService(MongoDB.client);
+        const exists = await docGiaService.checkUsernameExists(req.params.username);
+        return res.send({ exists });
+    } catch (error) {
+        return next(
+            new ApiError(500, "Lỗi khi kiểm tra username")
         );
     }
 };

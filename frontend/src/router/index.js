@@ -26,6 +26,7 @@ import NhanVienAdd from "@/views/NhanVienAdd.vue";
 import NhanVienEdit from "@/views/NhanVienEdit.vue";
 
 import DocGiaManagement from "@/views/DocGiaManagement.vue";
+import DocGiaAdd from "@/views/DocGiaAdd.vue";
 import DocGiaEdit from "@/views/DocGiaEdit.vue";
 
 import SachManagement from "@/views/SachManagement.vue";
@@ -35,8 +36,6 @@ import SachEdit from "@/views/SachEdit.vue";
 import MuonSachManagement from "@/views/MuonSachManagement.vue";
 
 import NhaXuatBanManagement from "@/views/NhaXuatBanManagement.vue";
-import NhaXuatBanAdd from "@/views/NhaXuatBanAdd.vue";
-import NhaXuatBanEdit from "@/views/NhaXuatBanEdit.vue";
 
 // Trang Staff
 // import StaffDashboard from "@/views/StaffDashboard.vue"; // <-- Dòng này không cần nữa
@@ -92,6 +91,7 @@ const routes = [
       { path: "nhanvien/edit/:id", name: "admin.nhanvien.edit", component: NhanVienEdit },
 
       { path: "docgia", name: "admin.docgia", component: DocGiaManagement },
+      { path: "docgia/add", name: "admin.docgia.add", component: DocGiaAdd },
       { path: "docgia/edit/:id", name: "admin.docgia.edit", component: DocGiaEdit },
 
       { path: "sach", name: "admin.sach", component: SachManagement },
@@ -101,8 +101,6 @@ const routes = [
       { path: "muonsach", name: "admin.muonsach", component: MuonSachManagement },
       
       { path: "nhaxuatban", name: "admin.nhaxuatban", component: NhaXuatBanManagement },
-      { path: "nhaxuatban/add", name: "admin.nhaxuatban.add", component: NhaXuatBanAdd },
-      { path: "nhaxuatban/edit/:id", name: "admin.nhaxuatban.edit", component: NhaXuatBanEdit },
     ],
   },
 

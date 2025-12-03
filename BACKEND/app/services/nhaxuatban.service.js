@@ -67,12 +67,35 @@ class NhaXuatBanService {
 
   
      //4. Update: Cập nhật thông tin NXB.
-   
+
     async update(id, payload) {
         const filter = {
             _id: ObjectId.isValid(id) ? new ObjectId(id) : null,
         };
         const update = this.#extractNhaXuatBanData(payload);
+
+        // Kiểm tra xem TENNXB đã tồn tại chưa (trừ bản ghi hiện tại)
+        if (update.TENNXB) {
+            const existingNXB = await this.NhaXuatBan.findOne({
+                TENNXB: update.TENNXB,
+                _id: { $ne: filter._id }
+            });
+            if (existingNXB) {
+                throw new Error("Tên Nhà Xuất Bản đã tồn tại");
+            }
+        }
+
+        // Kiểm tra xem MANXB đã tồn tại chưa (trừ bản ghi hiện tại)
+        if (update.MANXB) {
+            const existingMaNXB = await this.NhaXuatBan.findOne({
+                MANXB: update.MANXB,
+                _id: { $ne: filter._id }
+            });
+            if (existingMaNXB) {
+                throw new Error("Mã Nhà Xuất Bản đã tồn tại");
+            }
+        }
+
         const result = await this.NhaXuatBan.findOneAndUpdate(
             filter,
             { $set: update },

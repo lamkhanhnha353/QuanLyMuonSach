@@ -30,6 +30,11 @@ class DocGiaService {
     return http.delete(`/docgia/${id}`);
   }
 
+  // Kiểm tra username có tồn tại không
+  checkUsernameExists(username) {
+    return http.get(`/docgia/check-username/${username}`);
+  }
+
   // Thêm sách vào yêu thích
   addFavorite(docGiaId, sachId) {
     return http.post(`/docgia/${docGiaId}/favorites`, { sachId });

@@ -1,222 +1,321 @@
 <template>
-  <div class="container-fluid">
-    
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h3 class="text-white">Quản lý Sách</h3>
+  <div class="container-fluid pt-1 pb-4">
+    <!-- Header Section -->
+    <div class="row align-items-center mb-3">
+      <div class="col-md-6">
+        <h3 class="fw-bold text-dark mb-0">
+          <span class="text-primary">Quản Lý</span> Sách
+        </h3>
+        <small class="text-muted">Xem và quản lý danh sách sách trong hệ thống</small>
+      </div>
+      <div class="col-md-6 text-md-end mt-3 mt-md-0">
+        <router-link to="/admin/sach/add" class="btn btn-primary px-4 py-2 rounded-pill shadow-sm fw-bold">
+          <i class="fas fa-plus me-2"></i> Thêm Sách Mới
+        </router-link>
+      </div>
     </div>
 
-    <!-- Bộ lọc & tìm kiếm -->
-    <div class="card bg-dark text-white mb-4">
-      <div class="card-body">
+    <!-- Search & Filter Card -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+      <div class="card-body p-3">
         <div class="row g-3 align-items-center">
           <div class="col-md-3">
-            <select class="form-select" v-model="filterStock">
-              <option value="all">Tất cả sách</option>
-              <option value="in_stock">Sách còn hàng</option>
-              <option value="out_of_stock">Sách hết hàng</option>
-            </select>
+            <div class="d-flex align-items-center">
+              <span class="text-muted fw-semibold me-2 small text-nowrap">Trạng thái:</span>
+              <select v-model="filterStock" @change="currentPage = 1" class="form-select form-select-sm border-light bg-light fw-bold text-dark shadow-none cursor-pointer">
+                <option value="all">Tất cả sách</option>
+                <option value="in_stock">Sách còn hàng</option>
+                <option value="out_of_stock">Sách hết hàng</option>
+              </select>
+            </div>
           </div>
           <div class="col-md-6">
             <div class="input-group">
-              <input 
-                type="text" 
-                class="form-control" 
-                placeholder="Nhập tên sách để tìm..."
-                v-model="searchText"
-              >
-              <button class="btn btn-info" type="button" @click="search">
+              <span class="input-group-text bg-light border-end-0 text-secondary ps-3">
                 <i class="fas fa-search"></i>
+              </span>
+              <input
+                type="text"
+                class="form-control bg-light border-start-0 ps-0"
+                placeholder="Tìm kiếm theo tên sách, tác giả..."
+                v-model="searchText"
+                @keyup.enter="currentPage = 1"
+              />
+              <button class="btn btn-primary px-4 fw-bold" type="button" @click="currentPage = 1">
+                Tìm kiếm
               </button>
             </div>
           </div>
-          <div class="col-md-3 text-end">
-            <router-link to="/admin/sach/add" class="btn btn-primary w-100">
-              <i class="fas fa-plus me-2"></i> Thêm Sách Mới
-            </router-link>
+          <div class="col-md-3 text-md-end">
+            <div class="d-inline-flex align-items-center">
+              <span class="text-muted fw-semibold me-2 small text-nowrap">Hiển thị:</span>
+              <select v-model="itemsPerPage" @change="currentPage = 1" class="form-select form-select-sm w-auto border-light bg-light fw-bold text-dark shadow-none cursor-pointer">
+                <option :value="5">5 dòng</option>
+                <option :value="10">10 dòng</option>
+                <option :value="20">20 dòng</option>
+                <option :value="50">50 dòng</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Danh sách sách -->
-    <div class="card bg-dark text-white mb-4">
-      <div class="card-header">
-        <i class="fas fa-book me-2"></i> Danh sách Sách
+    <!-- Data Table Card -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+      <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4">
+        <div class="d-flex align-items-center">
+          <div class="icon-shape bg-primary text-white rounded-3 me-3 p-2">
+            <i class="fas fa-book fa-lg"></i>
+          </div>
+          <h5 class="mb-0 fw-bold text-secondary">Danh sách Sách</h5>
+        </div>
       </div>
-      <div class="card-body">
+
+      <div class="card-body p-0 mt-3">
         <div class="table-responsive">
-          <table class="table table-dark table-hover align-middle">
-            <thead>
+          <table class="table table-hover align-middle mb-0">
+            <thead class="bg-light text-secondary">
               <tr>
-                <th style="width: 60px; text-align: center;">STT</th>
-                <th>Tên Sách</th>
-                <th style="width: 130px;">Tổng số sách</th>
-                <th>Tác Giả</th>
-                <th style="width: 100px;">Năm SX</th>
-                <th style="width: 140px;">SL sách hiện tại</th>
-                <th style="width: 130px; text-align: center;">Trạng thái</th>
-                <th style="width: 150px; text-align: center;">Hành động</th>
+                <th class="text-center text-uppercase text-secondary text-xs font-weight-bolder opacity-7" style="width: 5%;">STT</th>
+                <th class="text-center text-uppercase text-secondary text-xs font-weight-bolder opacity-7" style="width: 8%;">Ảnh</th>
+                <th class="ps-3 text-uppercase text-secondary text-xs font-weight-bolder opacity-7" style="width: 25%;">Tên Sách</th>
+                <th class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7" style="width: 15%;">Tác Giả</th>
+                <th class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7" style="width: 10%;">Năm XB</th>
+                <th class="text-center text-uppercase text-secondary text-xs font-weight-bolder opacity-7" style="width: 10%;">Số Lượng</th>
+                <th class="text-center text-uppercase text-secondary text-xs font-weight-bolder opacity-7" style="width: 12%;">Trạng Thái</th>
+                <th class="text-center text-uppercase text-secondary text-xs font-weight-bolder opacity-7 pe-5" style="width: 15%;">Hành Động</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody v-if="!loading">
               <tr v-for="(book, index) in paginatedBooks" :key="book._id">
-                <td style="text-align: center;">
-                  {{ (currentPage - 1) * itemsPerPage + index + 1 }}
+                <td class="text-center text-secondary fw-bold">{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
+                <td class="text-center">
+                  <img
+                    :src="book.HinhAnh || defaultImage"
+                    class="avatar-sm rounded shadow-sm"
+                    alt="Book cover"
+                    @error="$event.target.src = defaultImage"
+                  >
                 </td>
-                <td>{{ book.TENSACH }}</td>
-                <td>{{ book.SOQUYEN }}</td>
-                <td>{{ book.TACGIA }}</td>
-                <td>{{ book.NAMXUATBAN }}</td>
-                <td>{{ book.SOQUYEN }}</td>
-                <td style="text-align: center;">
-                  <span 
+                <td class="ps-3">
+                  <div class="d-flex flex-column">
+                    <h6 class="mb-0 text-sm fw-bold text-dark">{{ book.TENSACH }}</h6>
+                    <small class="text-muted">{{ formatCurrency(book.DONGIA) }}</small>
+                  </div>
+                </td>
+                <td>
+                  <span class="text-secondary text-sm fw-bold">{{ book.TACGIA }}</span>
+                </td>
+                <td>
+                  <span class="text-secondary text-sm fw-bold">{{ book.NAMXUATBAN }}</span>
+                </td>
+                <td class="text-center">
+                  <span class="badge bg-primary px-3 py-2 fw-bold">{{ book.SOQUYEN }}</span>
+                </td>
+                <td class="text-center">
+                  <span
                     class="badge px-3 py-2 fw-bold"
-                    :class="book.SOQUYEN > 0 ? 'bg-success' : 'bg-danger'"
+                    :class="book.SOQUYEN > 0 ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-danger-subtle text-danger border border-danger-subtle'"
                   >
                     {{ book.SOQUYEN > 0 ? 'Còn hàng' : 'Hết hàng' }}
                   </span>
                 </td>
-                <td style="text-align: center;">
-                  <button 
-                    class="btn btn-info btn-sm me-1" 
-                    title="Xem chi tiết"
-                    @click="viewDetails(book)"
-                  >
-                    <i class="fas fa-eye"></i>
-                  </button>
-                  
-                  <router-link 
-                    :to="{ name: 'admin.sach.edit', params: { id: book._id } }"
-                    class="btn btn-warning btn-sm me-1" 
-                    title="Sửa"
-                  >
-                    <i class="fas fa-edit"></i>
-                  </router-link>
-
-                  <!-- Chỉnh đây -->
-                  <button 
-                    class="btn btn-danger btn-sm" 
-                    title="Xóa"
-                    @click="confirmDelete(book)"
-                  >
-                    <i class="fas fa-trash"></i>
-                  </button>
+                <td class="text-center pe-5">
+                  <div class="d-flex justify-content-center gap-2">
+                    <button
+                      class="btn btn-icon-only btn-rounded btn-outline-success mb-0 me-1 btn-sm d-flex align-items-center justify-content-center"
+                      @click="viewDetails(book)"
+                      title="Xem chi tiết"
+                    >
+                      <i class="fas fa-eye"></i>
+                    </button>
+                    <router-link
+                      :to="{ name: 'admin.sach.edit', params: { id: book._id } }"
+                      class="btn btn-icon-only btn-rounded btn-outline-info mb-0 me-1 btn-sm d-flex align-items-center justify-content-center"
+                      title="Chỉnh sửa"
+                    >
+                      <i class="fas fa-edit"></i>
+                    </router-link>
+                    <button
+                      class="btn btn-icon-only btn-rounded btn-outline-danger mb-0 btn-sm d-flex align-items-center justify-content-center"
+                      @click="confirmDelete(book)"
+                      title="Xóa"
+                    >
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
                 </td>
               </tr>
-              <tr v-if="filteredBooks.length === 0">
-                <td colspan="8" class="text-center">Không tìm thấy cuốn sách nào.</td>
+              <tr v-if="paginatedBooks.length === 0">
+                <td colspan="8" class="text-center py-5">
+                  <div class="d-flex flex-column align-items-center justify-content-center">
+                    <i class="fas fa-book-slash fa-3x text-secondary opacity-25 mb-3"></i>
+                    <p class="text-muted fw-bold">Không tìm thấy cuốn sách nào.</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+            <tbody v-else>
+              <tr>
+                <td colspan="8" class="text-center py-5">
+                  <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                  <p class="text-muted mt-2">Đang tải dữ liệu...</p>
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <!-- Pagination -->
-      <div class="card-footer" v-if="totalPages > 1">
+      <!-- Pagination Compact (Đã chỉnh sửa logic) -->
+      <div class="card-footer bg-white border-top-0 py-3" v-if="!loading && totalPages > 1">
         <nav aria-label="Page navigation">
           <ul class="pagination justify-content-center mb-0">
+            <!-- Nút Previous -->
             <li class="page-item" :class="{ disabled: currentPage === 1 }">
-              <a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)">Trang trước</a>
+              <a class="page-link border-0 rounded-circle mx-1" href="#" @click.prevent="changePage(currentPage - 1)">
+                <i class="fas fa-chevron-left"></i>
+              </a>
             </li>
-            <li v-for="page in totalPages" :key="page" class="page-item" :class="{ active: page === currentPage }">
-              <a class="page-link" href="#" @click.prevent="changePage(page)">{{ page }}</a>
+
+            <!-- Logic hiển thị trang thông minh (1 ... 4 5 6 ... 10) -->
+            <li 
+              v-for="page in visiblePages" 
+              :key="page" 
+              class="page-item" 
+              :class="{ active: page === currentPage, disabled: page === '...' }"
+            >
+              <a class="page-link border-0 rounded-circle mx-1 shadow-sm" href="#" @click.prevent="changePage(page)">
+                {{ page }}
+              </a>
             </li>
+
+            <!-- Nút Next -->
             <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-              <a class="page-link" href="#" @click.prevent="changePage(currentPage + 1)">Trang sau</a>
+              <a class="page-link border-0 rounded-circle mx-1" href="#" @click.prevent="changePage(currentPage + 1)">
+                <i class="fas fa-chevron-right"></i>
+              </a>
             </li>
           </ul>
         </nav>
       </div>
     </div>
 
-    <!-- Modal chi tiết sách -->
-    <div 
-      class="modal fade" 
-      id="sachDetailModal" 
-      tabindex="-1" 
-      aria-labelledby="sachDetailModalLabel" 
-      aria-hidden="true"
-    >
-      <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content bg-dark text-white">
-          <div class="modal-header">
-            <h5 class="modal-title" id="sachDetailModalLabel">
-              <i class="fas fa-book-reader me-2"></i> 
-              Chi tiết Sách: {{ selectedBook?.TENSACH }}
-            </h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+    <!-- Modal Xem Chi Tiết -->
+    <div class="modal fade" id="sachDetailModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+          <div class="modal-header border-bottom-0">
+            <h5 class="modal-title fw-bold text-primary">Thông Tin Chi Tiết Sách</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body" v-if="selectedBook">
+          <div class="modal-body py-4" v-if="selectedBook">
             <div class="row">
               <div class="col-md-4 text-center">
-                <img 
-                  :src="selectedBook.HinhAnh || 'https://via.placeholder.com/200?text=No+Image'" 
-                  class="img-fluid rounded mb-3" 
-                  style="width: 200px; height: 250px; object-fit: cover;"
-                  @error="(e) => { e.target.src = 'https://via.placeholder.com/200?text=No+Image' }"
+                <img
+                  :src="selectedBook.HinhAnh || defaultImage"
+                  class="avatar-modal rounded shadow-sm"
+                  alt="Book cover"
+                  @error="$event.target.src = defaultImage"
                 >
-                <h4>{{ selectedBook.TENSACH }}</h4>
-                <p class="text-muted">{{ selectedBook.TACGIA }}</p>
+                <h5 class="mt-3 fw-bold text-dark">{{ selectedBook.TENSACH }}</h5>
+                <p class="text-muted mb-0">{{ selectedBook.TACGIA }}</p>
               </div>
               <div class="col-md-8">
-                <ul class="list-group list-group-flush">
-                  <li class="list-group-item bg-dark text-white">
-                    <strong>Tên sách:</strong> {{ selectedBook.TENSACH }}
-                  </li>
-                  <li class="list-group-item bg-dark text-white">
-                    <strong>Tác giả:</strong> {{ selectedBook.TACGIA }}
-                  </li>
-                  <li class="list-group-item bg-dark text-white">
-                    <strong>Nhà xuất bản (Mã):</strong> {{ selectedBook.MANXB }}
-                  </li>
-                  <li class="list-group-item bg-dark text-white">
-                    <strong>Năm xuất bản:</strong> {{ selectedBook.NAMXUATBAN }}
-                  </li>
-                  <li class="list-group-item bg-dark text-white">
-                    <strong>Đơn giá:</strong> {{ selectedBook.DONGIA }} VNĐ
-                  </li>
-                  <li class="list-group-item bg-dark text-white">
-                    <strong>Tổng số quyển:</strong> {{ selectedBook.SOQUYEN }}
-                  </li>
-                  <li class="list-group-item bg-dark text-white">
-                    <strong>Trạng thái:</strong> 
-                    <span :class="selectedBook.SOQUYEN > 0 ? 'text-success' : 'text-danger'">
-                      {{ selectedBook.SOQUYEN > 0 ? 'Còn hàng' : ' Hết hàng' }}
-                    </span>
-                  </li>
-                </ul>
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <div class="border-start border-primary border-3 ps-3">
+                      <small class="text-muted fw-semibold">Mã Sách</small>
+                      <p class="mb-0 fw-bold text-dark">{{ selectedBook._id }}</p>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="border-start border-info border-3 ps-3">
+                      <small class="text-muted fw-semibold">Nhà Xuất Bản</small>
+                      <p class="mb-0 fw-bold text-dark">{{ selectedBook.MANXB }}</p>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="border-start border-success border-3 ps-3">
+                      <small class="text-muted fw-semibold">Đơn Giá</small>
+                      <p class="mb-0 fw-bold text-dark">{{ formatCurrency(selectedBook.DONGIA) }}</p>
+                    </div>
+                  </div>
+                   <div class="col-md-6">
+                    <div class="border-start border-danger border-3 ps-3">
+                      <small class="text-muted fw-semibold">Số Lượng</small>
+                      <p class="mb-0 fw-bold text-dark">{{ selectedBook.SOQUYEN }}</p>
+                    </div>
+                  </div>
+                   <div class="col-12">
+                     <div class="border-start border-secondary border-3 ps-3">
+                      <small class="text-muted fw-semibold">Mô Tả</small>
+                      <p class="mb-0 text-dark small">{{ selectedBook.MOTA || "Chưa có mô tả." }}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+          <div class="modal-footer border-top-0 justify-content-center pb-4">
+            <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">
+              Đóng
+            </button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Modal xác nhận xóa -->
+    <!-- Modal Xác Nhận Xóa -->
     <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content bg-dark text-white">
-          <div class="modal-header">
-            <h5 class="modal-title">
-              <i class="fas fa-exclamation-triangle text-danger me-2"></i> Xác nhận xóa
-            </h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        <div class="modal-content border-0 shadow-lg rounded-4">
+          <div class="modal-header border-bottom-0 bg-danger bg-opacity-10">
+            <div class="d-flex align-items-center">
+               <h5 class="modal-title fw-bold text-danger mb-0">Xác Nhận Xóa</h5>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body">
-            <p>Bạn có chắc chắn muốn xóa sách <strong>{{ bookToDelete?.TENSACH }}</strong> không?</p>
-            <p class="text-danger mb-0"><small>Hành động này không thể hoàn tác!</small></p>
+          <div class="modal-body py-4 text-center" v-if="bookToDelete">
+             <div class="avatar-circle bg-danger-subtle text-danger mb-3 mx-auto d-flex align-items-center justify-content-center rounded-circle" style="width: 60px; height: 60px;">
+                <i class="fas fa-trash-alt fa-2x"></i>
+            </div>
+            <p class="mb-1 text-muted">Bạn có chắc chắn muốn xóa cuốn sách này?</p>
+            <h5 class="fw-bold text-dark">{{ bookToDelete.TENSACH }}</h5>
+            <small class="text-danger d-block mt-2">Hành động này không thể hoàn tác.</small>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-            <button type="button" class="btn btn-danger" @click="handleDeleteConfirm">Xóa</button>
+          <div class="modal-footer border-top-0 justify-content-center pb-4">
+            <button type="button" class="btn btn-light rounded-pill px-4 fw-bold me-2" data-bs-dismiss="modal">
+              Hủy
+            </button>
+            <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold" @click="handleDeleteConfirm">
+              Xóa Sách
+            </button>
           </div>
         </div>
       </div>
     </div>
     
+    <!-- TOAST NOTIFICATION -->
+    <div v-if="toastMessage" class="toast-overlay">
+      <div 
+        class="toast show align-items-center text-white border-0 shadow-lg" 
+        :class="isToastError ? 'bg-danger' : 'bg-success'"
+        role="alert" 
+      >
+        <div class="d-flex">
+          <div class="toast-body fs-6 fw-bold">
+            <i :class="isToastError ? 'fas fa-exclamation-triangle' : 'fas fa-check-circle'" class="me-2"></i>
+            {{ toastMessage }}
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" @click="toastMessage = ''"></button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -237,6 +336,12 @@ export default {
       detailModal: null,
       confirmDeleteModal: null,
       bookToDelete: null,
+      loading: true,
+      defaultImage: "https://via.placeholder.com/150?text=No+Image",
+      
+      // Toast Notification
+      toastMessage: "",
+      isToastError: false,
     };
   },
   computed: {
@@ -247,7 +352,7 @@ export default {
 
       if (this.searchText.trim()) {
         const lower = this.searchText.trim().toLowerCase();
-        filtered = filtered.filter(b => b.TENSACH.toLowerCase().includes(lower));
+        filtered = filtered.filter(b => b.TENSACH.toLowerCase().includes(lower) || b.TACGIA.toLowerCase().includes(lower));
       }
       return filtered;
     },
@@ -258,14 +363,45 @@ export default {
       const start = (this.currentPage - 1) * this.itemsPerPage;
       return this.filteredBooks.slice(start, start + this.itemsPerPage);
     },
+    // Logic phân trang thông minh (1 ... 4 5 6 ... 10)
+    visiblePages() {
+      const total = this.totalPages;
+      const current = this.currentPage;
+      const delta = 1; // Số trang hiển thị xung quanh trang hiện tại
+      const range = [];
+      const rangeWithDots = [];
+      let l;
+
+      for (let i = 1; i <= total; i++) {
+        if (i === 1 || i === total || (i >= current - delta && i <= current + delta)) {
+          range.push(i);
+        }
+      }
+
+      for (let i of range) {
+        if (l) {
+          if (i - l === 2) {
+            rangeWithDots.push(l + 1);
+          } else if (i - l !== 1) {
+            rangeWithDots.push('...');
+          }
+        }
+        rangeWithDots.push(i);
+        l = i;
+      }
+      return rangeWithDots;
+    }
   },
   methods: {
     async retrieveBooks() {
+      this.loading = true;
       try {
         const response = await SachService.getAll();
         this.books = response.data;
       } catch (error) {
         console.error(error);
+      } finally {
+        this.loading = false;
       }
     },
     viewDetails(book) {
@@ -281,11 +417,15 @@ export default {
         await SachService.delete(this.bookToDelete._id);
         this.confirmDeleteModal.hide();
         this.retrieveBooks();
+        
+        // Hiển thị thông báo thành công
+        this.showToast("Xóa sách thành công!");
       } catch (error) {
-        alert("Không thể xóa sách.");
+        this.showToast("Không thể xóa sách.", true);
       }
     },
     changePage(page) {
+      if (page === '...') return;
       if (page < 1) page = 1;
       if (page > this.totalPages) page = this.totalPages;
       this.currentPage = page;
@@ -293,6 +433,16 @@ export default {
     search() {
       this.currentPage = 1;
     },
+    formatCurrency(value) {
+        if (!value) return '0 đ';
+        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
+    },
+    // Hàm hiển thị Toast
+    showToast(msg, isError = false) {
+        this.toastMessage = msg;
+        this.isToastError = isError;
+        setTimeout(() => { this.toastMessage = "" }, 3000);
+    }
   },
   watch: {
     filterStock() {
@@ -309,41 +459,110 @@ export default {
 
 <style scoped>
 .card {
-  border: 1px solid rgba(255, 255, 255, 0.125);
+  transition: all 0.3s ease;
 }
+
 .form-control, .form-select {
-  background-color: #212529;
-  color: #fff;
-  border: 1px solid #495057;
+  background-color: #f8f9fa;
+  border-left: none;
+  color: #495057;
+  transition: all 0.2s;
 }
-.form-control:focus, .form-select:focus {
-  background-color: #212529;
-  color: #fff;
-  border-color: #58a6ff;
-  box-shadow: 0 0 0 0.25rem rgba(88, 166, 255, 0.25);
+
+/* Input Group */
+.input-group-text {
+  background-color: #f8f9fa;
+  border-right: none;
+  color: #6c757d;
 }
+.input-group:focus-within .input-group-text {
+  background-color: #fff;
+  border-color: #86b7fe;
+  color: #0d6efd;
+}
+.input-group:focus-within .form-control,
+.input-group:focus-within .form-select {
+  background-color: #fff;
+  border-color: #86b7fe;
+  box-shadow: none;
+}
+.input-group:focus-within {
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+  border-radius: 0.375rem;
+}
+
+/* Table & Text */
+.text-xs { font-size: 0.75rem !important; }
+.text-sm { font-size: 0.875rem !important; }
+.text-xxs { font-size: 0.65rem !important; }
+.table-hover tbody tr:hover { background-color: rgba(13, 110, 253, 0.04); }
+
+/* Buttons */
+.btn-icon-only { width: 2.25rem; height: 2.25rem; padding: 0; }
+
+/* Pagination */
 .page-link {
-  background-color: #212529;
-  color: #c9d1d9;
-  border-color: #495057;
-  cursor: pointer;
-}
-.page-link:hover {
-  background-color: #343a40;
+  color: #6c757d;
+  background-color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  font-weight: 600;
+  transition: all 0.2s;
 }
 .page-item.active .page-link {
   background-color: #0d6efd;
-  border-color: #0d6efd;
   color: #fff;
+  border-color: #0d6efd;
 }
 .page-item.disabled .page-link {
-  background-color: #343a40;
-  color: #6c757d;
-  border-color: #495057;
+  background-color: #e9ecef;
+  color: #adb5bd;
   cursor: not-allowed;
 }
-::placeholder{
-    color: #ffffff9b;
-    font-style: italic;
+.page-link:hover:not(.active) {
+  background-color: #e9ecef;
+  color: #0d6efd;
+}
+
+.cursor-pointer { cursor: pointer; }
+
+.icon-shape {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+/* Avatar Styles */
+.avatar-sm {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+}
+.avatar-modal {
+  width: 150px;
+  height: 200px; /* Tỉ lệ sách */
+  object-fit: cover;
+  border: 1px solid #e9ecef;
+}
+
+/* Toast Overlay */
+.toast-overlay {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  min-width: 300px;
+  animation: slideInRight 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
 }
 </style>

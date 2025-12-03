@@ -266,6 +266,16 @@ class DocGiaService {
 
         return docgia.favorites || [];
     }
+
+    /**
+     * Kiểm tra username có tồn tại không
+     * @param {string} username Tên đăng nhập cần kiểm tra
+     * @returns {boolean} True nếu tồn tại, false nếu không
+     */
+    async checkUsernameExists(username) {
+        const count = await this.DocGia.countDocuments({ username });
+        return count > 0;
+    }
 }
 
 module.exports = DocGiaService;

@@ -1,163 +1,204 @@
 <template>
-  <div class="page-container">
-    <div class="d-flex justify-content-between align-items-center mb-4 page-header">
-      <div class="d-flex align-items-center">
-        <router-link to="/admin/sach" class="btn-back me-3">
-          <i class="fas fa-arrow-left"></i>
+  <div class="container-fluid pt-2 pb-4">
+    <div class="row align-items-center mb-3">
+      <div class="col-auto">
+        <router-link to="/admin/sach" class="btn btn-light shadow-sm rounded-pill px-3 fw-bold text-primary">
+          <i class="fas fa-arrow-left me-2"></i> Quay lại
         </router-link>
-        <h3 class="page-title mb-0">Thêm Sách Mới</h3>
+      </div>
+      <div class="col">
+        <h3 class="fw-bold text-dark mb-0">
+          <span class="text-primary">Thêm</span> Sách Mới
+        </h3>
+        <small class="text-muted">Nhập thông tin chi tiết để thêm sách vào kho</small>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+      <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4">
+        <div class="d-flex align-items-center">
+          <div class="icon-shape bg-primary text-white rounded-3 me-3 p-2">
+            <i class="fas fa-book-medical fa-lg"></i>
+          </div>
+          <h5 class="mb-0 fw-bold text-secondary">Thông tin sách</h5>
+        </div>
+      </div>
+
+      <div class="card-body p-4">
+        <Form @submit="handleCreate" :validation-schema="bookSchema" :validate-on-input="true">
+          <div class="row g-4">
+            
+            <div class="col-lg-4">
+              <div class="p-3 bg-light rounded-4 h-100 border border-light">
+                <h6 class="fw-bold text-secondary mb-3"><i class="fas fa-image me-2"></i>Ảnh Bìa</h6>
+                
+                <div class="image-upload-wrapper bg-white shadow-sm rounded-3 border-0" @click="openImageUploader">
+                  <div v-if="uploadingImage" class="d-flex flex-column align-items-center justify-content-center h-100 text-muted">
+                    <div class="spinner-border text-primary mb-2" role="status"></div>
+                    <small>Đang tải ảnh...</small>
+                  </div>
+                  
+                  <div v-else-if="imageUrl" class="image-preview h-100 position-relative">
+                    <img :src="imageUrl" alt="Book Cover" class="w-100 h-100 object-fit-cover rounded-3" />
+                    <div class="overlay-hover rounded-3 d-flex align-items-center justify-content-center">
+                      <div class="text-white text-center">
+                          <i class="fas fa-camera fa-2x mb-2"></i>
+                          <p class="mb-0 fw-bold small">Thay đổi ảnh</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div v-else class="d-flex flex-column align-items-center justify-content-center h-100 text-secondary p-4 text-center">
+                    <div class="bg-light rounded-circle p-3 mb-3">
+                        <i class="fas fa-cloud-upload-alt fa-2x text-primary"></i>
+                    </div>
+                    <p class="mb-1 fw-bold small">Nhấn để tải ảnh lên</p>
+                    <small class="text-muted" style="font-size: 0.75rem;">(JPG, PNG, tối đa 5MB)</small>
+                  </div>
+                </div>
+
+                <div class="mt-3">
+                   <label class="form-label small fw-bold text-muted mb-1">Hoặc nhập URL ảnh:</label>
+                   <div class="input-group">
+                      <span class="input-group-text bg-white border-end-0 text-secondary"><i class="fas fa-link"></i></span>
+                      <input type="text" class="form-control border-start-0 ps-0 bg-white" v-model="imageUrl" placeholder="https://example.com/image.png" />
+                   </div>
+                </div>
+                <ErrorMessage name="HinhAnh" class="text-danger small mt-1 d-block text-center" />
+
+                <div class="d-grid mt-4">
+                   <button class="btn btn-primary fw-bold py-2 shadow-sm button-save" :disabled="loading">
+                      <span v-if="!loading"><i class="fas fa-save me-2"></i> Lưu Sách</span>
+                      <span v-else><span class="spinner-border spinner-border-sm me-2"></span> Đang xử lý...</span>
+                   </button>
+                </div>
+                
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+              <div class="row g-3 mb-4">
+                 <div class="col-12">
+                    <label class="form-label fw-semibold text-secondary small">Tên Sách <span class="text-danger">*</span></label>
+                    <div class="input-group input-group-merge">
+                        <span class="input-group-text bg-light border-0 ps-3"><i class="fas fa-book text-muted"></i></span>
+                        <Field name="TENSACH" type="text" class="form-control bg-light border-0 ps-2" placeholder="Nhập tên sách..." />
+                    </div>
+                    <ErrorMessage name="TENSACH" class="text-danger small mt-1" />
+                 </div>
+                 <div class="col-md-6">
+                    <label class="form-label fw-semibold text-secondary small">Tác Giả <span class="text-danger">*</span></label>
+                    <div class="input-group input-group-merge">
+                       <span class="input-group-text bg-light border-0 ps-3"><i class="fas fa-pen-nib text-muted"></i></span>
+                       <Field name="TACGIA" type="text" class="form-control bg-light border-0 ps-2" placeholder="Tên tác giả" />
+                    </div>
+                    <ErrorMessage name="TACGIA" class="text-danger small mt-1" />
+                 </div>
+                 <div class="col-md-6">
+                    <label class="form-label fw-semibold text-secondary small">Mã NXB <span class="text-danger">*</span></label>
+                    <div class="input-group input-group-merge">
+                       <span class="input-group-text bg-light border-0 ps-3"><i class="fas fa-barcode text-muted"></i></span>
+                       <Field name="MANXB" type="text" class="form-control bg-light border-0 ps-2" placeholder="Mã nhà xuất bản" />
+                    </div>
+                    <ErrorMessage name="MANXB" class="text-danger small mt-1" />
+                 </div>
+                 <div class="col-md-6">
+                    <label class="form-label fw-semibold text-secondary small">Thể Loại <span class="text-danger">*</span></label>
+                    <div class="input-group input-group-merge">
+                        <span class="input-group-text bg-light border-0 ps-3"><i class="fas fa-tags text-muted"></i></span>
+                        <Field name="THELOAI" type="text" class="form-control bg-light border-0 ps-2" placeholder="Ví dụ: Khoa học, Văn học..." />
+                    </div>
+                    <ErrorMessage name="THELOAI" class="text-danger small mt-1" />
+                 </div>
+                 <div class="col-md-6">
+                    <label class="form-label fw-semibold text-secondary small">Đơn Giá <span class="text-danger">*</span></label>
+                    <div class="input-group input-group-merge">
+                        <span class="input-group-text bg-light border-0 ps-3"><i class="fas fa-tag text-muted"></i></span>
+                        <Field name="DONGIA" type="number" class="form-control bg-light border-0 ps-2" placeholder="0" />
+                        <span class="input-group-text bg-light border-0 text-success fw-bold">VNĐ</span>
+                    </div>
+                    <ErrorMessage name="DONGIA" class="text-danger small mt-1" />
+                 </div>
+              </div>
+
+              <hr class="border-light my-4">
+
+              <h6 class="fw-bold text-secondary mb-3"><i class="fas fa-info-circle me-2"></i>Chi tiết xuất bản</h6>
+              <div class="row g-3 mb-4">
+                 <div class="col-6 col-md-3">
+                    <label class="form-label fw-semibold text-secondary small">Năm XB</label>
+                    <div class="input-group input-group-merge">
+                        <span class="input-group-text bg-light border-0 ps-3"><i class="fas fa-calendar-alt text-muted small"></i></span>
+                        <Field name="NAMXUATBAN" type="number" class="form-control bg-light border-0 ps-1" />
+                    </div>
+                    <ErrorMessage name="NAMXUATBAN" class="text-danger small mt-1" />
+                 </div>
+                 <div class="col-6 col-md-3">
+                    <label class="form-label fw-semibold text-secondary small">Số Quyển</label>
+                    <div class="input-group input-group-merge">
+                        <span class="input-group-text bg-light border-0 ps-3"><i class="fas fa-layer-group text-muted small"></i></span>
+                        <Field name="SOQUYEN" type="number" class="form-control bg-light border-0 ps-1" />
+                    </div>
+                    <ErrorMessage name="SOQUYEN" class="text-danger small mt-1" />
+                 </div>
+                 <div class="col-6 col-md-3">
+                    <label class="form-label fw-semibold text-secondary small">Số Trang</label>
+                    <div class="input-group input-group-merge">
+                        <span class="input-group-text bg-light border-0 ps-3"><i class="fas fa-file-alt text-muted small"></i></span>
+                        <Field name="SOTRANG" type="number" class="form-control bg-light border-0 ps-1" />
+                    </div>
+                    <ErrorMessage name="SOTRANG" class="text-danger small mt-1" />
+                 </div>
+                 <div class="col-6 col-md-3">
+                    <label class="form-label fw-semibold text-secondary small">Ngôn Ngữ</label>
+                    <div class="input-group input-group-merge">
+                        <span class="input-group-text bg-light border-0 ps-3"><i class="fas fa-globe text-muted small"></i></span>
+                        <Field name="NGONNGU" type="text" class="form-control bg-light border-0 ps-1" placeholder="Tiếng Việt" />
+                    </div>
+                    <ErrorMessage name="NGONNGU" class="text-danger small mt-1" />
+                 </div>
+              </div>
+
+              <div class="mb-3">
+                 <label class="form-label fw-semibold text-secondary small">Giới Thiệu Nội Dung <span class="text-danger">*</span></label>
+                 <Field name="MOTA" as="textarea" class="form-control bg-light border-0" rows="4" placeholder="Viết mô tả ngắn về nội dung sách..." />
+                 <ErrorMessage name="MOTA" class="text-danger small mt-1" />
+              </div>
+
+            </div>
+          </div>
+          
+          <input type="file" ref="fileInput" style="display: none" accept="image/*" @change="handleFileSelect" />
+        </Form>
       </div>
     </div>
 
     <transition name="slide-fade">
-      <div v-if="showSuccessNotification" class="success-toast">
-        <div class="toast-content">
-          <i class="fas fa-check-circle icon"></i>
-          <span class="text">Thêm sách thành công!</span>
+      <div v-if="showSuccessNotification" class="toast-overlay" style="z-index: 10000;">
+        <div class="toast show align-items-center text-white bg-success border-0 shadow-lg" role="alert">
+          <div class="d-flex">
+            <div class="toast-body fs-6 fw-bold">
+              <i class="fas fa-check-circle me-2"></i> Thêm sách thành công!
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" @click="showSuccessNotification = false"></button>
+          </div>
         </div>
       </div>
     </transition>
 
-    <Form @submit="handleCreate" :validation-schema="bookSchema" :validate-on-input="true" class="form-layout">
-      <div class="row g-4">
-        
-        <div class="col-lg-4">
-          <div class="card-box image-section sticky-top-custom">
-            <h5 class="section-title"><i class="fas fa-image me-2"></i>Ảnh Bìa</h5>
-            
-            <div class="image-upload-wrapper" @click="openImageUploader">
-              <div v-if="uploadingImage" class="upload-state">
-                <div class="spinner-border text-primary mb-2" role="status"></div>
-                <small>Đang tải ảnh lên...</small>
-              </div>
-              
-              <div v-else-if="imageUrl" class="image-preview">
-                <img :src="imageUrl" alt="Book Cover" />
-                <div class="overlay-hover">
-                  <i class="fas fa-camera"></i> 
-                  <span>Đổi ảnh</span>
-                </div>
-              </div>
-              
-              <div v-else class="upload-placeholder">
-                <i class="fas fa-cloud-upload-alt icon-upload"></i>
-                <p>Nhấn để tải ảnh bìa</p>
-                <small class="text-muted">(JPG, PNG, max 5MB)</small>
-              </div>
+    <transition name="slide-fade">
+      <div v-if="showErrorNotification" class="toast-overlay" style="z-index: 10001;">
+        <div class="toast show align-items-center text-white bg-danger border-0 shadow-lg" role="alert">
+          <div class="d-flex">
+            <div class="toast-body fs-6 fw-bold">
+              <i class="fas fa-exclamation-triangle me-2"></i> {{ message }}
             </div>
-
-            <div class="mt-3">
-                <label class="form-label-sm text-muted">Hoặc dán link ảnh:</label>
-                <input type="text" class="form-control form-control-sm custom-input" v-model="imageUrl" placeholder="https://..." />
-             </div>
-             <ErrorMessage name="HinhAnh" class="error-feedback mt-2 d-block text-center" />
-
-             <div class="mt-4 d-grid">
-                <button class="btn btn-action-primary" :disabled="loading">
-                  <span v-if="!loading"><i class="fas fa-save me-2"></i>Lưu Sách</span>
-                  <span v-else><i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý...</span>
-                </button>
-             </div>
-
-             <div v-if="message && !showSuccessNotification" class="alert alert-danger mt-3 custom-alert">
-                <i class="fas fa-exclamation-triangle me-2"></i> {{ message }}
-             </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" @click="showErrorNotification = false"></button>
           </div>
-        </div>
-
-        <div class="col-lg-8">
-          
-          <div class="card-box mb-4">
-            <h5 class="section-title text-primary"><i class="fas fa-info-circle me-2"></i>Thông Tin Cơ Bản</h5>
-            <div class="row g-3">
-              <div class="col-12">
-                <div class="form-group">
-                  <label class="form-label">Tên Sách</label>
-                  <Field name="TENSACH" type="text" class="form-control custom-input" placeholder="Nhập tên sách..." />
-                  <ErrorMessage name="TENSACH" class="error-feedback" />
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="form-group">
-                  <label class="form-label">Tác Giả</label>
-                  <Field name="TACGIA" type="text" class="form-control custom-input" placeholder="Tên tác giả" />
-                  <ErrorMessage name="TACGIA" class="error-feedback" />
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="form-group">
-                  <label class="form-label">Mã NXB</label>
-                  <Field name="MANXB" type="text" class="form-control custom-input" placeholder="Mã nhà xuất bản" />
-                  <ErrorMessage name="MANXB" class="error-feedback" />
-                </div>
-              </div>
-               <div class="col-md-6">
-                <div class="form-group">
-                  <label class="form-label">Thể Loại</label>
-                  <Field name="THELOAI" type="text" class="form-control custom-input" placeholder="Ví dụ: Khoa học, Văn học..." />
-                  <ErrorMessage name="THELOAI" class="error-feedback" />
-                </div>
-              </div>
-               <div class="col-md-6">
-                <div class="form-group">
-                  <label class="form-label">Đơn Giá (VNĐ)</label>
-                  <div class="input-group">
-                     <Field name="DONGIA" type="number" class="form-control custom-input" placeholder="0" />
-                     <span class="input-group-text custom-addon">đ</span>
-                  </div>
-                  <ErrorMessage name="DONGIA" class="error-feedback" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="card-box mb-4">
-            <h5 class="section-title text-success"><i class="fas fa-book-open me-2"></i>Chi Tiết Xuất Bản</h5>
-            <div class="row g-3">
-              <div class="col-md-3 col-6">
-                <div class="form-group">
-                  <label class="form-label">Năm XB</label>
-                  <Field name="NAMXUATBAN" type="number" class="form-control custom-input" />
-                  <ErrorMessage name="NAMXUATBAN" class="error-feedback" />
-                </div>
-              </div>
-              <div class="col-md-3 col-6">
-                <div class="form-group">
-                  <label class="form-label">Số Quyển</label>
-                  <Field name="SOQUYEN" type="number" class="form-control custom-input" />
-                  <ErrorMessage name="SOQUYEN" class="error-feedback" />
-                </div>
-              </div>
-              <div class="col-md-3 col-6">
-                <div class="form-group">
-                  <label class="form-label">Số Trang</label>
-                  <Field name="SOTRANG" type="number" class="form-control custom-input" />
-                  <ErrorMessage name="SOTRANG" class="error-feedback" />
-                </div>
-              </div>
-              <div class="col-md-3 col-6">
-                <div class="form-group">
-                  <label class="form-label">Ngôn Ngữ</label>
-                  <Field name="NGONNGU" type="text" class="form-control custom-input" placeholder="Tiếng Việt" />
-                  <ErrorMessage name="NGONNGU" class="error-feedback" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="card-box">
-            <h5 class="section-title text-warning"><i class="fas fa-align-left me-2"></i>Giới Thiệu Nội Dung</h5>
-            <div class="form-group">
-              <Field name="MOTA" as="textarea" class="form-control custom-input" rows="6" placeholder="Viết mô tả ngắn về nội dung sách..." />
-              <ErrorMessage name="MOTA" class="error-feedback" />
-            </div>
-          </div>
-
         </div>
       </div>
+    </transition>
 
-      <input type="file" ref="fileInput" style="display: none" accept="image/*" @change="handleFileSelect" />
-    </Form>
   </div>
 </template>
 
@@ -194,10 +235,21 @@ export default {
       imageUrl: "",
       uploadingImage: false,
       uploadAbortController: null,
-      showSuccessNotification: false, // State để điều khiển notification đẹp
+      showSuccessNotification: false,
+      showErrorNotification: false, // State mới cho toast lỗi
     };
   },
   methods: {
+    // Helper function để hiển thị lỗi dạng Toast
+    showError(msg) {
+        this.message = msg;
+        this.showErrorNotification = true;
+        // Tự động tắt sau 3 giây
+        setTimeout(() => {
+            this.showErrorNotification = false;
+        }, 3000);
+    },
+
     openImageUploader() {
       this.$refs.fileInput.click();
     },
@@ -206,12 +258,15 @@ export default {
       const file = event.target.files[0];
       if (!file) return;
 
+      // Reset lỗi cũ
+      this.showErrorNotification = false;
+
       if (!file.type.startsWith("image/")) {
-        this.message = "Vui lòng chọn file ảnh!";
+        this.showError("Vui lòng chọn file ảnh!");
         return;
       }
       if (file.size > 5 * 1024 * 1024) {
-        this.message = "Ảnh không được vượt quá 5MB!";
+        this.showError("Ảnh không được vượt quá 5MB!");
         return;
       }
 
@@ -225,6 +280,7 @@ export default {
         reader.readAsDataURL(compressedFile);
       } catch (error) {
         console.error(error);
+        this.showError("Lỗi xử lý ảnh.");
       }
     },
 
@@ -262,6 +318,7 @@ export default {
         this.uploadAbortController = new AbortController();
         this.uploadingImage = true;
         this.message = "";
+        this.showErrorNotification = false;
 
         const response = await SachService.uploadImage(base64Data, this.uploadAbortController.signal);
         const returnedUrl = response?.data?.data?.url;
@@ -269,11 +326,11 @@ export default {
         if (returnedUrl) {
           this.imageUrl = returnedUrl;
         } else {
-          this.message = "Lỗi khi upload ảnh";
+          this.showError("Lỗi khi upload ảnh (không nhận được URL)");
         }
       } catch (error) {
         if (error.name !== 'AbortError') {
-           this.message = "Lỗi upload ảnh";
+           this.showError("Lỗi upload ảnh: " + error.message);
         }
       } finally {
         this.uploadingImage = false;
@@ -281,8 +338,12 @@ export default {
     },
 
     async handleCreate(book) {
+      // Reset trạng thái thông báo
+      this.showSuccessNotification = false;
+      this.showErrorNotification = false;
+
       if (!this.imageUrl && !book.HinhAnh) {
-        this.message = "Hình ảnh là bắt buộc!";
+        this.showError("Hình ảnh là bắt buộc!");
         return;
       }
 
@@ -293,16 +354,15 @@ export default {
         book.HinhAnh = this.imageUrl || book.HinhAnh;
         await SachService.create(book);
 
-        // --- XỬ LÝ HIỆN THÔNG BÁO ĐẸP ---
         this.showSuccessNotification = true;
 
-        // Đợi 700ms (0.7s) rồi chuyển trang
         setTimeout(() => {
           this.$router.push('/admin/sach');
-        }, 700);
+        }, 1500);
 
       } catch (error) {
-        this.message = error.response?.data?.message || "Lỗi khi thêm sách.";
+        const errorMsg = error.response?.data?.message || "Lỗi khi thêm sách.";
+        this.showError(errorMsg);
       } finally {
         this.loading = false;
       }
@@ -312,233 +372,111 @@ export default {
 </script>
 
 <style scoped>
-/* --- VARIABLE & GLOBAL --- */
-.page-container {
-  background-color: #151521; /* Nền tối đậm */
-  min-height: 100vh;
-  padding: 20px;
-  color: #e0e0e0;
-  font-family: 'Segoe UI', sans-serif;
+/* --- INPUT STYLING --- */
+.form-control, .form-select {
+  background-color: #fff;
+  border: 1px solid #e4e6ef;
+  color: #181c32;
+  padding: 0.6rem 0.8rem;
+  transition: all 0.2s;
+}
+.form-control:focus, .form-select:focus {
+  border-color: #b5b5c3;
+  box-shadow: none;
+  background-color: #ffffff; /* Giữ nền trắng khi focus */
+}
+.input-group-text {
+  background-color: #f8f9fa;
+  border-color: #e4e6ef;
+}
+.input-group:focus-within .input-group-text {
+  background-color: #fff;
+  border-color: #b5b5c3;
+  color: #0d6efd;
+}
+.input-group:focus-within .form-control {
+  border-color: #b5b5c3;
 }
 
-/* --- HEADER --- */
-.page-title {
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: 0.5px;
+/* FIX AUTOFILL BACKGROUND */
+.input-group-merge .form-control.bg-light:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 30px #f8f9fa inset !important;
+}
+.input-group-merge:focus-within .form-control.bg-light:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 30px #fff inset !important;
 }
 
-.btn-back {
+
+/* --- IMAGE UPLOADER --- */
+.image-upload-wrapper {
+  width: 100%;
+  aspect-ratio: 3/4;
+  border: 2px dashed #e4e6ef;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.3s;
+}
+
+.image-upload-wrapper:hover {
+  border-color: #0d6efd;
+  background-color: #f1faff !important;
+}
+
+.overlay-hover {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.image-preview:hover .overlay-hover {
+  opacity: 1;
+}
+
+/* --- ICON SHAPE --- */
+.icon-shape {
   width: 40px;
   height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: #2a2a3c;
-  color: #fff;
-  text-decoration: none;
-  transition: all 0.3s;
-}
-.btn-back:hover {
-  background: #007bff;
-  transform: translateX(-3px);
-}
-
-/* --- CARDS & LAYOUT --- */
-.card-box {
-  background: #1e1e2d; /* Card màu tối sáng hơn nền */
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.section-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.sticky-top-custom {
-  position: sticky;
-  top: 20px;
-  z-index: 10;
-}
-
-/* --- FORM INPUTS --- */
-.form-label {
-  font-size: 0.9rem;
-  color: #a6a6b7;
-  margin-bottom: 6px;
-  font-weight: 500;
-}
-
-.custom-input {
-  background-color: #151521;
-  border: 1px solid #333344;
-  color: #fff;
-  border-radius: 8px;
-  padding: 10px 12px;
-  transition: all 0.2s;
-}
-
-.custom-input:focus {
-  background-color: #1a1a27;
-  border-color: #58a6ff;
-  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
-  color: #fff;
-}
-
-.input-group-text.custom-addon {
-  background-color: #2a2a3c;
-  border-color: #333344;
-  color: #a6a6b7;
-  border-top-right-radius: 8px;
-  border-bottom-right-radius: 8px;
-}
-
-.error-feedback {
-  color: #ff5b5b;
-  font-size: 0.8rem;
-  margin-top: 4px;
-}
-
-/* --- IMAGE UPLOADER --- */
-.image-upload-wrapper {
-  width: 100%;
-  aspect-ratio: 2/3; /* Tỉ lệ sách chuẩn */
-  background: #151521;
-  border: 2px dashed #333344;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  overflow: hidden;
-  position: relative;
-  transition: all 0.3s;
-}
-
-.image-upload-wrapper:hover {
-  border-color: #007bff;
-  background: #1a1a29;
-}
-
-.upload-placeholder {
-  text-align: center;
-  color: #6c757d;
-}
-
-.icon-upload {
-  font-size: 3rem;
-  margin-bottom: 10px;
-  color: #444;
-}
-
-.image-preview {
-  width: 100%;
-  height: 100%;
-  position: relative;
-}
-
-.image-preview img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.overlay-hover {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.3s;
-  color: white;
-  font-weight: 600;
-}
-
-.image-upload-wrapper:hover .overlay-hover {
-  opacity: 1;
 }
 
 /* --- BUTTONS --- */
-.btn-action-primary {
-  background: linear-gradient(135deg, #007bff, #0056b3);
-  color: white;
-  padding: 12px;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 1rem;
-  transition: all 0.3s;
+.button-save {
+  transition: transform 0.2s;
 }
-
-.btn-action-primary:hover {
+.button-save:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
-  color: white;
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.25);
 }
 
-.btn-action-primary:disabled {
-  background: #444;
-  transform: none;
-}
-
-/* --- SUCCESS TOAST NOTIFICATION (Điểm nhấn) --- */
-.success-toast {
+/* --- TOAST OVERLAY (Dùng chung cho cả Success và Error) --- */
+.toast-overlay {
   position: fixed;
   top: 20px;
   right: 20px;
-  z-index: 9999;
-  background: #28a745; /* Màu xanh thành công */
-  color: white;
-  padding: 12px 24px;
-  border-radius: 50px; /* Bo tròn như hình yêu cầu */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  display: flex;
-  align-items: center;
+  min-width: 320px;
+  animation: slideInRight 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
-.toast-content {
-  display: flex;
-  align-items: center;
-  font-weight: 600;
-  font-size: 1rem;
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
 }
 
-.toast-content .icon {
-  margin-right: 10px;
-  font-size: 1.2rem;
-}
-
-/* Animation cho Toast */
+/* Vue Transition */
 .slide-fade-enter-active {
   transition: all 0.3s ease-out;
 }
-
 .slide-fade-leave-active {
   transition: all 0.3s cubic-bezier(1, 0.5, 0.8, 1);
 }
-
 .slide-fade-enter-from,
 .slide-fade-leave-to {
-  transform: translateY(-20px);
+  transform: translateX(20px);
   opacity: 0;
-}
-
-/* Mobile responsive */
-@media (max-width: 768px) {
-  .sticky-top-custom {
-    position: static;
-  }
 }
 </style>

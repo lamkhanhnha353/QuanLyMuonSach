@@ -9,9 +9,14 @@
               <h2 class="fw-bold text-white mb-1">Chào mừng, {{ currentUser?.HoTenNV || 'Nhân viên' }}!</h2>
               <p class="text-white-50 mb-0">Hôm nay là {{ currentDate }}</p>
             </div>
-            <div class="text-white text-end">
-              <div class="h5 mb-0">{{ currentTime }}</div>
-              <small class="text-white-75">Thời gian làm việc</small>
+            <div class="d-flex align-items-center">
+              <div class="text-white text-end me-3">
+                <div class="h5 mb-0">{{ currentTime }}</div>
+                <small class="text-white-75">Thời gian làm việc</small>
+              </div>
+              <button v-if="isAdmin" @click="openCustomizeModal" class="btn btn-outline-light btn-sm">
+                <i class="fas fa-cog me-1"></i>Tuỳ chỉnh Layout
+              </button>
             </div>
           </div>
         </div>
@@ -19,7 +24,7 @@
     </div>
 
     <!-- Quick Actions -->
-    <div class="row mb-4">
+    <div v-if="layoutPreferences.showQuickActions" class="row mb-4">
       <div class="col-12">
         <div class="card shadow-sm border-0">
           <div class="card-header bg-white border-0 py-3">
@@ -80,7 +85,7 @@
     </div>
 
     <!-- Statistics Cards -->
-    <div class="row mb-4">
+    <div v-if="layoutPreferences.showStatistics" class="row mb-4">
       <div class="col-md-3 mb-3">
         <div class="stat-card stat-card-primary">
           <div class="stat-icon">
@@ -142,7 +147,7 @@
     <!-- Main Content Grid -->
     <div class="row">
       <!-- Today's Tasks -->
-      <div class="col-lg-6 mb-4">
+      <div v-if="layoutPreferences.showTodaysTasks" class="col-lg-6 mb-4">
         <div class="card shadow-sm border-0 h-100">
           <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
             <h5 class="fw-bold mb-0 text-primary">
@@ -178,7 +183,7 @@
       </div>
 
       <!-- Books Due Today & Overdue -->
-      <div class="col-lg-6 mb-4">
+      <div v-if="layoutPreferences.showBooksDue" class="col-lg-6 mb-4">
         <div class="card shadow-sm border-0 h-100">
           <div class="card-header bg-white border-0 py-3">
             <h5 class="fw-bold mb-0 text-danger">
@@ -229,7 +234,7 @@
     </div>
 
     <!-- Recent Activities -->
-    <div class="row">
+    <div v-if="layoutPreferences.showRecentActivities" class="row">
       <div class="col-12">
         <div class="card shadow-sm border-0">
           <div class="card-header bg-white border-0 py-3">
@@ -260,6 +265,78 @@
         </div>
       </div>
     </div>
+
+    <!-- Customize Layout Modal -->
+    <div v-if="showCustomizeModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold">
+              <i class="fas fa-cog me-2"></i>Tuỳ chỉnh Layout Trang chủ
+            </h5>
+            <button type="button" class="btn-close" @click="closeCustomizeModal"></button>
+          </div>
+          <div class="modal-body">
+            <p class="text-muted mb-4">Chọn các phần bạn muốn hiển thị trên trang tổng quan:</p>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="showQuickActions" v-model="layoutPreferences.showQuickActions">
+                  <label class="form-check-label fw-500" for="showQuickActions">
+                    <i class="fas fa-bolt text-primary me-2"></i>Hoạt động Nhanh
+                  </label>
+                  <small class="text-muted d-block ms-4">Các nút thao tác nhanh cho mượn/trả sách</small>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="showStatistics" v-model="layoutPreferences.showStatistics">
+                  <label class="form-check-label fw-500" for="showStatistics">
+                    <i class="fas fa-chart-bar text-success me-2"></i>Thống kê
+                  </label>
+                  <small class="text-muted d-block ms-4">Các thẻ thống kê tổng quan</small>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="showTodaysTasks" v-model="layoutPreferences.showTodaysTasks">
+                  <label class="form-check-label fw-500" for="showTodaysTasks">
+                    <i class="fas fa-tasks text-warning me-2"></i>Công việc Hôm nay
+                  </label>
+                  <small class="text-muted d-block ms-4">Danh sách nhiệm vụ cần thực hiện</small>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="showBooksDue" v-model="layoutPreferences.showBooksDue">
+                  <label class="form-check-label fw-500" for="showBooksDue">
+                    <i class="fas fa-calendar-times text-danger me-2"></i>Sách Đến Hạn
+                  </label>
+                  <small class="text-muted d-block ms-4">Danh sách sách đến hạn và quá hạn</small>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="showRecentActivities" v-model="layoutPreferences.showRecentActivities">
+                  <label class="form-check-label fw-500" for="showRecentActivities">
+                    <i class="fas fa-history text-info me-2"></i>Hoạt động Gần đây
+                  </label>
+                  <small class="text-muted d-block ms-4">Lịch sử hoạt động mượn/trả sách</small>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="closeCustomizeModal">
+              <i class="fas fa-times me-1"></i>Hủy
+            </button>
+            <button type="button" class="btn btn-primary" @click="applyLayoutChanges">
+              <i class="fas fa-check me-1"></i>Áp dụng
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -273,6 +350,14 @@ export default {
       currentUser: null,
       currentDate: '',
       currentTime: '',
+      showCustomizeModal: false,
+      layoutPreferences: {
+        showQuickActions: true,
+        showStatistics: true,
+        showTodaysTasks: true,
+        showBooksDue: true,
+        showRecentActivities: true
+      },
       stats: {
         totalBooks: 150,
         totalReaders: 85,
@@ -303,8 +388,14 @@ export default {
       ]
     };
   },
+  computed: {
+    isAdmin() {
+      return this.currentUser && this.currentUser.ChucVu === 'Admin';
+    }
+  },
   mounted() {
     this.currentUser = AuthService.getCurrentUser();
+    this.loadLayoutPreferences();
     this.updateDateTime();
     setInterval(this.updateDateTime, 1000); // Update time every second
   },
@@ -350,6 +441,27 @@ export default {
         default:
           return 'fas fa-info-circle';
       }
+    },
+    loadLayoutPreferences() {
+      const userId = this.currentUser?._id || 'default';
+      const saved = localStorage.getItem(`staffLayoutPreferences_${userId}`);
+      if (saved) {
+        this.layoutPreferences = { ...this.layoutPreferences, ...JSON.parse(saved) };
+      }
+    },
+    saveLayoutPreferences() {
+      const userId = this.currentUser?._id || 'default';
+      localStorage.setItem(`staffLayoutPreferences_${userId}`, JSON.stringify(this.layoutPreferences));
+    },
+    openCustomizeModal() {
+      this.showCustomizeModal = true;
+    },
+    closeCustomizeModal() {
+      this.showCustomizeModal = false;
+    },
+    applyLayoutChanges() {
+      this.saveLayoutPreferences();
+      this.closeCustomizeModal();
     }
   },
 };

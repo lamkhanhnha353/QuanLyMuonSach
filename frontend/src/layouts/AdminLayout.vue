@@ -98,6 +98,12 @@
                 </a>
                 
                 <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-2" aria-labelledby="navbarDropdown">
+                  <!-- Thêm mục Trang chủ vào đây -->
+                  <li>
+                    <router-link to="/" class="dropdown-item py-2">
+                      <i class="fas fa-home me-2 text-primary"></i> Trang chủ
+                    </router-link>
+                  </li>
                   <li>
                     <a class="dropdown-item py-2" @click="openProfileModal">
                       <i class="fas fa-user-circle me-2 text-primary"></i> Thông tin cá nhân
@@ -121,23 +127,37 @@
       </main>
     </div>
 
-    <!-- MODAL PROFILE (LIGHT THEME) -->
+    <!-- MODAL PROFILE (COMPACT & BEAUTIFUL) -->
     <div 
       class="modal fade" 
       id="profileModal" 
       tabindex="-1" 
       aria-hidden="true"
     >
-      <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content border-0 shadow-lg">
-          <div class="modal-header bg-white border-bottom">
-            <h5 class="modal-title fw-bold text-primary">
-               <i class="fas fa-id-card me-2"></i>Hồ Sơ Của Bạn
-            </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      <div class="modal-dialog modal-dialog-centered"> <!-- Bỏ modal-lg để gọn hơn -->
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+          
+          <!-- 1. Header Ảnh bìa -->
+          <div class="profile-header-bg">
+            <button type="button" class="btn-close-white-custom" data-bs-dismiss="modal">
+               <i class="fas fa-times"></i>
+            </button>
           </div>
-          <div class="modal-body bg-light-gray">
-            
+
+          <div class="modal-body px-4 pb-4 pt-0">
+            <!-- 2. Avatar Nổi -->
+            <div class="text-center" style="margin-top: -50px;">
+               <div class="position-relative d-inline-block">
+                  <img :src="profileData?.AVATAR || defaultAvatar" class="profile-avatar-lg shadow-sm bg-white" />
+                  <span class="badge rounded-pill bg-primary position-absolute bottom-0 end-0 border border-2 border-white">
+                    {{ profileData?.ChucVu || 'Admin' }}
+                  </span>
+               </div>
+               <h5 class="fw-bold mt-2 mb-0 text-dark">{{ profileData?.HoTenNV }}</h5>
+               <p class="text-muted small mb-3">{{ profileData?.EMAIL }}</p>
+            </div>
+
+            <!-- 3. Form Nhập Liệu Gọn Gàng -->
             <div v-if="profileData">
               <Form 
                 @submit="handleProfileUpdate" 
@@ -145,83 +165,94 @@
                 :initial-values="profileData"
                 :validate-on-input="true"
               >
-                <!-- Avatar Section -->
-                <div class="text-center mb-4">
-                   <div class="position-relative d-inline-block">
-                      <img :src="profileData.AVATAR || defaultAvatar" class="profile-avatar-lg shadow-sm" />
-                      <span class="badge rounded-pill bg-primary position-absolute bottom-0 end-0 mb-2">{{ profileData.ChucVu }}</span>
-                   </div>
+                <div class="row g-3">
+                    <!-- Hàng 1 -->
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted fw-bold mb-1">Họ Tên</label>
+                        <Field name="HoTenNV" type="text" class="form-control form-control-sm" />
+                        <ErrorMessage name="HoTenNV" class="error-feedback" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted fw-bold mb-1">Mã Nhân Viên</label>
+                        <Field name="MSNV" type="text" class="form-control form-control-sm bg-light" disabled />
+                    </div>
+
+                    <!-- Hàng 2 -->
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted fw-bold mb-1">Số Điện Thoại</label>
+                        <Field name="SoDienThoai" type="text" class="form-control form-control-sm" />
+                        <ErrorMessage name="SoDienThoai" class="error-feedback" />
+                    </div>
+                     <div class="col-md-6">
+                        <label class="form-label small text-muted fw-bold mb-1">CCCD</label>
+                        <Field name="CCCD" type="text" class="form-control form-control-sm" />
+                        <ErrorMessage name="CCCD" class="error-feedback" />
+                    </div>
+
+                    <!-- Hàng 3 -->
+                    <div class="col-12">
+                        <label class="form-label small text-muted fw-bold mb-1">Địa Chỉ</label>
+                        <Field name="DiaChi" type="text" class="form-control form-control-sm" />
+                        <ErrorMessage name="DiaChi" class="error-feedback" />
+                    </div>
+
+                    <!-- Hàng 4 -->
+                    <div class="col-12">
+                        <label class="form-label small text-muted fw-bold mb-1">Avatar URL</label>
+                        <Field name="AVATAR" type="text" class="form-control form-control-sm" placeholder="https://..." />
+                    </div>
+
+                    <!-- Hàng 5: Mật khẩu -->
+                    <div class="col-12">
+                        <label class="form-label small text-warning fw-bold mb-1">Đổi mật khẩu (Tùy chọn)</label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white border-end-0 text-secondary"><i class="fas fa-lock"></i></span>
+                            <Field 
+                              name="password" 
+                              :type="showPassword ? 'text' : 'password'" 
+                              class="form-control border-start-0 border-end-0" 
+                              placeholder="Nhập mật khẩu mới..." 
+                              autocomplete="new-password"
+                            />
+                            <span 
+                              class="input-group-text bg-white border-start-0 text-secondary" 
+                              style="cursor: pointer;" 
+                              @click="showPassword = !showPassword"
+                            >
+                                <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                            </span>
+                        </div>
+                        <ErrorMessage name="password" class="error-feedback" />
+                    </div>
                 </div>
 
-                <div class="card border-0 shadow-sm mb-3">
-                   <div class="card-body">
-                      <h6 class="text-uppercase text-muted small fw-bold mb-3">Thông tin chung</h6>
-                      <div class="row g-3">
-                        <div class="col-md-6">
-                           <label class="form-label">Họ Tên</label>
-                           <Field name="HoTenNV" type="text" class="form-control" />
-                           <ErrorMessage name="HoTenNV" class="error-feedback" />
-                        </div>
-                        <div class="col-md-6">
-                           <label class="form-label">Mã Nhân Viên</label>
-                           <Field name="MSNV" type="text" class="form-control bg-light" disabled />
-                        </div>
-                         <div class="col-md-6">
-                           <label class="form-label">Email</label>
-                           <Field name="EMAIL" type="email" class="form-control" />
-                           <ErrorMessage name="EMAIL" class="error-feedback" />
-                        </div>
-                        <div class="col-md-6">
-                           <label class="form-label">Số Điện Thoại</label>
-                           <Field name="SoDienThoai" type="text" class="form-control" />
-                           <ErrorMessage name="SoDienThoai" class="error-feedback" />
-                        </div>
-                      </div>
-                   </div>
-                </div>
-
-                <div class="card border-0 shadow-sm">
-                   <div class="card-body">
-                      <h6 class="text-uppercase text-muted small fw-bold mb-3">Chi tiết & Bảo mật</h6>
-                      <div class="row g-3">
-                         <div class="col-md-6">
-                           <label class="form-label">CCCD</label>
-                           <Field name="CCCD" type="text" class="form-control" />
-                           <ErrorMessage name="CCCD" class="error-feedback" />
-                        </div>
-                        <div class="col-md-6">
-                           <label class="form-label">Địa Chỉ</label>
-                           <Field name="DiaChi" type="text" class="form-control" />
-                           <ErrorMessage name="DiaChi" class="error-feedback" />
-                        </div>
-                        <div class="col-12">
-                           <label class="form-label">URL Avatar</label>
-                           <Field name="AVATAR" type="text" class="form-control" placeholder="https://..." />
-                        </div>
-                        <div class="col-12">
-                           <label class="form-label text-warning">Đổi mật khẩu (Tùy chọn)</label>
-                           <Field name="password" type="password" class="form-control" placeholder="Nhập mật khẩu mới..." autocomplete="new-password"/>
-                           <ErrorMessage name="password" class="error-feedback" />
-                        </div>
-                      </div>
-                   </div>
-                </div>
-
-                <div class="d-flex justify-content-end mt-4">
-                  <button type="button" class="btn btn-light me-2 text-muted" data-bs-dismiss="modal">Hủy bỏ</button>
-                  <button type="submit" class="btn btn-primary px-4" :disabled="profileLoading">
-                    <span v-if="profileLoading" class="spinner-border spinner-border-sm me-2"></span>
-                    <span v-else>Lưu Thay Đổi</span>
-                  </button>
-                </div>
-
-                <div v-if="profileMessage" class="alert alert-success mt-3 shadow-sm border-0 text-center">
-                  {{ profileMessage }}
+                <div class="d-flex justify-content-center mt-4 pt-2">
+                   <button type="button" class="btn btn-light rounded-pill px-4 me-2 fw-bold text-secondary" data-bs-dismiss="modal">Hủy</button>
+                   <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold" :disabled="profileLoading">
+                     <span v-if="profileLoading" class="spinner-border spinner-border-sm me-2"></span>
+                     Lưu Thay Đổi
+                   </button>
                 </div>
               </Form>
             </div>
-
           </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION (Góc Phải) -->
+    <div v-if="profileMessage" class="toast-overlay">
+      <div 
+        class="toast show align-items-center text-white bg-success border-0 shadow-lg" 
+        role="alert" 
+      >
+        <div class="d-flex">
+          <div class="toast-body fs-6 fw-bold">
+            <i class="fas fa-check-circle me-2"></i>
+            {{ profileMessage }}
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" @click="profileMessage = ''"></button>
         </div>
       </div>
     </div>
@@ -230,7 +261,6 @@
 </template>
 
 <script>
-// --- GIỮ NGUYÊN PHẦN SCRIPT LOGIC CỦA BẠN (KHÔNG THAY ĐỔI) ---
 import AuthService from "@/services/auth.service";
 import eventBus from "@/services/eventBus";
 import { Dropdown, Modal } from "bootstrap"; 
@@ -266,6 +296,7 @@ export default {
       profileLoading: false,
       profileMessage: "",
       editSchema, 
+      showPassword: false, // Trạng thái hiển thị mật khẩu
     };
   },
   methods: {
@@ -292,6 +323,7 @@ export default {
     openProfileModal() {
       this.profileData = { ...AuthService.getCurrentUser() };
       this.profileMessage = ""; 
+      this.showPassword = false; // Reset trạng thái mật khẩu khi mở modal
       if (this.profileModalInstance) this.profileModalInstance.show();
     },
     async handleProfileUpdate(data) {
@@ -309,13 +341,20 @@ export default {
             this.profileData = updatedUser; 
             this.currentUser = updatedUser;
         }
-        this.profileMessage = "Cập nhật thành công!";
+        
+        // Hiển thị thông báo và đóng modal
+        this.profileMessage = "Cập nhật hồ sơ thành công!";
+        this.profileModalInstance.hide();
+        
+        // Tự động tắt thông báo sau 3s
         setTimeout(() => {
-          this.profileModalInstance.hide();
           this.profileMessage = "";
-        }, 1500);
+        }, 3000);
+
       } catch (error) {
-        this.profileMessage = error.response?.data?.message || "Lỗi cập nhật.";
+        // Nếu lỗi thì giữ modal để sửa, có thể hiện lỗi ở toast hoặc trong modal tùy ý
+        // Ở đây tôi hiển thị Toast lỗi (nếu muốn) hoặc alert đơn giản
+        alert(error.response?.data?.message || "Lỗi cập nhật hồ sơ.");
       } finally {
         this.profileLoading = false;
       }
@@ -348,11 +387,11 @@ export default {
 /* --- 1. CORE LAYOUT --- */
 .admin-wrapper {
   display: flex;
-  font-family: 'Inter', 'Segoe UI', sans-serif; /* Font hiện đại */
-  background-color: #f3f6f9; /* Nền xám xanh rất nhạt - chìa khóa của Light Theme đẹp */
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  background-color: #f3f6f9;
 }
 
-/* --- 2. SIDEBAR (TRẮNG SẠCH) --- */
+/* --- 2. SIDEBAR --- */
 #sidebar {
   width: 260px;
   min-height: 100vh;
@@ -362,7 +401,7 @@ export default {
   left: 0;
   z-index: 1000;
   background-color: #ffffff;
-  border-right: 1px solid rgba(0,0,0,0.05); /* Viền mờ thay vì shadow đậm */
+  border-right: 1px solid rgba(0,0,0,0.05);
   box-shadow: 2px 0 10px rgba(0,0,0,0.01);
   display: flex;
   flex-direction: column;
@@ -417,7 +456,7 @@ export default {
 }
 
 .nav-link {
-  color: #5e6278; /* Màu chữ xám đậm */
+  color: #5e6278;
   padding: 0.75rem 1rem;
   border-radius: 8px;
   margin-bottom: 4px;
@@ -429,13 +468,12 @@ export default {
 
 .nav-link:hover {
   background-color: #f5f8fa;
-  color: #0d6efd; /* Hover màu xanh */
+  color: #0d6efd;
 }
 
-/* Active State - Điểm nhấn của Light Theme */
 .nav-link.router-link-active {
-  background-color: #eff2f5; /* Nền xám xanh cực nhạt */
-  color: #0d6efd; /* Chữ xanh dương */
+  background-color: #eff2f5;
+  color: #0d6efd;
 }
 
 .icon-box {
@@ -445,7 +483,6 @@ export default {
   font-size: 1.1rem;
 }
 
-/* Collapsed State */
 .admin-wrapper.sidebar-collapsed #sidebar { width: 80px; }
 .admin-wrapper.sidebar-collapsed .nav-text,
 .admin-wrapper.sidebar-collapsed .brand-wrapper,
@@ -454,14 +491,13 @@ export default {
 .admin-wrapper.sidebar-collapsed .icon-box { margin-right: 0; font-size: 1.4rem; }
 .admin-wrapper.sidebar-collapsed #main-content { margin-left: 80px; }
 
-
 /* --- 3. MAIN CONTENT --- */
 #main-content {
   flex-grow: 1;
   min-height: 100vh;
   margin-left: 260px;
   transition: margin-left 0.3s ease;
-  background-color: #f3f6f9; /* Quan trọng: nền xám nhạt để tách biệt card trắng */
+  background-color: #f3f6f9;
 }
 
 .navbar-custom {
@@ -487,38 +523,32 @@ export default {
   border-color: #0d6efd;
 }
 
-/* --- 4. FORM & MODAL STYLING (LIGHT) --- */
-.bg-light-gray {
-    background-color: #f9f9f9;
+/* --- 4. FORM & MODAL STYLING (COMPACT) --- */
+.profile-header-bg {
+    height: 90px;
+    background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%);
+    position: relative;
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-start;
+    padding: 12px;
 }
 
-.form-label {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #3f4254;
-    margin-bottom: 0.35rem;
+.btn-close-white-custom {
+    background: rgba(0,0,0,0.2);
+    border: none;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s;
 }
-
-.form-control {
-    background-color: #fff;
-    border: 1px solid #e4e6ef;
-    color: #181c32;
-    border-radius: 6px;
-    padding: 0.75rem 1rem;
-    font-size: 0.95rem;
-    transition: all 0.2s;
-}
-
-.form-control:focus {
-    border-color: #b5b5c3;
-    box-shadow: none; /* Bỏ shadow xanh mặc định bootstrap cho clean */
-    background-color: #fcfcfc;
-}
-
-.form-control:disabled {
-    background-color: #eff2f5;
-    border-color: #eff2f5;
-    color: #a1a5b7;
+.btn-close-white-custom:hover {
+    background: rgba(0,0,0,0.4);
 }
 
 .profile-avatar-lg {
@@ -526,13 +556,81 @@ export default {
     height: 90px;
     border-radius: 50%;
     object-fit: cover;
-    border: 4px solid #fff;
+    border: 3px solid #fff;
+}
+
+.form-control-sm {
+    font-size: 0.9rem;
+    padding: 0.4rem 0.7rem;
+}
+
+.form-control:focus {
+    border-color: #b5b5c3;
+    box-shadow: none;
+    background-color: #fcfcfc;
 }
 
 .error-feedback {
     color: #f1416c;
-    font-size: 0.8rem;
-    margin-top: 4px;
+    font-size: 0.75rem;
+    margin-top: 2px;
+}
+
+/* --- 5. DROPDOWN STYLING (HOVER EFFECT) --- */
+.dropdown-menu {
+  border-radius: 12px;
+  padding: 0.5rem;
+  animation: dropdownFadeIn 0.2s ease;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08) !important;
+  border: 1px solid rgba(0,0,0,0.05);
+  margin-top: 10px !important;
+}
+
+@keyframes dropdownFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dropdown-item {
+  border-radius: 8px;
+  margin-bottom: 2px;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  color: #5e6278;
+  padding: 0.6rem 1rem;
+  cursor: pointer; /* Thêm cursor pointer */
+}
+
+.dropdown-item:hover {
+  background-color: #eff2f5;
+  color: #0d6efd;
+  transform: translateX(4px);
+}
+
+.dropdown-item:hover i {
+  color: #0d6efd !important;
+  transform: scale(1.1);
+}
+
+/* Riêng nút đăng xuất */
+.dropdown-item.text-danger:hover {
+  background-color: #fff5f8;
+  color: #d9214e !important;
+}
+
+/* --- 6. TOAST OVERLAY --- */
+.toast-overlay {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1100; /* Cao hơn modal */
+  min-width: 300px;
+  animation: slideInRight 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
 }
 
 /* Responsive */
