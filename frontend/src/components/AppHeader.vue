@@ -43,7 +43,7 @@
                 <i class="fas fa-user me-1"></i>{{ displayName }}
               </button>
               <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="staffDropdown">
-                <li><router-link v-if="currentUser.ChucVu === 'Staff'" to="/staff" class="dropdown-item"><i class="fas fa-arrow-left me-2"></i>Trở về Staff</router-link></li>
+                <li><router-link v-if="currentUser.ChucVu === 'Staff'" to="/staff" class="dropdown-item"><i class="fas fa-arrow-left me-2"></i>Quay lại trang</router-link></li>
                 <li><router-link v-if="currentUser.ChucVu === 'Admin'" to="/admin" class="dropdown-item"><i class="fas fa-arrow-left me-2"></i>Trở về Admin</router-link></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><button class="dropdown-item text-danger" @click="logOut"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</button></li>

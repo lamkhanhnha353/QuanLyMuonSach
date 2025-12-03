@@ -2,12 +2,12 @@
   <div class="staff-wrapper d-flex vh-100">
     <!-- SIDEBAR CŨ (GIỮ NGUYÊN) -->
     <div id="sidebar" class="d-flex flex-column flex-shrink-0 p-3" style="width: 263px; background-color: #303f9f;">
-      
+
       <a href="/staff" class="d-flex align-items-center mb-4 text-decoration-none">
-        <i class="fas fa-book-reader fa-2x me-2 text-white"></i> 
+        <i class="fas fa-book-reader fa-2x me-2 text-white"></i>
         <span class="fs-4 fw-bold text-white">Thư Viện</span>
       </a>
-      
+
       <div class="user-profile-sidebar d-flex align-items-center p-2 mb-4" style="cursor: pointer;">
         <img :src="currentUser?.AVATAR || defaultAvatar" class="rounded-circle me-3" style="width: 44px; height: 44px; object-fit: cover;" @click="openProfileModal" />
         <div>
@@ -17,7 +17,7 @@
       </div>
 
       <ul class="nav nav-pills flex-column mb-auto">
-        
+
         <li class="nav-item">
           <router-link to="/" exact class="nav-link d-flex align-items-center">
             <i class="fas fa-home"></i> Về Trang chủ
@@ -80,7 +80,7 @@
     <div class="modal fade" id="profileModal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 overflow-hidden shadow-lg rounded-4">
-          
+
           <!-- Decorative Header -->
           <div class="profile-header-bg">
             <button type="button" class="btn-close-white-custom" data-bs-dismiss="modal">
@@ -108,26 +108,26 @@
             <div class="row g-3">
               <div class="col-6">
                 <div class="info-item p-3 rounded-3 bg-light h-100">
-                  <div class="text-secondary small mb-1"><i class="fas fa-envelope me-2 text-primary"></i>Email</div>
-                  <div class="fw-semibold text-break">{{ currentUser?.EMAIL || 'Chưa cập nhật' }}</div>
+                  <div class="text-secondary small mb-1"><i class="fas fa-phone me-2 text-success"></i>Điện thoại</div>
+                  <div class="fw-semibold">{{ currentUser?.SoDienThoai || 'Chưa cập nhật' }}</div>
                 </div>
               </div>
               <div class="col-6">
                 <div class="info-item p-3 rounded-3 bg-light h-100">
-                  <div class="text-secondary small mb-1"><i class="fas fa-phone me-2 text-success"></i>Điện thoại</div>
-                  <div class="fw-semibold">{{ currentUser?.SoDienThoai || 'Chưa cập nhật' }}</div>
+                  <div class="text-secondary small mb-1"><i class="fas fa-address-card me-2 text-warning"></i>CCCD/CMND</div>
+                  <div class="fw-semibold">{{ currentUser?.CCCD || 'Chưa cập nhật' }}</div>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="info-item p-3 rounded-3 bg-light">
+                  <div class="text-secondary small mb-1"><i class="fas fa-envelope me-2 text-primary"></i>Email</div>
+                  <div class="fw-semibold text-break">{{ currentUser?.EMAIL || 'Chưa cập nhật' }}</div>
                 </div>
               </div>
               <div class="col-12">
                 <div class="info-item p-3 rounded-3 bg-light">
                   <div class="text-secondary small mb-1"><i class="fas fa-map-marker-alt me-2 text-danger"></i>Địa chỉ</div>
                   <div class="fw-semibold">{{ currentUser?.DiaChi || 'Chưa cập nhật' }}</div>
-                </div>
-              </div>
-              <div class="col-12">
-                <div class="info-item p-3 rounded-3 bg-light">
-                  <div class="text-secondary small mb-1"><i class="fas fa-address-card me-2 text-warning"></i>CCCD/CMND</div>
-                  <div class="fw-semibold">{{ currentUser?.CCCD || 'Chưa cập nhật' }}</div>
                 </div>
               </div>
             </div>
@@ -145,7 +145,7 @@
 
 <script>
 import AuthService from "@/services/auth.service";
-import { Modal } from 'bootstrap'; 
+import { Modal } from 'bootstrap';
 
 export default {
   name: "StaffLayout",
