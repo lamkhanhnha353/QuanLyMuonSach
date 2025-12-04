@@ -6,17 +6,12 @@
         <div class="welcome-header">
           <div class="d-flex justify-content-between align-items-center">
             <div>
-              <h2 class="fw-bold text-white mb-1">Chào mừng, {{ currentUser?.HoTenNV || 'Nhân viên' }}!</h2>
-              <p class="text-white-50 mb-0">Hôm nay là {{ currentDate }}</p>
+              <h2 class="fw-bold text-white mb-1">Tổng quan Nhân viên</h2>
+              <p class="text-white-50 mb-0">Quản lý mượn trả sách hiệu quả</p>
             </div>
-            <div class="d-flex align-items-center">
-              <div class="text-white text-end me-3">
-                <div class="h5 mb-0">{{ currentTime }}</div>
-                <small class="text-white-75">Thời gian làm việc</small>
-              </div>
-              <button v-if="isAdmin" @click="openCustomizeModal" class="btn btn-outline-light btn-sm">
-                <i class="fas fa-cog me-1"></i>Tuỳ chỉnh Layout
-              </button>
+            <div class="text-white text-end">
+              <div class="h5 mb-0">{{ currentTime }}</div>
+              <small class="text-white-75">Hệ thống hoạt động</small>
             </div>
           </div>
         </div>
@@ -27,10 +22,13 @@
     <div v-if="layoutPreferences.showQuickActions" class="row mb-4">
       <div class="col-12">
         <div class="card shadow-sm border-0">
-          <div class="card-header bg-white border-0 py-3">
+          <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
             <h5 class="fw-bold mb-0 text-primary">
               <i class="fas fa-bolt me-2"></i>Hoạt động Nhanh
             </h5>
+            <button v-if="isAdmin" class="btn btn-outline-primary btn-sm" @click="openCustomizeModal">
+              <i class="fas fa-cog me-1"></i>Tuỳ chỉnh
+            </button>
           </div>
           <div class="card-body">
             <div class="row g-3">
@@ -89,13 +87,13 @@
       <div class="col-md-3 mb-3">
         <div class="stat-card stat-card-primary">
           <div class="stat-icon">
-            <i class="fas fa-book"></i>
+            <i class="fas fa-users"></i>
           </div>
           <div class="stat-content">
-            <h3 class="stat-number">{{ stats.totalBooks }}</h3>
-            <p class="stat-label">Tổng số sách</p>
+            <h3 class="stat-number">{{ stats.totalReaders }}</h3>
+            <p class="stat-label">Độc Giả</p>
             <small class="stat-change text-success">
-              <i class="fas fa-arrow-up me-1"></i>+12 sách mới
+              <i class="fas fa-arrow-up me-1"></i>+{{ stats.newReadersThisMonth }} độc giả mới
             </small>
           </div>
         </div>
@@ -103,13 +101,13 @@
       <div class="col-md-3 mb-3">
         <div class="stat-card stat-card-success">
           <div class="stat-icon">
-            <i class="fas fa-users"></i>
+            <i class="fas fa-book"></i>
           </div>
           <div class="stat-content">
-            <h3 class="stat-number">{{ stats.totalReaders }}</h3>
-            <p class="stat-label">Độc giả đăng ký</p>
+            <h3 class="stat-number">{{ stats.totalBooks }}</h3>
+            <p class="stat-label">Đầu Sách</p>
             <small class="stat-change text-success">
-              <i class="fas fa-arrow-up me-1"></i>+5 độc giả mới
+              <i class="fas fa-arrow-up me-1"></i>+{{ stats.newBooksThisMonth }} sách mới
             </small>
           </div>
         </div>
@@ -117,13 +115,13 @@
       <div class="col-md-3 mb-3">
         <div class="stat-card stat-card-warning">
           <div class="stat-icon">
-            <i class="fas fa-clock"></i>
+            <i class="fas fa-receipt"></i>
           </div>
           <div class="stat-content">
             <h3 class="stat-number">{{ stats.booksBorrowed }}</h3>
-            <p class="stat-label">Đang được mượn</p>
-            <small class="stat-change text-warning">
-              <i class="fas fa-minus me-1"></i>Còn {{ stats.availableBooks }} cuốn
+            <p class="stat-label">Đang Mượn</p>
+            <small class="stat-change text-info">
+              <i class="fas fa-clock me-1"></i>{{ stats.availableBooks }} cuốn còn lại
             </small>
           </div>
         </div>
@@ -135,7 +133,7 @@
           </div>
           <div class="stat-content">
             <h3 class="stat-number">{{ stats.overdueBooks }}</h3>
-            <p class="stat-label">Sách quá hạn</p>
+            <p class="stat-label">Quá Hạn</p>
             <small class="stat-change text-danger">
               <i class="fas fa-arrow-up me-1"></i>Cần xử lý ngay
             </small>
@@ -144,135 +142,13 @@
       </div>
     </div>
 
-    <!-- Main Content Grid -->
-    <div class="row">
-      <!-- Today's Tasks -->
-      <div v-if="layoutPreferences.showTodaysTasks" class="col-lg-6 mb-4">
-        <div class="card shadow-sm border-0 h-100">
-          <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
-            <h5 class="fw-bold mb-0 text-primary">
-              <i class="fas fa-tasks me-2"></i>Công việc Hôm nay
-            </h5>
-            <span class="badge bg-primary">{{ todaysTasks.length }}</span>
-          </div>
-          <div class="card-body">
-            <div v-if="todaysTasks.length === 0" class="text-center py-4">
-              <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
-              <h6 class="text-muted">Tất cả công việc đã hoàn thành!</h6>
-            </div>
-            <div v-else class="task-list">
-              <div v-for="task in todaysTasks" :key="task.id" class="task-item d-flex align-items-center mb-3">
-                <div class="task-checkbox me-3">
-                  <input type="checkbox" :checked="task.completed" @change="toggleTask(task.id)" class="form-check-input">
-                </div>
-                <div class="task-content flex-grow-1">
-                  <h6 class="mb-1" :class="{ 'text-decoration-line-through text-muted': task.completed }">
-                    {{ task.title }}
-                  </h6>
-                  <small class="text-muted">{{ task.description }}</small>
-                </div>
-                <div class="task-priority">
-                  <span class="badge" :class="getPriorityClass(task.priority)">
-                    {{ task.priority }}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Books Due Today & Overdue -->
-      <div v-if="layoutPreferences.showBooksDue" class="col-lg-6 mb-4">
-        <div class="card shadow-sm border-0 h-100">
-          <div class="card-header bg-white border-0 py-3">
-            <h5 class="fw-bold mb-0 text-danger">
-              <i class="fas fa-calendar-times me-2"></i>Sách Đến Hạn
-            </h5>
-          </div>
-          <div class="card-body">
-            <!-- Due Today -->
-            <div class="mb-4">
-              <h6 class="text-warning mb-3">
-                <i class="fas fa-clock me-2"></i>Hôm nay ({{ dueToday.length }} cuốn)
-              </h6>
-              <div v-if="dueToday.length === 0" class="text-muted small mb-3">
-                Không có sách đến hạn hôm nay
-              </div>
-              <div v-else class="due-books-list">
-                <div v-for="book in dueToday.slice(0, 3)" :key="book.id" class="due-book-item d-flex justify-content-between align-items-center mb-2">
-                  <div class="flex-grow-1">
-                    <span class="fw-500 d-block">{{ book.title }}</span>
-                    <small class="text-muted">{{ book.reader }}</small>
-                  </div>
-                  <span class="badge bg-warning text-dark">Hôm nay</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Overdue -->
-            <div>
-              <h6 class="text-danger mb-3">
-                <i class="fas fa-exclamation-triangle me-2"></i>Quá hạn ({{ overdueBooks.length }} cuốn)
-              </h6>
-              <div v-if="overdueBooks.length === 0" class="text-muted small">
-                Không có sách quá hạn
-              </div>
-              <div v-else class="overdue-books-list">
-                <div v-for="book in overdueBooks.slice(0, 3)" :key="book.id" class="overdue-book-item d-flex justify-content-between align-items-center mb-2">
-                  <div class="flex-grow-1">
-                    <span class="fw-500 d-block">{{ book.title }}</span>
-                    <small class="text-muted">{{ book.reader }}</small>
-                  </div>
-                  <span class="badge bg-danger">{{ book.daysOverdue }} ngày</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Recent Activities -->
-    <div v-if="layoutPreferences.showRecentActivities" class="row">
-      <div class="col-12">
-        <div class="card shadow-sm border-0">
-          <div class="card-header bg-white border-0 py-3">
-            <h5 class="fw-bold mb-0 text-info">
-              <i class="fas fa-history me-2"></i>Hoạt động Gần đây
-            </h5>
-          </div>
-          <div class="card-body">
-            <div class="activity-timeline">
-              <div v-for="activity in recentActivities" :key="activity.id" class="activity-item d-flex mb-3">
-                <div class="activity-dot me-3" :class="activity.type === 'borrow' ? 'bg-primary' : activity.type === 'return' ? 'bg-success' : 'bg-info'">
-                  <i :class="getActivityIcon(activity.type)"></i>
-                </div>
-                <div class="activity-content flex-grow-1">
-                  <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                      <span class="fw-500">{{ activity.user }}</span>
-                      <span class="text-muted"> {{ activity.action }}</span>
-                      <span class="fw-500">{{ activity.book }}</span>
-                    </div>
-                    <small class="text-muted">{{ activity.time }}</small>
-                  </div>
-                  <small class="text-muted">{{ activity.details }}</small>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- Customize Layout Modal -->
-    <div v-if="showCustomizeModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div v-if="showCustomizeModal" class="modal-overlay" @click="closeCustomizeModal">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title fw-bold">
-              <i class="fas fa-cog me-2"></i>Tuỳ chỉnh Layout Trang chủ
+              <i class="fas fa-cog me-2"></i>Tuỳ chỉnh Tổng quan Nhân viên
             </h5>
             <button type="button" class="btn-close" @click="closeCustomizeModal"></button>
           </div>
@@ -295,33 +171,6 @@
                     <i class="fas fa-chart-bar text-success me-2"></i>Thống kê
                   </label>
                   <small class="text-muted d-block ms-4">Các thẻ thống kê tổng quan</small>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="form-check form-switch">
-                  <input class="form-check-input" type="checkbox" id="showTodaysTasks" v-model="layoutPreferences.showTodaysTasks">
-                  <label class="form-check-label fw-500" for="showTodaysTasks">
-                    <i class="fas fa-tasks text-warning me-2"></i>Công việc Hôm nay
-                  </label>
-                  <small class="text-muted d-block ms-4">Danh sách nhiệm vụ cần thực hiện</small>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="form-check form-switch">
-                  <input class="form-check-input" type="checkbox" id="showBooksDue" v-model="layoutPreferences.showBooksDue">
-                  <label class="form-check-label fw-500" for="showBooksDue">
-                    <i class="fas fa-calendar-times text-danger me-2"></i>Sách Đến Hạn
-                  </label>
-                  <small class="text-muted d-block ms-4">Danh sách sách đến hạn và quá hạn</small>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="form-check form-switch">
-                  <input class="form-check-input" type="checkbox" id="showRecentActivities" v-model="layoutPreferences.showRecentActivities">
-                  <label class="form-check-label fw-500" for="showRecentActivities">
-                    <i class="fas fa-history text-info me-2"></i>Hoạt động Gần đây
-                  </label>
-                  <small class="text-muted d-block ms-4">Lịch sử hoạt động mượn/trả sách</small>
                 </div>
               </div>
             </div>
@@ -348,44 +197,21 @@ export default {
   data() {
     return {
       currentUser: null,
-      currentDate: '',
       currentTime: '',
       showCustomizeModal: false,
       layoutPreferences: {
         showQuickActions: true,
-        showStatistics: true,
-        showTodaysTasks: true,
-        showBooksDue: true,
-        showRecentActivities: true
+        showStatistics: true
       },
       stats: {
-        totalBooks: 150,
-        totalReaders: 85,
-        booksBorrowed: 23,
-        availableBooks: 127,
-        overdueBooks: 5
-      },
-      todaysTasks: [
-        { id: 1, title: 'Kiểm tra sách trả', description: 'Xác nhận sách trả từ độc giả Nguyễn Văn A', priority: 'Cao', completed: false },
-        { id: 2, title: 'Cập nhật kho sách', description: 'Thêm sách mới vào hệ thống', priority: 'Trung bình', completed: true },
-        { id: 3, title: 'Liên hệ độc giả quá hạn', description: 'Nhắc nhở độc giả về sách quá hạn', priority: 'Cao', completed: false }
-      ],
-      dueToday: [
-        { id: 1, title: 'Bố Già', reader: 'Hoàng Văn F' },
-        { id: 2, title: 'Rừng Na Uy', reader: 'Đặng Thị G' }
-      ],
-      // Dữ liệu giả - ĐÃ XÓA `time`
-      recentActivities: [
-        { id: 1, user: 'Nguyễn Văn A', action: 'vừa mượn sách', book: 'Đắc Nhân Tâm', type: 'borrow', time: '10:30', details: 'Mượn 1 cuốn' },
-        { id: 2, user: 'Trần Thị B', action: 'vừa trả sách', book: 'Nhà Giả Kim', type: 'return', time: '09:15', details: 'Trả đúng hạn' },
-        { id: 3, user: 'Lê Văn C', action: 'vừa mượn sách', book: 'Dune - Xứ Cát', type: 'borrow', time: '14:20', details: 'Mượn 1 cuốn' },
-        { id: 4, user: 'Phạm Thị D', action: 'vừa trả sách', book: 'Bố Già', type: 'return', time: '11:45', details: 'Trả đúng hạn' },
-      ],
-      // Dữ liệu giả - Giữ nguyên
-      overdueBooks: [
-        { id: 1, title: 'Lược Sử Loài Người', reader: 'Phạm Văn D', daysOverdue: 3 },
-        { id: 2, title: 'Cây Cam Ngọt Của Tôi', reader: 'Võ Thị E', daysOverdue: 1 }
-      ]
+        totalReaders: 120,
+        newReadersThisMonth: 8,
+        totalBooks: 450,
+        newBooksThisMonth: 15,
+        activeBorrows: 85,
+        availableBooks: 365,
+        overdueBooks: 12
+      }
     };
   },
   computed: {
@@ -396,51 +222,17 @@ export default {
   mounted() {
     this.currentUser = AuthService.getCurrentUser();
     this.loadLayoutPreferences();
-    this.updateDateTime();
-    setInterval(this.updateDateTime, 1000); // Update time every second
+    this.updateTime();
+    setInterval(this.updateTime, 1000); // Update time every second
   },
   methods: {
-    updateDateTime() {
+    updateTime() {
       const now = new Date();
-      this.currentDate = now.toLocaleDateString('vi-VN', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
       this.currentTime = now.toLocaleTimeString('vi-VN', {
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit'
       });
-    },
-    toggleTask(taskId) {
-      const task = this.todaysTasks.find(t => t.id === taskId);
-      if (task) {
-        task.completed = !task.completed;
-      }
-    },
-    getPriorityClass(priority) {
-      switch (priority) {
-        case 'Cao':
-          return 'bg-danger';
-        case 'Trung bình':
-          return 'bg-warning text-dark';
-        case 'Thấp':
-          return 'bg-success';
-        default:
-          return 'bg-secondary';
-      }
-    },
-    getActivityIcon(type) {
-      switch (type) {
-        case 'borrow':
-          return 'fas fa-plus-circle';
-        case 'return':
-          return 'fas fa-undo';
-        default:
-          return 'fas fa-info-circle';
-      }
     },
     loadLayoutPreferences() {
       const userId = this.currentUser?._id || 'default';
@@ -468,57 +260,251 @@ export default {
 </script>
 
 <style scoped>
-.card {
-  border-radius: 12px;
-}
-.welcome-card {
-  background: linear-gradient(to right, #f4f7fc, #eef7ff);
-}
-.fa-3x {
-    font-size: 3em;
-}
-.text-primary { color: #303f9f !important; }
-.text-success { color: #198754 !important; }
-.text-warning { color: #ffc107 !important; }
-.fw-500 {
-  font-weight: 500;
+.staff-overview {
+  padding: 20px;
 }
 
-/* Style cho Hoạt động gần đây */
-.activity-icon {
-  width: 40px;
-  height: 40px;
+.welcome-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 15px;
+  padding: 25px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.card {
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+}
+
+.stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  border: 1px solid #e9ecef;
+}
+
+.stat-card-primary {
+  border-left: 4px solid #007bff;
+}
+
+.stat-card-success {
+  border-left: 4px solid #28a745;
+}
+
+.stat-card-warning {
+  border-left: 4px solid #ffc107;
+}
+
+.stat-card-danger {
+  border-left: 4px solid #dc3545;
+}
+
+.stat-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin-right: 15px;
+}
+
+.stat-card-primary .stat-icon {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
+}
+
+.stat-card-success .stat-icon {
+  background: linear-gradient(135deg, #28a745, #1e7e34);
+  color: white;
+}
+
+.stat-card-warning .stat-icon {
+  background: linear-gradient(135deg, #ffc107, #e0a800);
+  color: white;
+}
+
+.stat-card-danger .stat-icon {
+  background: linear-gradient(135deg, #dc3545, #bd2130);
+  color: white;
+}
+
+.stat-number {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #333;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.stat-change {
+  font-size: 0.8rem;
+}
+
+.action-card {
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  transition: all 0.3s ease;
+  height: 100%;
+}
+
+.action-card:hover {
+  border-color: #007bff;
+  box-shadow: 0 4px 15px rgba(0, 123, 255, 0.1);
+  text-decoration: none !important;
+}
+
+.action-icon {
+  width: 50px;
+  height: 50px;
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
-}
-.bg-light-primary {
-  background-color: #eef7ff;
-}
-.bg-light-success {
-  background-color: #e6f7f1;
-}
-.list-group-item {
-  padding-left: 0;
-  padding-right: 0;
-  border-bottom: 1px solid #eee;
-}
-.list-group-item:last-child {
-  border-bottom: 0;
+  font-size: 1.2rem;
+  margin-right: 12px;
 }
 
-/* Style cho Sách quá hạn */
-.list-group-flush:last-child .list-group-item:last-child {
-  border-bottom: 0;
-  border-radius: 0 0 12px 12px;
+.action-content h6 {
+  margin-bottom: 2px;
+  color: #333;
 }
-.list-group-item {
-  padding: 1rem;
+
+.fw-500 {
+  font-weight: 500;
 }
-.badge {
-  font-size: 0.8rem;
-  padding: 0.4em 0.7em;
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1050;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  padding: 20px;
+  border-bottom: 1px solid #e9ecef;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #6c757d;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-footer {
+  padding: 20px;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #5a6268;
+}
+
+.btn-primary {
+  background: #007bff;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #0056b3;
+}
+
+.btn-outline-primary {
+  background: transparent;
+  color: #007bff;
+  border: 1px solid #007bff;
+}
+
+.btn-outline-primary:hover {
+  background: #007bff;
+  color: white;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .staff-overview {
+    padding: 10px;
+  }
+
+  .welcome-header {
+    padding: 15px;
+  }
+
+  .stat-card {
+    padding: 15px;
+  }
+
+  .action-card {
+    padding: 12px;
+  }
 }
 </style>

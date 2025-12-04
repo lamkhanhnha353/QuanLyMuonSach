@@ -11,49 +11,6 @@
         </button>
     </div>
 
-    <!-- Stats Cards Row -->
-    <div class="row g-3 mb-4">
-      <div class="col-md-4">
-        <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden card-stat">
-          <div class="card-body p-3 d-flex align-items-center">
-             <div class="icon-shape bg-warning text-white rounded-4 me-3 p-3 shadow-sm">
-                <i class="fas fa-clock fa-2x"></i>
-             </div>
-             <div>
-                <p class="text-muted small fw-bold mb-1 text-uppercase ls-1">Chờ Xử Lý</p>
-                <h4 class="mb-0 fw-bolder text-dark">{{ pendingCount }}</h4>
-             </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden card-stat">
-          <div class="card-body p-3 d-flex align-items-center">
-             <div class="icon-shape bg-info text-white rounded-4 me-3 p-3 shadow-sm">
-                <i class="fas fa-book-reader fa-2x"></i>
-             </div>
-             <div>
-                <p class="text-muted small fw-bold mb-1 text-uppercase ls-1">Sách Đang Mượn</p>
-                <h4 class="mb-0 fw-bolder text-dark">{{ borrowedCount }}</h4>
-             </div>
-          </div>
-        </div>
-      </div>
-       <div class="col-md-4">
-        <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden card-stat">
-          <div class="card-body p-3 d-flex align-items-center">
-             <div class="icon-shape bg-success text-white rounded-4 me-3 p-3 shadow-sm">
-                <i class="fas fa-undo-alt fa-2x"></i>
-             </div>
-             <div>
-                <p class="text-muted small fw-bold mb-1 text-uppercase ls-1">Yêu Cầu Trả</p>
-                <h4 class="mb-0 fw-bolder text-dark">{{ returnCount }}</h4>
-             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- Main Content Card -->
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
        <!-- Custom Tabs Header -->
@@ -153,6 +110,10 @@
                              <button class="btn btn-icon-only btn-rounded btn-warning btn-sm text-dark shadow-sm" title="Nhận trả" @click="openUpdateModal(item, 'đã trả')"><i class="fas fa-undo"></i></button>
                          </template>
 
+                         <template v-if="item.trangThai === 'trễ hạn' && item.daXacNhanNopPhat">
+                             <button class="btn btn-icon-only btn-rounded btn-info btn-sm text-white shadow-sm" title="Xác nhận nộp phạt" @click="openFinePaymentModal(item)"><i class="fas fa-check-circle"></i></button>
+                         </template>
+
                          <button class="btn btn-icon-only btn-rounded btn-light border btn-sm text-secondary" title="Chi tiết" @click="viewDetails(item)"><i class="fas fa-eye"></i></button>
                       </div>
                    </td>
@@ -194,21 +155,68 @@
     <div class="modal fade" id="confirmUpdateModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-4">
-                <div class="modal-header border-bottom-0 bg-primary bg-opacity-10">
-                    <h5 class="modal-title fw-bold text-primary">Xác nhận hành động</h5>
+                <div class="modal-header border-bottom-0" :class="isFinePayment ? 'bg-warning bg-opacity-10' : 'bg-primary bg-opacity-10'">
+                    <h5 class="modal-title fw-bold" :class="isFinePayment ? 'text-warning' : 'text-primary'">{{ isFinePayment ? 'Xác nhận nộp phạt' : 'Xác nhận hành động' }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body py-4 text-center" v-if="itemToUpdate">
-                    <div class="avatar-circle bg-primary-subtle text-primary mb-3 mx-auto d-flex align-items-center justify-content-center rounded-circle" style="width: 60px; height: 60px;">
-                        <i class="fas fa-question fa-2x"></i>
+                    <div class="avatar-circle mb-3 mx-auto d-flex align-items-center justify-content-center rounded-circle" :class="isFinePayment ? 'bg-warning-subtle text-warning' : 'bg-primary-subtle text-primary'" style="width: 60px; height: 60px;">
+                        <i :class="isFinePayment ? 'fas fa-money-bill-wave fa-2x' : 'fas fa-question fa-2x'"></i>
                     </div>
-                    <p class="mb-1">Bạn có chắc muốn chuyển trạng thái phiếu của</p>
-                    <h5 class="fw-bold text-dark mb-2">{{ itemToUpdate.docGiaInfo?.HOLOT }} {{ itemToUpdate.docGiaInfo?.TEN }}</h5>
-                    <p class="text-muted">Sang trạng thái: <span class="badge bg-primary px-3 py-2 rounded-pill">{{ newStatus }}</span></p>
+                    <template v-if="isFinePayment">
+                        <p class="mb-1">Xác nhận độc giả</p>
+                        <h5 class="fw-bold text-dark mb-2">{{ itemToUpdate.docGiaInfo?.HOLOT }} {{ itemToUpdate.docGiaInfo?.TEN }}</h5>
+                        <p class="text-muted mb-2">đã nộp phạt trễ hạn với số tiền:</p>
+                        <h4 class="fw-bold text-warning mb-2">{{ formatCurrency(itemToUpdate.tienPhat || 0) }}</h4>
+                        <p class="text-muted">Phiếu sẽ được chuyển sang trạng thái "Đã trả"</p>
+                    </template>
+                    <template v-else>
+                        <p class="mb-1">Bạn có chắc muốn chuyển trạng thái phiếu của</p>
+                        <h5 class="fw-bold text-dark mb-2">{{ itemToUpdate.docGiaInfo?.HOLOT }} {{ itemToUpdate.docGiaInfo?.TEN }}</h5>
+                        <p class="text-muted">Sang trạng thái: <span class="badge bg-primary px-3 py-2 rounded-pill">{{ newStatus }}</span></p>
+                    </template>
                 </div>
                 <div class="modal-footer border-top-0 justify-content-center pb-4">
                     <button type="button" class="btn btn-light rounded-pill px-4 fw-bold me-2" data-bs-dismiss="modal">Hủy</button>
-                    <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold" @click="handleUpdateStatus">Xác nhận</button>
+                    <button type="button" :class="['btn rounded-pill px-4 fw-bold', isFinePayment ? 'btn-warning' : 'btn-primary']" @click="handleUpdateStatus">{{ isFinePayment ? 'Xác nhận nộp phạt' : 'Xác nhận' }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rejection Reason Modal -->
+    <div class="modal fade" id="rejectionReasonModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-bottom-0 bg-danger bg-opacity-10">
+                    <h5 class="modal-title fw-bold text-danger">Lý do từ chối</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body py-4" v-if="itemToUpdate">
+                    <div class="text-center mb-4">
+                        <div class="avatar-circle bg-danger-subtle text-danger mb-3 mx-auto d-flex align-items-center justify-content-center rounded-circle" style="width: 60px; height: 60px;">
+                            <i class="fas fa-times fa-2x"></i>
+                        </div>
+                        <p class="mb-1">Từ chối yêu cầu mượn sách của</p>
+                        <h5 class="fw-bold text-dark mb-2">{{ itemToUpdate.docGiaInfo?.HOLOT }} {{ itemToUpdate.docGiaInfo?.TEN }}</h5>
+                        <p class="text-muted">Sách: {{ itemToUpdate.sachInfo?.TENSACH }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label for="rejectionReason" class="form-label fw-bold">Lý do từ chối <span class="text-danger">*</span></label>
+                        <textarea
+                            id="rejectionReason"
+                            v-model="rejectionReason"
+                            class="form-control"
+                            rows="4"
+                            placeholder="Nhập lý do từ chối yêu cầu mượn sách..."
+                            required
+                        ></textarea>
+                        <div class="form-text">Lý do này sẽ được gửi cho độc giả để họ biết tại sao yêu cầu bị từ chối.</div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 justify-content-center pb-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4 fw-bold me-2" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold" @click="handleRejectWithReason" :disabled="!rejectionReason.trim()">Từ chối</button>
                 </div>
             </div>
         </div>
@@ -243,7 +251,7 @@
                 
                 <h6 class="text-dark fw-bold mb-1">{{ selectedItem.sachInfo?.TENSACH }}</h6>
                 <p class="text-muted small mb-1"><i class="fas fa-pen-nib me-1"></i>{{ selectedItem.sachInfo?.TACGIA }}</p>
-                <span class="badge bg-light text-secondary border">NXB: {{ selectedItem.sachInfo?.NAMXUATBAN }}</span>
+                <span class="badge bg-light text-secondary border">NXB: {{ selectedItem.sachInfo?.tenNhaXuatBan || 'N/A' }}</span>
               </div>
 
               <div class="col-md-8">
@@ -294,6 +302,19 @@
                          <span class="fw-bold text-success">{{ formatDate(selectedItem.ngayTraThucTe) }}</span>
                       </div>
                    </div>
+                   <div class="col-12" v-if="selectedItem.trangThai === 'từ chối' && selectedItem.lyDoTuChoi">
+                      <div class="border rounded p-2 d-flex justify-content-between align-items-center bg-danger-subtle border-danger-subtle">
+                         <span class="text-danger small fw-bold"><i class="fas fa-times-circle me-1"></i> Lý do từ chối:</span>
+                         <span class="fw-bold text-danger">{{ selectedItem.lyDoTuChoi }}</span>
+                      </div>
+                   </div>
+                   <div class="col-12" v-if="selectedItem.trangThai === 'trễ hạn'">
+                      <div class="border rounded p-2 d-flex justify-content-between align-items-center bg-warning-subtle border-warning-subtle">
+                         <span class="text-warning small fw-bold"><i class="fas fa-exclamation-triangle me-1"></i> Phạt trễ hạn:</span>
+                         <span class="fw-bold text-warning">{{ formatCurrency(selectedItem.tienPhat || 0) }}</span>
+                      </div>
+                   </div>
+
                 </div>
 
                 <div v-if="selectedItem.trangThai !== 'chờ duyệt'" class="border-top pt-3 mt-auto">
@@ -343,6 +364,7 @@ import MuonSachService from "@/services/muonsach.service";
 import DocGiaService from "@/services/docgia.service";
 import SachService from "@/services/sach.service";
 import NhanVienService from "@/services/nhanvien.service";
+import NhaXuatBanService from "@/services/nhaxuatban.service";
 import AuthService from "@/services/auth.service";
 import { Modal } from "bootstrap";
 
@@ -370,13 +392,16 @@ export default {
         { key: "chờ duyệt", label: "Chờ Duyệt" },
         { key: "đã duyệt", label: "Đã Duyệt" },
         { key: "đang mượn", label: "Đang Mượn" },
+        { key: "đang chờ trả", label: "Chờ Trả" },
         { key: "đã trả", label: "Đã Trả" },
         { key: "từ chối", label: "Từ Chối" },
         { key: "trễ hạn", label: "Trễ Hạn" },
-        { key: "đang chờ trả", label: "Chờ Trả" },
       ],
       toastMessage: "",
       isToastError: false,
+      rejectionReason: "",
+      rejectionModalInstance: null,
+      isFinePayment: false,
     };
   },
   computed: {
@@ -417,19 +442,39 @@ export default {
     async fetchData() {
       this.loading = true;
       try {
-        const [muonSachRes, docGiaRes, sachRes, nhanVienRes] = await Promise.all([
-          MuonSachService.getAll(), DocGiaService.getAll(), SachService.getAll(), NhanVienService.getAll()
+        const [muonSachRes, docGiaRes, sachRes, nhanVienRes, nhaXuatBanRes] = await Promise.all([
+          MuonSachService.getAll(), DocGiaService.getAll(), SachService.getAll(), NhanVienService.getAll(), NhaXuatBanService.getAll()
         ]);
         const docGiaMap = new Map(docGiaRes.data.map(item => [item._id, item]));
         const sachMap = new Map(sachRes.data.map(item => [item._id, item]));
         const nhanVienMap = new Map(nhanVienRes.data.map(item => [item._id, item]));
-        
-        this.allData = muonSachRes.data.map(item => ({
-          ...item,
-          docGiaInfo: docGiaMap.get(item.docGiaId),
-          sachInfo: sachMap.get(item.sachId),
-          nhanVienInfo: item.nhanVienId ? nhanVienMap.get(item.nhanVienId) : null
-        }));
+        const nhaXuatBanMap = new Map(nhaXuatBanRes.data.map(item => [item._id, item]));
+
+        const today = new Date();
+        this.allData = muonSachRes.data.map(item => {
+          const sachInfo = sachMap.get(item.sachId);
+          // Tìm nhà xuất bản dựa vào MANXB từ sachInfo
+          let nhaXuatBanInfo = null;
+          if (sachInfo?.MANXB) {
+            // Tìm nhà xuất bản có MANXB matching
+            nhaXuatBanInfo = nhaXuatBanRes.data.find(nxb => nxb.MANXB === sachInfo.MANXB);
+          }
+
+          // Tính tiền phạt cho sách trễ hạn
+          let tienPhat = 0;
+          if (item.trangThai === 'trễ hạn') {
+            const soLuong = item.soLuong || 1;
+            tienPhat = soLuong * 50000; // 50,000đ mỗi cuốn
+          }
+
+          return {
+            ...item,
+            docGiaInfo: docGiaMap.get(item.docGiaId),
+            sachInfo: sachInfo ? { ...sachInfo, tenNhaXuatBan: nhaXuatBanInfo?.TENNXB || 'N/A' } : null,
+            nhanVienInfo: item.nhanVienId ? nhanVienMap.get(item.nhanVienId) : null,
+            tienPhat: tienPhat
+          };
+        });
       } catch (error) { console.error(error); } finally { this.loading = false; }
     },
     switchTab(tabKey) { this.activeTab = tabKey; this.searchQuery = ""; },
@@ -438,10 +483,23 @@ export default {
     openUpdateModal(item, newStatus) {
       this.itemToUpdate = item;
       this.newStatus = newStatus;
-      this.updateModalInstance.show();
+      this.isFinePayment = false; // Reset flag for non-fine payment modals
+      if (newStatus === 'từ chối') {
+        this.rejectionReason = "";
+        this.rejectionModalInstance.show();
+      } else {
+        this.updateModalInstance.show();
+      }
     },
     async handleUpdateStatus() {
-      if (!this.itemToUpdate || !this.newStatus || !this.currentUser) return;
+      if (!this.itemToUpdate || !this.currentUser) return;
+      
+      // Nếu đây là xác nhận nộp phạt riêng lẻ
+      if (this.isFinePayment) {
+        return this.handleFinePaymentConfirmation();
+      }
+      
+      if (!this.newStatus) return;
       
       if (this.newStatus === 'đã trả' && this.itemToUpdate.trangThai === 'đang chờ trả') {
          return this.handleConfirmReturn();
@@ -460,6 +518,29 @@ export default {
          this.showToast("Lỗi: " + error.message, true);
       } finally { this.loading = false; }
     },
+
+    async handleFinePaymentConfirmation() {
+      if (!this.itemToUpdate || !this.currentUser) return;
+      this.loading = true;
+      try {
+        // Xác nhận nộp phạt cho phiếu trễ hạn này
+        // Chuyển trạng thái sang 'đã trả' và ghi nhận nộp phạt
+        await MuonSachService.update(this.itemToUpdate._id, {
+          trangThai: 'đã trả',
+          nhanVienId: this.currentUser._id,
+          daNopPhat: true, // Ghi nhận đã nộp phạt
+        });
+        await this.fetchData();
+        this.updateModalInstance.hide();
+        this.isFinePayment = false; // Reset flag
+        this.showToast("Xác nhận nộp phạt thành công!");
+      } catch (error) {
+        console.error("Lỗi khi xác nhận nộp phạt:", error);
+        this.showToast("Lỗi xác nhận nộp phạt: " + (error.response?.data?.message || error.message), true);
+      } finally {
+        this.loading = false;
+      }
+    },
     viewDetails(item) { this.selectedItem = item; this.detailModalInstance.show(); },
     
     async handleConfirmReturn() {
@@ -473,6 +554,26 @@ export default {
         } catch (error) {
             console.error("Lỗi khi xác nhận trả sách:", error);
             this.showToast("Lỗi xác nhận: " + (error.response?.data?.message || error.message), true);
+        } finally {
+            this.loading = false;
+        }
+    },
+
+    async handleRejectWithReason() {
+        if (!this.itemToUpdate || !this.rejectionReason.trim() || !this.currentUser) return;
+        this.loading = true;
+        try {
+            await MuonSachService.update(this.itemToUpdate._id, {
+                trangThai: 'từ chối',
+                nhanVienId: this.currentUser._id,
+                lyDoTuChoi: this.rejectionReason.trim()
+            });
+            await this.fetchData();
+            this.rejectionModalInstance.hide();
+            this.showToast("Từ chối yêu cầu thành công!");
+        } catch (error) {
+            console.error("Lỗi khi từ chối yêu cầu:", error);
+            this.showToast("Lỗi từ chối: " + (error.response?.data?.message || error.message), true);
         } finally {
             this.loading = false;
         }
@@ -501,10 +602,28 @@ export default {
     onImgError(e) {
       e.target.src = this.defaultBookImage;
     },
+    openFinePaymentModal(item) {
+      this.itemToUpdate = item;
+      this.newStatus = 'đã trả'; // Chuyển sang trạng thái đã trả sau khi xác nhận nộp phạt
+      this.isFinePayment = true; // Flag để biết đây là modal xác nhận nộp phạt
+      // Đóng modal chi tiết trước khi mở modal xác nhận
+      this.detailModalInstance.hide();
+      // Tạo modal mới không có backdrop cho chức năng xác nhận nộp phạt
+      this.updateModalInstance = new Modal(document.getElementById("confirmUpdateModal"), {
+        backdrop: false
+      });
+      this.updateModalInstance.show();
+    },
     showToast(msg, isError = false) {
         this.toastMessage = msg;
         this.isToastError = isError;
         setTimeout(() => { this.toastMessage = "" }, 3000);
+    },
+    formatCurrency(amount) {
+      return new Intl.NumberFormat('vi-VN', {
+        style: 'currency',
+        currency: 'VND'
+      }).format(amount);
     }
   },
   mounted() {
@@ -512,6 +631,7 @@ export default {
     this.fetchData();
     this.updateModalInstance = new Modal(document.getElementById("confirmUpdateModal"));
     this.detailModalInstance = new Modal(document.getElementById("detailModal"));
+    this.rejectionModalInstance = new Modal(document.getElementById("rejectionReasonModal"));
   },
 };
 </script>

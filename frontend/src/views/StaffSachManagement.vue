@@ -106,9 +106,6 @@
                <button class="btn btn-sm btn-outline-warning rounded-circle action-btn" @click="openEditModal(book)" title="Chỉnh sửa">
                   <i class="fas fa-pen"></i>
                </button>
-               <button class="btn btn-sm btn-outline-danger rounded-circle action-btn" @click="confirmDelete(book)" title="Xóa sách">
-                  <i class="fas fa-trash"></i>
-               </button>
             </div>
           </div>
 
@@ -319,7 +316,7 @@
                     <div class="bg-light p-3 rounded mb-3 border">
                         <div class="row g-3">
                             <div class="col-sm-6">
-                                <small class="text-muted d-block mb-1">Nhà xuất bản</small>
+                                <small class="text-muted d-block mb-1">Mã NXB</small>
                                 <span class="fw-medium text-dark">{{ selectedBook.MANXB }}</span>
                             </div>
                             <div class="col-sm-6">
@@ -359,21 +356,7 @@
         </div>
       </div>
     </div>
-    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-sm modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-          <div class="modal-body text-center p-4">
-            <i class="fas fa-trash-alt fa-3x text-danger mb-3"></i>
-            <h5 class="fw-bold">Xóa sách này?</h5>
-            <p class="text-muted small">Hành động này không thể hoàn tác.</p>
-            <div class="d-flex justify-content-center gap-2 mt-4">
-                 <button type="button" class="btn btn-light btn-sm w-50" data-bs-dismiss="modal">Hủy</button>
-                 <button type="button" class="btn btn-danger btn-sm w-50" @click="handleDeleteConfirm">Xóa</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+
 
   </div>
 
@@ -425,7 +408,6 @@ export default {
       currentPage: 1,
       itemsPerPage: 8,
       selectedBook: null,
-      bookToDelete: null,
       isEdit: false,
       showSuccessNotification: false,
       notificationMessage: "",
@@ -444,7 +426,6 @@ export default {
       },
       detailModal: null,
       sachModal: null,
-      confirmDeleteModal: null,
       isListening: false,
       recognition: null,
     };
@@ -539,24 +520,7 @@ export default {
         alert("Lỗi khi lưu sách");
       }
     },
-    confirmDelete(book) {
-      this.bookToDelete = book;
-      this.confirmDeleteModal.show();
-    },
-    async handleDeleteConfirm() {
-      try {
-        await SachService.delete(this.bookToDelete._id);
-        this.confirmDeleteModal.hide();
-        this.retrieveBooks();
-        this.notificationMessage = "Xóa sách thành công!";
-        this.showSuccessNotification = true;
-        setTimeout(() => {
-          this.showSuccessNotification = false;
-        }, 700);
-      } catch (error) {
-        alert("Không thể xóa sách.");
-      }
-    },
+
     changePage(page) {
       if (page < 1) page = 1;
       if (page > this.totalPages) page = this.totalPages;
@@ -695,7 +659,6 @@ export default {
     this.retrieveBooks();
     this.detailModal = new Modal(document.getElementById("sachDetailModal"));
     this.sachModal = new Modal(document.getElementById("sachModal"));
-    this.confirmDeleteModal = new Modal(document.getElementById("confirmDeleteModal"));
   },
 };
 </script>
@@ -765,14 +728,7 @@ export default {
     transform: scale(1.08); /* Quay về scale 1.08 */
 }
 .z-index-1 { z-index: 10; }
-.text-truncate-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    height: 3em;
-}
-.action-btn {
+.text-truncate-2.action-btn {
     width: 32px;
     height: 32px;
     padding: 0;

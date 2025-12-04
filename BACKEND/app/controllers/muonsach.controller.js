@@ -121,7 +121,7 @@ exports.confirmReturn = async (req, res, next) => {
         if (!req.body?.nhanVienId) {
             return next(new ApiError(400, "ID Nhân viên xử lý là bắt buộc"));
         }
-        
+
         const muonSachService = new MuonSachService(MongoDB.client);
         const payload = {
             trangThai: "đã trả",
@@ -132,6 +132,22 @@ exports.confirmReturn = async (req, res, next) => {
     } catch (error) {
         return next(
             new ApiError(500, `Lỗi khi xác nhận trả sách: ${error.message}`)
+        );
+    }
+};
+
+// 6.6. Confirm Fine Payment (Độc giả xác nhận đã nộp phạt)
+exports.confirmFinePayment = async (req, res, next) => {
+    try {
+        const muonSachService = new MuonSachService(MongoDB.client);
+        const payload = {
+            daXacNhanNopPhat: true
+        };
+        const document = await muonSachService.update(req.params.id, payload);
+        return res.send({ message: "Xác nhận nộp phạt thành công", data: document });
+    } catch (error) {
+        return next(
+            new ApiError(500, `Lỗi khi xác nhận nộp phạt: ${error.message}`)
         );
     }
 };

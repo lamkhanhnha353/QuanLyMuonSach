@@ -105,7 +105,7 @@
                     <h6 class="text-uppercase fw-bold text-primary mb-2" style="font-size: 0.85rem;">Thông tin sách</h6>
                     <p class="mb-1 text-dark fw-medium small text-truncate">Tên: <span class="text-muted fw-normal">{{ selectedRequest.TENSACH }}</span></p>
                     <p class="mb-1 text-dark fw-medium small text-truncate">TG: <span class="text-muted fw-normal">{{ selectedRequest.TACGIA }}</span></p>
-                    <p class="mb-0 text-dark fw-medium small">NXB: <span class="text-muted fw-normal">{{ selectedRequest.NXB || '---' }}</span></p>
+                    <p class="mb-0 text-dark fw-medium small">NXB: <span class="text-muted fw-normal">{{ selectedRequest.tenNhaXuatBan || '---' }}</span></p>
                   </div>
                 </div>
 
@@ -154,6 +154,27 @@
                       <div class="row mb-2">
                         <div class="col-4 text-muted fw-medium small">Trả thực tế:</div>
                         <div class="col-8 text-dark small fw-bold">{{ formatDate(selectedRequest.ngayTraThucTe || selectedRequest.NGAYTRUCTE) || 'Chưa trả' }}</div>
+                      </div>
+                      <div class="row mb-2" v-if="selectedRequest.trangThai === 'từ chối' && selectedRequest.lyDoTuChoi">
+                        <div class="col-4 text-muted fw-medium small">Lý do từ chối:</div>
+                        <div class="col-8 text-dark small fw-bold">{{ selectedRequest.lyDoTuChoi }}</div>
+                      </div>
+                      <div class="row mb-2" v-if="(selectedRequest.displayTrangThai || selectedRequest.trangThai) === 'trễ hạn'">
+                        <div class="col-4 text-muted fw-medium small">Phạt trễ hạn:</div>
+                        <div class="col-8 text-danger small fw-bold">{{ formatCurrency(selectedRequest.tienPhat || 0) }}</div>
+                      </div>
+                      <div class="row mb-2" v-if="(selectedRequest.displayTrangThai || selectedRequest.trangThai) === 'trễ hạn'">
+                        <div class="col-12">
+                          <div class="border rounded p-2 bg-light d-flex justify-content-between align-items-center">
+                            <div>
+                              <span class="text-info small fw-bold"><i class="fas fa-money-bill-wave me-1"></i> Nộp phạt</span>
+                              <div class="text-muted small mt-1">Vui lòng nộp phạt để hoàn tất thủ tục trả sách</div>
+                            </div>
+                            <button class="btn btn-info btn-sm rounded-pill px-3 fw-bold" @click="payFine(selectedRequest)">
+                              <i class="fas fa-check-circle me-1"></i> Xác nhận nộp phạt
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -237,24 +258,31 @@ export default {
       try {
         const user = AuthService.getCurrentUser();
         if (!user || !user._id) return;
-        
+
         const userResp = await DocGiaService.get(user._id);
         this.userInfo = userResp.data;
         this.userAvatar = this.userInfo.AVATAR;
 
-        const resp = await MuonSachService.getForDocGia(user._id);
+        const [resp, nhaXuatBanRes] = await Promise.all([
+          MuonSachService.getForDocGia(user._id),
+          NhaXuatBanService.getAll()
+        ]);
         const records = resp.data || [];
+        const nhaXuatBanMap = new Map(nhaXuatBanRes.data.map(item => [item._id, item]));
 
         const today = new Date();
         const populated = await Promise.all(records.map(async (rec) => {
           const out = { ...rec };
           try {
             const r = await SachService.get(rec.sachId);
-            out.TENSACH = r.data.TENSACH || 'Không xác định';
-            out.TACGIA = r.data.TACGIA || '';
-            out.NAMXB = r.data.NAMXB || '';
+            const sach = r.data;
+            out.TENSACH = sach.TENSACH || 'Không xác định';
+            out.TACGIA = sach.TACGIA || '';
 
-            const imgField = r.data.HinhAnh;
+            const nhaXuatBanInfo = sach.nhaXuatBanId ? nhaXuatBanMap.get(sach.nhaXuatBanId) : null;
+            out.tenNhaXuatBan = nhaXuatBanInfo?.TenNXB || 'N/A';
+
+            const imgField = sach.HinhAnh;
             if (imgField) {
               out.sachCover = String(imgField).startsWith('http') ? imgField : `http://localhost:8080/uploads/${imgField}`;
             } else {
@@ -275,7 +303,18 @@ export default {
               out.displayTrangThai = 'trễ hạn';
             }
           }
-          return out;
+
+          // Tính tiền phạt cho sách trễ hạn
+          let tienPhat = 0;
+          if (out.displayTrangThai === 'trễ hạn') {
+            const soLuong = out.soLuong || 1;
+            tienPhat = soLuong * 50000; // 50,000đ mỗi cuốn
+          }
+
+          return {
+            ...out,
+            tienPhat: tienPhat
+          };
         }));
 
         this.requests = populated.sort((a, b) => new Date(b.ngayMuon || b.NGAYMUON) - new Date(a.ngayMuon || a.NGAYMUON));
@@ -288,6 +327,9 @@ export default {
     formatDate(d) {
       if (!d) return '--/--/----';
       return new Date(d).toLocaleDateString('vi-VN');
+    },
+    formatCurrency(amount) {
+      return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
     },
     statusLabel(s) {
       const map = { 'chờ duyệt': 'Chờ duyệt', 'đã duyệt': 'Đã duyệt', 'đang mượn': 'Đang mượn', 'đang chờ trả': 'Đang chờ trả', 'đã trả': 'Đã trả', 'từ chối': 'Bị từ chối', 'trễ hạn': 'Quá hạn' };
@@ -333,6 +375,19 @@ export default {
           this.closeDetail();
         } catch (e) {
           alert('Lỗi gửi yêu cầu trả sách: ' + (e.response?.data?.message || e.message));
+        }
+      }
+    },
+    async payFine(r) {
+      if (confirm('Bạn có chắc chắn đã nộp phạt?')) {
+        try {
+          // Sử dụng endpoint riêng cho xác nhận nộp phạt
+          await MuonSachService.confirmFinePayment(r._id);
+          alert('Đã xác nhận nộp phạt thành công! Vui lòng chờ nhân viên xác nhận.');
+          await this.fetch();
+          this.closeDetail();
+        } catch (e) {
+          alert('Lỗi xác nhận nộp phạt: ' + (e.response?.data?.message || e.message));
         }
       }
     }

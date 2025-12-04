@@ -29,4 +29,8 @@ router.route("/:id/request-return")
 router.route("/:id/confirm-return")
     .put(muonsach.confirmReturn);
 
+// Route cho Độc Giả: Xác nhận nộp phạt
+router.route("/:id/confirm-fine-payment")
+    .put(muonsach.confirmFinePayment);
+
 module.exports = router;

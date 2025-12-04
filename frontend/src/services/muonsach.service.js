@@ -44,6 +44,11 @@ class MuonSachService {
   confirmReturn(id, nhanVienId) {
     return http.put(`/muonsach/${id}/confirm-return`, { nhanVienId });
   }
+
+  // 9. Độc giả: Xác nhận đã nộp phạt
+  confirmFinePayment(id) {
+    return http.put(`/muonsach/${id}/confirm-fine-payment`);
+  }
 }
 
 export default new MuonSachService();

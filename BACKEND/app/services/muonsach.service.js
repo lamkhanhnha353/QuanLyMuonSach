@@ -236,16 +236,18 @@ async create(payload) {
         const filter = { _id: phieuMuonId };
         const updateData = {};
         const validStates = ["chờ duyệt", "đã duyệt", "đang mượn", "đang chờ trả", "đã trả", "từ chối"];
-        
+
         if (newTrangThai && validStates.includes(newTrangThai)) {
             updateData.trangThai = newTrangThai;
+        } else if (!newTrangThai && payload.daXacNhanNopPhat !== undefined) {
+            // Cho phép cập nhật daXacNhanNopPhat mà không cần trạng thái mới
         } else {
              throw new Error("Trạng thái cập nhật không hợp lệ");
         }
-        
-        // Chỉ yêu cầu nhanVienId khi không phải yêu cầu trả sách từ độc giả
-        if (newTrangThai === "đang chờ trả") {
-            // Độc giả yêu cầu trả - không cần nhanVienId
+
+        // Chỉ yêu cầu nhanVienId khi không phải yêu cầu trả sách từ độc giả hoặc cập nhật daXacNhanNopPhat
+        if (newTrangThai === "đang chờ trả" || (!newTrangThai && payload.daXacNhanNopPhat !== undefined)) {
+            // Độc giả yêu cầu trả hoặc cập nhật nộp phạt - không cần nhanVienId
             // Giữ nhanVienId cũ nếu có
             if (payload.nhanVienId) {
                 updateData.nhanVienId = ObjectId.isValid(payload.nhanVienId) ? new ObjectId(payload.nhanVienId) : null;
@@ -261,6 +263,16 @@ async create(payload) {
 
         if (newTrangThai === "đã trả") {
             updateData.ngayTraThucTe = new Date().toISOString().split('T')[0]; // Ghi nhận ngày hôm nay
+        }
+
+        // Thêm lý do từ chối nếu trạng thái là 'từ chối'
+        if (newTrangThai === "từ chối" && payload.lyDoTuChoi) {
+            updateData.lyDoTuChoi = payload.lyDoTuChoi;
+        }
+
+        // Thêm xác nhận nộp phạt từ độc giả
+        if (payload.daXacNhanNopPhat !== undefined) {
+            updateData.daXacNhanNopPhat = payload.daXacNhanNopPhat;
         }
 
         const result = await this.MuonSach.findOneAndUpdate(
