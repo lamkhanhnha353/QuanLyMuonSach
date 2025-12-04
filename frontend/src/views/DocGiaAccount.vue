@@ -1,5 +1,14 @@
 <template>
   <div class="account-page">
+    
+    <div v-if="showToast" :class="['custom-toast', toastClass]">
+      <div class="toast-content">
+        <i :class="toastIcon" class="toast-icon"></i>
+        <span>{{ toastMessage }}</span>
+      </div>
+      <div class="toast-progress"></div>
+    </div>
+
     <div v-if="loading && !docgia" class="loading-overlay">
       <div class="spinner-border text-primary" role="status">
         <span class="visually-hidden">Loading...</span>
@@ -93,9 +102,9 @@
             
             <div class="d-flex justify-content-between align-items-center mb-3">
               <h5 class="fw-bold m-0">Sách đang mượn ({{ borrowedBooks.length }})</h5>
-              
-              <a v-if="borrowedBooks.length > 2" 
-                 href="#" 
+
+              <a v-if="borrowedBooks.length > 2"
+                 href="#"
                  class="text-decoration-none small text-primary fw-bold"
                  @click.prevent="showAllBorrowed = !showAllBorrowed">
                  {{ showAllBorrowed ? 'Thu gọn' : 'Xem tất cả' }}
@@ -136,10 +145,10 @@
             </div>
 
             <div class="d-flex justify-content-between align-items-center mb-3">
-              <h5 class="fw-bold m-0">Lịch sử mượn sách</h5>
-              
-              <a v-if="borrowHistory.length > 3" 
-                 href="#" 
+              <h5 class="fw-bold m-0">Sách trễ hạn</h5>
+
+              <a v-if="borrowHistory.length > 3"
+                 href="#"
                  class="text-decoration-none small text-primary fw-bold"
                  @click.prevent="showAllHistory = !showAllHistory">
                  {{ showAllHistory ? 'Thu gọn' : 'Xem tất cả' }}
@@ -231,10 +240,7 @@
                            Lưu thông tin
                         </button>
                      </div>
-                     <div v-if="message" class="alert mt-3" :class="messageType === 'success' ? 'alert-success' : 'alert-danger'">
-                        {{ message }}
-                     </div>
-                  </Form>
+                     </Form>
                </div>
              </div>
           </div>
@@ -309,10 +315,7 @@
                            Lưu mật khẩu
                         </button>
                      </div>
-                     <div v-if="message" class="alert mt-3" :class="messageType === 'success' ? 'alert-success' : 'alert-danger'">
-                        {{ message }}
-                     </div>
-                  </Form>
+                     </Form>
                </div>
              </div>
           </div>
@@ -335,7 +338,6 @@ export default {
   name: "DocGiaAccount",
   components: { Form, Field, ErrorMessage },
   data() {
-    // Schema cho form thông tin
     const infoSchema = yup.object().shape({
       HOLOT: yup.string().required("Bắt buộc"),
       TEN: yup.string().required("Bắt buộc"),
@@ -345,7 +347,6 @@ export default {
       DIENTHOAI: yup.string().required("Bắt buộc"),
     });
 
-    // Schema cho form mật khẩu
     const passwordSchema = yup.object().shape({
       currentPassword: yup.string().required("Nhập mật khẩu hiện tại để xác nhận"),
       password: yup.string().min(6, "Tối thiểu 6 ký tự").required("Mật khẩu mới là bắt buộc"),
@@ -356,41 +357,62 @@ export default {
 
     return {
       loading: false,
-      message: "",
-      messageType: "success",
       docgia: null,
       activeTab: "dashboard",
       borrowedBooks: [],
       borrowHistory: [],
-      // Biến trạng thái xem tất cả/thu gọn
       showAllBorrowed: false, 
       showAllHistory: false, 
       
-      // Biến hiển thị mật khẩu
       showCurrentPassword: false,
       showNewPassword: false,
       showConfirmPassword: false,
       infoSchema,
       passwordSchema,
+
+      // --- TOAST DATA ---
+      showToast: false,
+      toastMessage: "",
+      toastType: "success", // 'success', 'error', 'info'
     };
   },
   computed: {
-    // Computed cho sách đang mượn (Hiện 2)
     visibleBorrowedBooks() {
       if (this.showAllBorrowed) {
         return this.borrowedBooks;
       }
       return this.borrowedBooks.slice(0, 2);
     },
-    // Computed cho lịch sử mượn (Hiện 3)
     visibleBorrowHistory() {
       if (this.showAllHistory) {
         return this.borrowHistory;
       }
       return this.borrowHistory.slice(0, 3);
+    },
+    // --- HELPER CHO TOAST CLASS ---
+    toastClass() {
+      if (this.toastType === 'success') return 'toast-success';
+      if (this.toastType === 'error') return 'toast-error';
+      return 'toast-info'; // default/info
+    },
+    toastIcon() {
+      if (this.toastType === 'success') return 'fas fa-check-circle';
+      if (this.toastType === 'error') return 'fas fa-exclamation-circle';
+      return 'fas fa-info-circle';
     }
   },
   methods: {
+    // --- HÀM GỌI TOAST ---
+    triggerToast(message, type = 'success') {
+      this.toastMessage = message;
+      this.toastType = type;
+      this.showToast = true;
+      // Tự tắt sau 3 giây
+      setTimeout(() => {
+        this.showToast = false;
+      }, 3000);
+    },
+
     getInitials(holot, ten) {
       const h = holot ? holot.charAt(0) : "";
       const t = ten ? ten.charAt(0) : "";
@@ -410,17 +432,6 @@ export default {
       if (!dateString) return "";
       return new Date(dateString).toLocaleDateString("vi-VN", {day: "2-digit", month: "2-digit", year: "numeric"});
     },
-    getStatusText(status) {
-      const statusMap = {
-        "chờ duyệt": "Chờ duyệt",
-        "đã duyệt": "Đã duyệt",
-        "đang mượn": "Đang mượn",
-        "đã trả": "Đã trả",
-        "từ chối": "Từ chối",
-        "đang chờ trả": "Đang chờ trả"
-      };
-      return statusMap[status] || status;
-    },
     getStatusBadgeClass(status) {
       const classMap = {
         "chờ duyệt": "bg-warning-soft text-warning",
@@ -428,7 +439,8 @@ export default {
         "đang mượn": "bg-primary-soft text-primary",
         "đã trả": "bg-green-soft text-green",
         "từ chối": "bg-danger-soft text-danger",
-        "đang chờ trả": "bg-orange-soft text-orange"
+        "đang chờ trả": "bg-orange-soft text-orange",
+        "trễ hạn": "bg-danger-soft text-danger"
       };
       return classMap[status] || "bg-secondary-soft text-secondary";
     },
@@ -453,7 +465,7 @@ export default {
        try {
         const response = await MuonSachService.getForDocGia(docgiaId);
         const records = response.data;
-        const borrowed = records.filter(record => !record.ngayTraThucTe);
+        const borrowed = records.filter(record => record.trangThai === "đang mượn");
         for (let record of borrowed) {
           try {
             const sachResponse = await SachService.get(record.sachId);
@@ -475,26 +487,27 @@ export default {
         try {
             const response = await MuonSachService.getForDocGia(docgiaId);
             const records = response.data;
-            const history = records; 
-            for (let record of history) {
+            const overdue = records.filter(record => record.trangThai === "trễ hạn");
+            for (let record of overdue) {
                  try {
                     const sachResponse = await SachService.get(record.sachId);
                     record.TENSACH = sachResponse.data.TENSACH;
                     record.NGAYMUON = record.ngayMuon;
                     record.NGAYTRA = record.ngayTraThucTe || record.ngayTra;
-                    record.TRANGTHAI = this.getStatusText(record.trangThai);
+                    record.trangThai = "trễ hạn";
+                    record.TRANGTHAI = "Trễ hạn";
                 } catch (error) {
                     record.TENSACH = "Không xác định";
-                    record.TRANGTHAI = "N/A";
+                    record.trangThai = "trễ hạn";
+                    record.TRANGTHAI = "Trễ hạn";
                 }
             }
-            this.borrowHistory = history;
+            this.borrowHistory = overdue;
         } catch(e) { this.borrowHistory = []; }
     },
 
     async handleUpdateInfo(data) {
         this.loading = true;
-        this.message = "";
         try {
             const updateData = {
                 HOLOT: data.HOLOT,
@@ -505,13 +518,15 @@ export default {
                 DIENTHOAI: data.DIENTHOAI
             };
             await DocGiaService.update(this.docgia._id, updateData);
-            this.message = "Cập nhật thông tin thành công!";
-            this.messageType = "success";
+            
+            // GỌI TOAST THAY VÌ ALERT INLINE
+            this.triggerToast("Cập nhật thông tin thành công!", "success");
+            
             this.docgia = { ...this.docgia, ...updateData };
-            setTimeout(() => { this.activeTab = 'dashboard'; this.message = ""; }, 1500);
+            setTimeout(() => { this.activeTab = 'dashboard'; }, 1500);
         } catch (error) {
-            this.message = "Lỗi khi cập nhật thông tin.";
-            this.messageType = "danger";
+            // GỌI TOAST LỖI
+            this.triggerToast("Lỗi khi cập nhật thông tin.", "error");
         } finally {
             this.loading = false;
         }
@@ -519,7 +534,6 @@ export default {
 
     async handleChangePassword(data) {
         this.loading = true;
-        this.message = "";
         try {
             const loginData = { username: this.docgia.username, password: data.currentPassword };
             await AuthService.login(loginData);
@@ -527,24 +541,25 @@ export default {
             const updateData = { password: data.password };
             await DocGiaService.update(this.docgia._id, updateData);
 
-            this.message = "Đổi mật khẩu thành công!";
-            this.messageType = "success";
+            // GỌI TOAST THAY VÌ ALERT INLINE
+            this.triggerToast("Đổi mật khẩu thành công!", "success");
 
             this.showCurrentPassword = false;
             this.showNewPassword = false;
             this.showConfirmPassword = false;
 
-            setTimeout(() => { this.activeTab = 'dashboard'; this.message = ""; }, 1500);
+            setTimeout(() => { this.activeTab = 'dashboard'; }, 1500);
         } catch (error) {
-            this.message = "Mật khẩu hiện tại không đúng.";
-            this.messageType = "danger";
+            // GỌI TOAST LỖI
+            this.triggerToast("Mật khẩu hiện tại không đúng.", "error");
         } finally {
             this.loading = false;
         }
     },
 
     showDevelopmentMessage() {
-        alert("Tính năng này đang trong giai đoạn phát triển");
+        // GỌI TOAST INFO THAY VÌ BROWSER ALERT
+        this.triggerToast("Tính năng này đang trong giai đoạn phát triển", "info");
     }
   },
   mounted() {
@@ -560,6 +575,35 @@ export default {
 .page-title { font-weight: 800; color: #1a1a1a; }
 .card { border-radius: 16px; background: #ffffff; }
 .shadow-sm { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important; }
+
+/* --- TOAST STYLES (MỚI) --- */
+.custom-toast {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  color: white;
+  padding: 16px 24px;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  min-width: 320px;
+  animation: slideInRight 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  overflow: hidden;
+}
+
+.toast-success { background-color: #10b981; }
+.toast-error { background-color: #ef4444; }
+.toast-info { background-color: #3b82f6; }
+
+.toast-content { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.toast-icon { font-size: 1.5rem; }
+.custom-toast span { font-weight: 600; font-size: 1rem; }
+.toast-progress { height: 4px; background-color: rgba(255, 255, 255, 0.4); width: 100%; border-radius: 2px; animation: progressRun 3s linear forwards; align-self: flex-start; margin-left: -24px; margin-right: -24px; margin-bottom: -16px; width: calc(100% + 48px); }
+
+@keyframes slideInRight { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
+@keyframes progressRun { from { width: 100%; } to { width: 0%; } }
 
 /* SIDEBAR */
 .avatar-circle { width: 80px; height: 80px; background-color: #e0e7ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; }

@@ -1,5 +1,30 @@
 <template>
   <div class="book-detail-page">
+    <div v-if="showSuccessToast" class="success-toast">
+      <div class="toast-content">
+        <i class="fas fa-check-circle toast-icon"></i>
+        <span>{{ successMessage }}</span>
+      </div>
+      <div class="toast-progress"></div>
+    </div>
+
+    <div v-if="showConfirmModal" class="modal-overlay confirm-overlay">
+      <div class="confirm-box">
+        <div class="confirm-icon">
+          <i class="fas fa-question"></i>
+        </div>
+        <h4 class="confirm-title">Xác nhận mượn sách</h4>
+        <p class="confirm-desc">
+          Bạn có chắc chắn muốn mượn <strong>{{ borrowQuantity }}</strong> quyển 
+          <br>"<strong>{{ book?.TENSACH }}</strong>" không?
+        </p>
+        <div class="confirm-actions">
+          <button class="btn btn-secondary" @click="cancelConfirm">Xem lại</button>
+          <button class="btn btn-primary" @click="executeBorrow">Đồng ý mượn</button>
+        </div>
+      </div>
+    </div>
+
     <div class="container-fluid px-3">
       <div class="detail-container mt-1 py-3">
 
@@ -88,43 +113,35 @@
 
               <div class="info-section mt-4">
                 <h5 class="info-title">Thông tin chi tiết</h5>
-
                 <div class="info-grid">
                   <div class="info-item">
                     <span class="info-label">Thể loại</span>
                     <span class="info-value">{{ book.THELOAI || 'N/A' }}</span>
                   </div>
-
                   <div class="info-item">
                     <span class="info-label">Nhà xuất bản</span>
                     <span class="info-value">{{ publisherName }}</span>
                   </div>
-
                   <div class="info-item">
                     <span class="info-label">Năm xuất bản</span>
                     <span class="info-value">{{ book.NAMXUATBAN || 'N/A' }}</span>
                   </div>
-
                   <div class="info-item">
                     <span class="info-label">Số trang</span>
                     <span class="info-value">{{ book.SOTRANG || 'N/A' }}</span>
                   </div>
-
                   <div class="info-item">
                     <span class="info-label">Ngôn ngữ</span>
                     <span class="info-value">{{ book.NGONNGU || 'Tiếng Việt' }}</span>
                   </div>
                 </div>
-
               </div>
             </div>
           </div>
         </div>
-
         <div v-else class="text-center py-5">
           <p class="text-muted">Không tìm thấy sách</p>
         </div>
-
       </div>
     </div>
 
@@ -194,10 +211,10 @@
           <button 
             type="button" 
             class="btn btn-primary"
-            @click="confirmBorrow"
+            @click="preCheckBorrow"
             :disabled="!borrowQuantity || borrowQuantity < 1"
           >
-            Xác nhận mượn {{ borrowQuantity }} quyển
+            Tiếp tục
           </button>
         </div>
       </div>
@@ -206,7 +223,6 @@
 </template>
 
 <script>
-// SCRIPT GIỮ NGUYÊN KHÔNG THAY ĐỔI
 import SachService from "@/services/sach.service";
 import NhaXuatBanService from "@/services/nhaxuatban.service";
 import AuthService from "@/services/auth.service";
@@ -222,15 +238,28 @@ export default {
       placeholderImage: "https://via.placeholder.com/400x600?text=No+Cover",
       isLoggedIn: false,
       publishers: [],
+      
+      // Modal chọn số lượng
       showBorrowModal: false,
       borrowQuantity: 1,
+      
+      // Các biến đếm
       userBorrowCount: 0,
       pendingBorrowCount: 0,
       bookBorrowCount: 0,
+      
+      // Thông báo lỗi/cảnh báo
       borrowError: "",
       borrowWarning: "",
+      
+      // Yêu thích
       isFavorite: false,
       favoriteLoading: false,
+      
+      // HIỆU ỨNG MỚI
+      showSuccessToast: false, // Toast thông báo
+      successMessage: "",
+      showConfirmModal: false, // Box xác nhận (thay cho alert)
     };
   },
   computed: {
@@ -351,10 +380,12 @@ export default {
       this.borrowWarning = "";
     },
 
-    async confirmBorrow() {
+    // --- BƯỚC 1: KIỂM TRA SỐ LIỆU VÀ HIỆN CONFIRM BOX ---
+    preCheckBorrow() {
       this.borrowError = "";
       this.borrowWarning = "";
       const user = AuthService.getCurrentUser();
+      
       if (!user) {
         alert("Vui lòng đăng nhập để mượn sách");
         this.$router.push("/login");
@@ -369,9 +400,21 @@ export default {
         return;
       }
 
-      const confirmBorrow = confirm(`Bạn có chắc muốn mượn ${this.borrowQuantity} quyển sách "${this.book.TENSACH}" không?`);
-      if (!confirmBorrow) return;
+      // Ẩn modal nhập liệu, hiện modal xác nhận
+      this.showBorrowModal = false;
+      this.showConfirmModal = true; 
+    },
 
+    // --- XỬ LÝ KHI BẤM "HỦY" Ở CONFIRM BOX ---
+    cancelConfirm() {
+      this.showConfirmModal = false;
+      this.showBorrowModal = true; // Quay lại modal nhập số lượng
+    },
+
+    // --- BƯỚC 2: THỰC HIỆN GỌI API (KHI BẤM "ĐỒNG Ý" Ở CONFIRM BOX) ---
+    async executeBorrow() {
+      const user = AuthService.getCurrentUser();
+      
       try {
         const today = new Date();
         const returnDate = new Date(today);
@@ -388,8 +431,19 @@ export default {
 
         const response = await MuonSachService.create(borrowData);
         if (response.status === 200 || response.status === 201) {
-          alert(`Yêu cầu mượn ${this.borrowQuantity} quyển sách đã được gửi thành công! Vui lòng chờ nhân viên duyệt.`);
-          this.showBorrowModal = false;
+          
+          // Tắt Confirm box
+          this.showConfirmModal = false;
+
+          // Hiện Toast xanh lá
+          this.successMessage = `Thành công! Đã gửi yêu cầu mượn ${this.borrowQuantity} quyển.`;
+          this.showSuccessToast = true;
+          
+          setTimeout(() => {
+            this.showSuccessToast = false;
+          }, 3000);
+
+          // Reset data
           this.borrowQuantity = 1;
           await this.fetchBook();
           await this.fetchUserBorrowCount();
@@ -397,11 +451,15 @@ export default {
           throw new Error("Không thể gửi yêu cầu mượn sách");
         }
       } catch (error) {
+        this.showConfirmModal = false; // Tắt modal nếu lỗi
+        this.showBorrowModal = true; // Mở lại modal nhập để báo lỗi
+        
         console.error("Error borrowing book:", error);
         const errorMessage = error.response?.data?.message || error.message || "Có lỗi xảy ra khi mượn sách";
         this.borrowError = `Lỗi: ${errorMessage}`;
       }
     },
+    // -----------------------------------------------------------
 
     onImgError(e) {
       e.target.src = this.placeholderImage;
@@ -476,14 +534,131 @@ html {
   scroll-behavior: smooth;
 }
 
+/* --- TOAST NOTIFICATION MỚI (NỀN XANH FULL) --- */
+.success-toast {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  /* Chuyển background sang màu xanh lá đậm */
+  background-color: #10b981; 
+  color: white; /* Chữ trắng */
+  padding: 16px 24px;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  min-width: 320px;
+  animation: slideInRight 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  overflow: hidden;
+}
 
-/* Main container */
+.toast-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.toast-icon {
+  color: white; /* Icon trắng cho nổi trên nền xanh */
+  font-size: 1.5rem;
+}
+
+.success-toast span {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.toast-progress {
+  height: 4px;
+  background-color: rgba(255, 255, 255, 0.4); /* Thanh progress màu trắng mờ */
+  width: 100%;
+  border-radius: 2px;
+  animation: progressRun 3s linear forwards;
+  align-self: flex-start;
+  margin-left: -24px;
+  margin-right: -24px;
+  margin-bottom: -16px; 
+  width: calc(100% + 48px);
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(100%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes progressRun {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
+/* --- CONFIRMATION BOX STYLES (MỚI) --- */
+.confirm-overlay {
+  z-index: 1100; /* Cao hơn modal thường một chút */
+}
+
+.confirm-box {
+  background: white;
+  padding: 30px;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.confirm-icon {
+  width: 60px;
+  height: 60px;
+  background-color: #eff6ff;
+  color: #2563eb;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  margin: 0 auto 20px;
+}
+
+.confirm-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 12px;
+}
+
+.confirm-desc {
+  font-size: 1rem;
+  color: #4b5563;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.confirm-actions .btn {
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+/* --- CÁC STYLE CŨ --- */
 .detail-container {
   max-width: 1200px;
   margin: 0 auto;
 }
 
-/* LEFT COLUMN */
 .book-cover-col {
   display: flex;
   justify-content: center;
@@ -507,7 +682,6 @@ html {
   object-fit: cover;
 }
 
-/* RIGHT COLUMN */
 .book-details-col {
   padding-left: 2rem;
 }
@@ -523,7 +697,6 @@ html {
   font-size: 2.2rem;
   font-weight: 800;
   color: #1f2937;
-  /* CHỈNH SỬA: Sửa line-height từ 0.2 thành 1.2 để chữ không bị đè lên nhau */
   line-height: 1.2;
   margin-bottom: 1rem;
 }
@@ -533,7 +706,6 @@ html {
   color: #4b5563;
 }
 
-/* Buttons */
 .button-group {
   flex-wrap: wrap;
 }
@@ -579,7 +751,6 @@ html {
   color: white;
 }
 
-/* Description Section */
 .section-title {
   font-weight: 700;
   font-size: 1.2rem;
@@ -596,7 +767,6 @@ html {
   font-size: 1rem;
 }
 
-/* Info Grid Layout */
 .info-title {
   font-size: 1.2rem;
   font-weight: 700;
@@ -634,9 +804,7 @@ html {
   color: #1f2937;
 }
 
-/* Responsive Styles */
 @media (max-width: 991px) {
-  /* Tablet & Mobile: Ảnh bìa ở trên */
   .book-cover-col {
     position: static;
     margin-bottom: 20px;
@@ -661,7 +829,6 @@ html {
   }
 }
 
-/* ================== MODAL STYLES ================== */
 .modal-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;

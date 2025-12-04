@@ -1,11 +1,34 @@
 <template>
   <div class="borrow-page bg-light min-vh-100">
+    
+    <div v-if="showSuccessToast" class="success-toast">
+      <div class="toast-content">
+        <i class="fas fa-check-circle toast-icon"></i>
+        <span>{{ successMessage }}</span>
+      </div>
+      <div class="toast-progress"></div>
+    </div>
+
+    <div v-if="showConfirmModal" class="modal-overlay confirm-overlay">
+      <div class="confirm-box">
+        <div class="confirm-icon">
+          <i class="fas fa-question"></i>
+        </div>
+        <h4 class="confirm-title">{{ confirmState.title }}</h4>
+        <p class="confirm-desc" v-html="confirmState.message"></p>
+        <div class="confirm-actions">
+          <button class="btn btn-secondary" @click="closeConfirmModal">Hủy bỏ</button>
+          <button class="btn btn-primary" @click="executeConfirmAction">Xác nhận</button>
+        </div>
+      </div>
+    </div>
+
     <div class="container py-4">
       
       <div class="row align-items-center mb-4">
         <div class="col-md-5">
           <h4 class="fw-bold text-dark m-0">
-            <i class="fas fa-clipboard-list text-primary me-2"></i>Lịch sử mượn sách
+            <i class="fas fa-clipboard-list text-primary me-2"></i>Trạng thái mượn sách
           </h4>
           <p class="text-muted small m-0 mt-1">Theo dõi trạng thái các yêu cầu mượn của bạn.</p>
         </div>
@@ -71,10 +94,10 @@
                 <button class="btn btn-light btn-sm fw-bold text-primary action-btn" @click="showDetail(r)">
                   <i class="fas fa-info-circle"></i> Chi tiết
                 </button>
-                <button v-if="canCancel(r)" class="btn btn-danger btn-sm fw-bold action-btn" @click="cancelRequest(r)">
+                <button v-if="canCancel(r)" class="btn btn-danger btn-sm fw-bold action-btn" @click="triggerCancel(r)">
                   <i class="fas fa-times"></i> Hủy
                 </button>
-                <button v-if="canReturn(r)" class="btn btn-success btn-sm fw-bold action-btn" @click="returnRequest(r)">
+                <button v-if="canReturn(r)" class="btn btn-success btn-sm fw-bold action-btn" @click="triggerReturn(r)">
                   <i class="fas fa-undo"></i> Trả sách
                 </button>
               </div>
@@ -170,7 +193,7 @@
                               <span class="text-info small fw-bold"><i class="fas fa-money-bill-wave me-1"></i> Nộp phạt</span>
                               <div class="text-muted small mt-1">Vui lòng nộp phạt để hoàn tất thủ tục trả sách</div>
                             </div>
-                            <button class="btn btn-info btn-sm rounded-pill px-3 fw-bold" @click="payFine(selectedRequest)">
+                            <button class="btn btn-info btn-sm rounded-pill px-3 fw-bold" @click="triggerPayFine(selectedRequest)">
                               <i class="fas fa-check-circle me-1"></i> Xác nhận nộp phạt
                             </button>
                           </div>
@@ -193,8 +216,8 @@
             </div>
 
             <div class="modal-footer px-4 py-3 border-top d-flex justify-content-end gap-2" style="background-color: #f8f9fa;">
-              <button v-if="canCancel(selectedRequest)" class="btn btn-danger btn-sm px-4 fw-bold" @click="cancelRequest(selectedRequest)">Hủy yêu cầu</button>
-              <button v-if="canReturn(selectedRequest)" class="btn btn-success btn-sm px-4 fw-bold" @click="returnRequest(selectedRequest)">Trả sách</button>
+              <button v-if="canCancel(selectedRequest)" class="btn btn-danger btn-sm px-4 fw-bold" @click="triggerCancel(selectedRequest)">Hủy yêu cầu</button>
+              <button v-if="canReturn(selectedRequest)" class="btn btn-success btn-sm px-4 fw-bold" @click="triggerReturn(selectedRequest)">Trả sách</button>
               <button class="btn btn-white border btn-sm px-4 fw-bold text-secondary" @click="closeDetail">Đóng</button>
             </div>
 
@@ -207,7 +230,6 @@
 </template>
 
 <script>
-// (Giữ nguyên phần script như cũ vì không thay đổi logic)
 import MuonSachService from '@/services/muonsach.service';
 import SachService from '@/services/sach.service';
 import AuthService from '@/services/auth.service';
@@ -236,7 +258,18 @@ export default {
       detailVisible: false,
       selectedRequest: null,
       userInfo: {},
-      userAvatar: null
+      userAvatar: null,
+
+      // --- NEW: TOAST & CONFIRM STATES ---
+      showSuccessToast: false,
+      successMessage: "",
+      
+      showConfirmModal: false,
+      confirmState: {
+        title: "",
+        message: "",
+        action: null // Hàm sẽ chạy khi bấm "Xác nhận"
+      }
     }
   },
   computed: {
@@ -253,6 +286,38 @@ export default {
     }
   },
   methods: {
+    // --- HELPER: SHOW TOAST ---
+    triggerToast(message) {
+      this.successMessage = message;
+      this.showSuccessToast = true;
+      setTimeout(() => {
+        this.showSuccessToast = false;
+      }, 3000);
+    },
+
+    // --- HELPER: SHOW CONFIRM MODAL ---
+    openConfirm(title, message, actionFn) {
+      this.confirmState = {
+        title: title,
+        message: message,
+        action: actionFn
+      };
+      this.showConfirmModal = true;
+    },
+
+    closeConfirmModal() {
+      this.showConfirmModal = false;
+      this.confirmState.action = null;
+    },
+
+    executeConfirmAction() {
+      if (this.confirmState.action) {
+        this.confirmState.action();
+      }
+      this.closeConfirmModal();
+    },
+
+    // --- LOGIC GỐC (ĐÃ CHỈNH SỬA ĐỂ DÙNG HELPER) ---
     async fetch() {
       this.loading = true;
       try {
@@ -263,12 +328,8 @@ export default {
         this.userInfo = userResp.data;
         this.userAvatar = this.userInfo.AVATAR;
 
-        const [resp, nhaXuatBanRes] = await Promise.all([
-          MuonSachService.getForDocGia(user._id),
-          NhaXuatBanService.getAll()
-        ]);
+        const resp = await MuonSachService.getForDocGia(user._id);
         const records = resp.data || [];
-        const nhaXuatBanMap = new Map(nhaXuatBanRes.data.map(item => [item._id, item]));
 
         const today = new Date();
         const populated = await Promise.all(records.map(async (rec) => {
@@ -276,11 +337,9 @@ export default {
           try {
             const r = await SachService.get(rec.sachId);
             const sach = r.data;
-            out.TENSACH = sach.TENSACH || 'Không xác định';
-            out.TACGIA = sach.TACGIA || '';
-
-            const nhaXuatBanInfo = sach.nhaXuatBanId ? nhaXuatBanMap.get(sach.nhaXuatBanId) : null;
-            out.tenNhaXuatBan = nhaXuatBanInfo?.TenNXB || 'N/A';
+            out.TENSACH = rec.TENSACH || sach.TENSACH || 'Không xác định';
+            out.TACGIA = rec.TACGIA || sach.TACGIA || '';
+            out.tenNhaXuatBan = rec.nxbName || 'N/A';
 
             const imgField = sach.HinhAnh;
             if (imgField) {
@@ -289,7 +348,7 @@ export default {
               out.sachCover = null;
             }
           } catch (e) {
-            out.TENSACH = 'Không xác định';
+            out.TENSACH = out.TENSACH || 'Không xác định';
           }
 
           const due = out.ngayTra || out.NGAYTRADK;
@@ -304,11 +363,10 @@ export default {
             }
           }
 
-          // Tính tiền phạt cho sách trễ hạn
           let tienPhat = 0;
           if (out.displayTrangThai === 'trễ hạn') {
             const soLuong = out.soLuong || 1;
-            tienPhat = soLuong * 50000; // 50,000đ mỗi cuốn
+            tienPhat = soLuong * 50000;
           }
 
           return {
@@ -360,35 +418,62 @@ export default {
       this.detailVisible = false;
       this.selectedRequest = null;
     },
-    async cancelRequest(r) {
-      if (confirm('Hủy yêu cầu này?')) {
-        try { await MuonSachService.delete(r._id); await this.fetch(); this.closeDetail(); }
-        catch (e) { alert('Lỗi hủy.'); }
+
+    // --- ACTIONS MỚI (Dùng openConfirm thay vì confirm()) ---
+
+    triggerCancel(r) {
+      this.openConfirm(
+        'Xác nhận hủy', 
+        `Bạn có chắc chắn muốn hủy yêu cầu mượn sách <strong>${r.TENSACH}</strong> không?`, 
+        () => this.cancelRequestLogic(r)
+      );
+    },
+
+    async cancelRequestLogic(r) {
+      try { 
+        await MuonSachService.delete(r._id); 
+        this.triggerToast("Đã hủy yêu cầu thành công!");
+        await this.fetch(); 
+        this.closeDetail(); 
+      }
+      catch (e) { alert('Lỗi hủy.'); } // Giữ alert cho lỗi để debug nhanh
+    },
+
+    triggerReturn(r) {
+      this.openConfirm(
+        'Xác nhận trả sách',
+        `Bạn có chắc chắn muốn gửi yêu cầu trả sách <strong>${r.TENSACH}</strong>?`,
+        () => this.returnRequestLogic(r)
+      );
+    },
+
+    async returnRequestLogic(r) {
+      try {
+        await MuonSachService.requestReturn(r._id);
+        this.triggerToast('Yêu cầu trả sách đã gửi thành công!');
+        await this.fetch();
+        this.closeDetail();
+      } catch (e) {
+        alert('Lỗi gửi yêu cầu trả sách: ' + (e.response?.data?.message || e.message));
       }
     },
-    async returnRequest(r) {
-      if (confirm('Bạn có chắc chắn muốn yêu cầu trả sách này?')) {
-        try {
-          await MuonSachService.requestReturn(r._id);
-          alert('Yêu cầu trả sách đã được gửi thành công! Vui lòng chờ nhân viên duyệt.');
-          await this.fetch();
-          this.closeDetail();
-        } catch (e) {
-          alert('Lỗi gửi yêu cầu trả sách: ' + (e.response?.data?.message || e.message));
-        }
-      }
+
+    triggerPayFine(r) {
+      this.openConfirm(
+        'Xác nhận nộp phạt',
+        `Bạn xác nhận đã nộp phạt số tiền <strong>${this.formatCurrency(r.tienPhat)}</strong>?`,
+        () => this.payFineLogic(r)
+      );
     },
-    async payFine(r) {
-      if (confirm('Bạn có chắc chắn đã nộp phạt?')) {
-        try {
-          // Sử dụng endpoint riêng cho xác nhận nộp phạt
-          await MuonSachService.confirmFinePayment(r._id);
-          alert('Đã xác nhận nộp phạt thành công! Vui lòng chờ nhân viên xác nhận.');
-          await this.fetch();
-          this.closeDetail();
-        } catch (e) {
-          alert('Lỗi xác nhận nộp phạt: ' + (e.response?.data?.message || e.message));
-        }
+
+    async payFineLogic(r) {
+      try {
+        await MuonSachService.confirmFinePayment(r._id);
+        this.triggerToast('Đã xác nhận nộp phạt thành công!');
+        await this.fetch();
+        this.closeDetail();
+      } catch (e) {
+        alert('Lỗi xác nhận nộp phạt: ' + (e.response?.data?.message || e.message));
       }
     }
   },
@@ -435,17 +520,52 @@ export default {
   .d-flex.align-items-start { flex-wrap: wrap; }
 }
 
-/* --- MODAL STYLES (UPDATED) --- */
+/* --- MODAL STYLES --- */
 .modal-overlay {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1050; backdrop-filter: blur(2px);
 }
 .modal-dialog-centered {
   display: flex; align-items: center; justify-content: center; min-height: calc(100% - 1rem); width: 100%;
 }
-/* CSS cho nút đóng màu trắng */
 .btn-close-white { filter: invert(1) grayscale(100%) brightness(200%); }
 .btn-close-white:hover { opacity: 1; }
 
 .section-title { font-size: 0.85rem; letter-spacing: 0.05em; }
-.text-primary { color: #4f46e5 !important; } /* Ghi đè màu primary thành tím */
+.text-primary { color: #4f46e5 !important; }
+
+/* --- TOAST NOTIFICATION (NỀN XANH FULL) --- */
+.success-toast {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  background-color: #10b981; 
+  color: white; 
+  padding: 16px 24px;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  min-width: 320px;
+  animation: slideInRight 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  overflow: hidden;
+}
+
+.toast-content { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.toast-icon { color: white; font-size: 1.5rem; }
+.success-toast span { font-weight: 600; font-size: 1rem; }
+.toast-progress { height: 4px; background-color: rgba(255, 255, 255, 0.4); width: 100%; border-radius: 2px; animation: progressRun 3s linear forwards; align-self: flex-start; margin-left: -24px; margin-right: -24px; margin-bottom: -16px; width: calc(100% + 48px); }
+
+@keyframes slideInRight { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
+@keyframes progressRun { from { width: 100%; } to { width: 0%; } }
+
+/* --- CONFIRMATION BOX STYLES --- */
+.confirm-overlay { z-index: 1100; }
+.confirm-box { background: white; padding: 30px; border-radius: 16px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.2); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+@keyframes popIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+.confirm-icon { width: 60px; height: 60px; background-color: #eff6ff; color: #2563eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 20px; }
+.confirm-title { font-size: 1.4rem; font-weight: 700; color: #1f2937; margin-bottom: 12px; }
+.confirm-desc { font-size: 1rem; color: #4b5563; margin-bottom: 24px; line-height: 1.5; }
+.confirm-actions { display: flex; gap: 12px; justify-content: center; }
+.confirm-actions .btn { padding: 10px 24px; border-radius: 8px; font-weight: 600; }
 </style>

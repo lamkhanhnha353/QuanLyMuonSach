@@ -158,6 +158,7 @@ async create(payload) {
                         out.NAMXB = sach.NAMXUATBAN || sach.NAMXB || out.NAMXB;
                         
                         // Populate NXB name - find by MANXB (code) or _id
+                        out.nxbName = 'N/A'; // Default value
                         if (sach.MANXB) {
                             // Try to find by MANXB first (string field)
                             let nxb = await this.client.db().collection("NHAXUATBAN").findOne({ MANXB: sach.MANXB });
@@ -170,7 +171,7 @@ async create(payload) {
                             if (nxb) {
                                 out.nxbName = nxb.TENNXB;
                             } else {
-                                out.nxbName = sach.MANXB || 'N/A';
+                                out.nxbName = sach.MANXB;
                             }
                         }
                     }
