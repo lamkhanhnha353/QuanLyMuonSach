@@ -1,6 +1,10 @@
 <template>
-  <div v-if="successMessage" class="toast-animated">
-    {{ successMessage }}
+  <div v-if="successMessage" class="toast-animated toast-success">
+    <i class="fas fa-check-circle me-2"></i>{{ successMessage }}
+  </div>
+
+  <div v-if="errorMessage" class="toast-animated toast-error">
+    <i class="fas fa-exclamation-triangle me-2"></i>{{ errorMessage }}
   </div>
 
   <div class="register-container d-flex align-items-center justify-content-center">
@@ -153,17 +157,11 @@
 
           </Form>
 
-          <div class="text-center mt-3"> 
+          <div class="text-center mt-3">
             <small class="text-secondary-light">
               Đã có tài khoản?
               <router-link to="/login" class="text-link">Đăng nhập ngay</router-link>
             </small>
-          </div>
-
-          <div class="form-group mt-3" v-if="errorMessage">
-            <div class="alert alert-danger">
-              {{ errorMessage }}
-            </div>
           </div>
 
         </div>
@@ -254,13 +252,21 @@ export default {
   position: fixed;
   top: 80px;
   right: 20px;
-  background-color: #28a745;
-  color: white;
   padding: 16px 24px;
   border-radius: 8px;
   z-index: 1000;
   font-weight: bold;
   animation: slideInFromRight 0.5s ease-out, fadeOut 0.5s ease-in 3s forwards;
+}
+
+.toast-success {
+  background-color: #28a745;
+  color: white;
+}
+
+.toast-error {
+  background-color: #dc3545;
+  color: white;
 }
 
 /* ==== Layout ==== */

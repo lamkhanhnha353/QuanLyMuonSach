@@ -1,6 +1,10 @@
 <template>
-  <div v-if="successMessage" class="toast-animated">
-    {{ successMessage }}
+  <div v-if="successMessage" class="toast-animated toast-success">
+    <i class="fas fa-check-circle me-2"></i>{{ successMessage }}
+  </div>
+
+  <div v-if="errorMessage" class="toast-animated toast-error">
+    <i class="fas fa-exclamation-triangle me-2"></i>{{ errorMessage }}
   </div>
 
   <div class="login-container d-flex align-items-center justify-content-center">
@@ -41,9 +45,9 @@
             <div class="form-group mb-3">
               <div class="d-flex justify-content-between align-items-center mb-1">
                 <label class="form-label mb-0">Mật khẩu</label>
-                <router-link to="/forgot-password" class="text-link-small">
+                <a href="#" @click.prevent="showForgotPasswordAlert" class="text-link-small">
                   Quên mật khẩu?
-                </router-link>
+                </a>
               </div>
 
               <div class="input-group-custom password-input">
@@ -86,12 +90,6 @@
               Chưa có tài khoản?
               <router-link to="/docgia/register" class="text-link">Đăng ký ngay</router-link>
             </small>
-          </div>
-
-          <div class="form-group mt-3" v-if="errorMessage">
-            <div class="alert alert-danger">
-              {{ errorMessage }}
-            </div>
           </div>
 
         </div>
@@ -185,6 +183,10 @@ export default {
           error.message || "Đăng nhập thất bại. Vui lòng thử lại.";
       }
     },
+
+    showForgotPasswordAlert() {
+      alert("Tính năng đang trong giai đoạn phát triển");
+    },
   },
 };
 </script>
@@ -205,13 +207,21 @@ export default {
   position: fixed;
   top: 80px;
   right: 20px;
-  background-color: #28a745;
-  color: white;
   padding: 16px 24px;
   border-radius: 8px;
   z-index: 1000;
   font-weight: bold;
   animation: slideInFromRight 0.5s ease-out, fadeOut 0.5s ease-in 3s forwards;
+}
+
+.toast-success {
+  background-color: #28a745;
+  color: white;
+}
+
+.toast-error {
+  background-color: #dc3545;
+  color: white;
 }
 
 /* ==== 🎨 START: CẬP NHẬT GIAO DIỆN NỔI BẬT HƠN ==== */
