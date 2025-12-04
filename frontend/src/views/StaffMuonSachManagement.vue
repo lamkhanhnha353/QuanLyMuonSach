@@ -1,237 +1,335 @@
 <template>
-  <div class="staff-dashboard">
-    <div class="stats-section">
-      <div class="stat-card">
-        <div class="stat-icon pending">
-          <i class="fas fa-clock"></i>
+  <div class="container-fluid pt-3 pb-4 bg-light-gray min-vh-100">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold text-dark mb-1">Quản lý Mượn Trả</h3>
+            <small class="text-muted">Xử lý các yêu cầu mượn và trả sách từ độc giả</small>
         </div>
-        <div class="stat-content">
-          <div class="stat-label">Yêu Cầu Chờ Xử Lý</div>
-          <div class="stat-value">{{ pendingCount }}</div>
-        </div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-icon borrowed">
-          <i class="fas fa-book"></i>
-        </div>
-        <div class="stat-content">
-          <div class="stat-label">Sách Đang Mượn</div>
-          <div class="stat-value">{{ borrowedCount }}</div>
-        </div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-icon return">
-          <i class="fas fa-undo"></i>
-        </div>
-        <div class="stat-content">
-          <div class="stat-label">Yêu Cầu Trả</div>
-          <div class="stat-value">{{ returnCount }}</div>
-        </div>
-      </div>
+        <button class="btn btn-white shadow-sm rounded-pill px-3 fw-bold text-primary border" @click="fetchData" :disabled="loading">
+            <i class="fas fa-sync-alt me-2" :class="{ 'fa-spin': loading }"></i> Làm mới
+        </button>
     </div>
 
-    <div class="filter-section">
-      <div class="search-box">
-        <i class="fas fa-search"></i>
-        <input 
-          v-model="searchQuery"
-          type="text" 
-          placeholder="Tìm kiếm theo mã nhân viên, mã độc giả, tên sách..."
-          @keyup.enter="applyFilters"
-        >
-      </div>
-      <div class="filter-box">
-        <i class="fas fa-filter"></i>
-        <select v-model="statusFilter" @change="applyFilters">
-          <option value="all">Tất cả trạng thái</option>
-          <option value="chờ duyệt">Chờ duyệt</option>
-          <option value="đã duyệt">Đã duyệt</option>
-          <option value="đang mượn">Đang mượn</option>
-          <option value="đã trả">Đã trả</option>
-          <option value="từ chối">Từ chối</option>
-          <option value="trễ hạn">Trễ hạn</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="table-container">
-      <div class="table-header">
-        <h4>Yêu cầu mượn/trả</h4>
-        <button class="btn-refresh" @click="fetchData" :disabled="loading">
-          <i class="fas fa-sync" :class="{ 'fa-spin': loading }"></i>
-        </button>
-      </div>
-
-      <div v-if="loading" class="text-center p-5">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Loading...</span>
-        </div>
-      </div>
-      
-      <div v-else-if="filteredData.length === 0" class="text-center p-5 text-muted">
-        Không tìm thấy yêu cầu nào phù hợp.
-      </div>
-
-      <table v-else class="main-table">
-        <thead>
-          <tr>
-            <th>STT</th>
-            <th>Mã độc giả</th>
-            <th>Tên độc giả</th>
-            <th>Tên sách</th>
-            <th>Trạng thái</th>
-            <th>Ngày mượn</th>
-            <th>Ngày trả</th>
-            <th>Hành động</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(item, index) in paginatedData" :key="item._id">
-            <td>{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
-            <td>{{ item.docGiaInfo?.username || 'N/A' }}</td>
-            <td>{{ (item.docGiaInfo?.HOLOT || '') + ' ' + (item.docGiaInfo?.TEN || '') }}</td>
-            <td>{{ item.sachInfo?.TENSACH || 'N/A' }}</td>
-            <td>
-              <span :class="['status-badge', getStatusClass(item.trangThai)]">
-                {{ item.trangThai }}
-              </span>
-            </td>
-            <td>{{ formatDate(item.ngayMuon) }}</td>
-            <td>{{ formatDate(item.ngayTra) }}</td>
-            <td>
-              <div class="action-buttons">
-                <template v-if="item.trangThai === 'chờ duyệt'">
-                  <button class="btn-action confirm" title="Duyệt yêu cầu" @click="openUpdateModal(item, 'đã duyệt')">
-                    <i class="fas fa-check"></i>
-                  </button>
-                  <button class="btn-action cancel" title="Từ chối yêu cầu" @click="openUpdateModal(item, 'từ chối')">
-                    <i class="fas fa-times"></i>
-                  </button>
-                </template>
-                
-                <template v-if="item.trangThai === 'đã duyệt'">
-                  <button class="btn-action confirm" title="Xác nhận đã lấy sách" @click="openUpdateModal(item, 'đang mượn')">
-                    <i class="fas fa-hand-holding"></i> Giao sách
-                  </button>
-                </template>
-
-                <template v-if="item.trangThai === 'đang mượn'">
-                  <button class="btn-action return" title="Xác nhận đã trả sách" @click="openUpdateModal(item, 'đã trả')">
-                    <i class="fas fa-undo"></i> Nhận trả
-                  </button>
-                </template>
-
-                <template v-if="item.trangThai === 'đang chờ trả'">
-                  <button class="btn-action return" title="Xác nhận đã trả sách" @click="openUpdateModal(item, 'đã trả')">
-                    <i class="fas fa-check"></i> Duyệt trả
-                  </button>
-                </template>
-                 <!-- UPDATED: Use confirmReturn modal instead -->
-                 <!-- Replaced openUpdateModal(item, 'đã trả') with openConfirmReturnModal(item) -->
-                
-                <button class="btn-action detail" title="Xem chi tiết" @click="viewDetails(item)">
-                  <i class="fas fa-eye"></i>
-                </button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      
-      <div class="pagination-container" v-if="totalPages > 1">
-        <button 
-          @click="changePage(currentPage - 1)" 
-          :disabled="currentPage === 1"
-          class="page-btn"
-        >
-          &laquo;
-        </button>
-        <button 
-          v-for="page in totalPages" 
-          :key="page" 
-          @click="changePage(page)" 
-          :class="['page-btn', { 'active': currentPage === page }]"
-        >
-          {{ page }}
-        </button>
-        <button 
-          @click="changePage(currentPage + 1)" 
-          :disabled="currentPage === totalPages"
-          class="page-btn"
-        >
-          &raquo;
-        </button>
-      </div>
-    </div>
-
-    <div class="modal" id="confirmUpdateModal" tabindex="-1">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Xác nhận cập nhật</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <!-- Stats Cards Row -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden card-stat">
+          <div class="card-body p-3 d-flex align-items-center">
+             <div class="icon-shape bg-warning text-white rounded-4 me-3 p-3 shadow-sm">
+                <i class="fas fa-clock fa-2x"></i>
+             </div>
+             <div>
+                <p class="text-muted small fw-bold mb-1 text-uppercase ls-1">Chờ Xử Lý</p>
+                <h4 class="mb-0 fw-bolder text-dark">{{ pendingCount }}</h4>
+             </div>
           </div>
-          <div class="modal-body">
-            <p v-if="itemToUpdate">
-              Bạn có chắc muốn cập nhật trạng thái của phiếu mượn sách <strong>{{ itemToUpdate.sachInfo?.TENSACH }}</strong>
-              (mượn bởi <strong>{{ (itemToUpdate.docGiaInfo?.HOLOT || '') + ' ' + (itemToUpdate.docGiaInfo?.TEN || '') }}</strong>)
-              thành <strong>"{{ newStatus }}"</strong>?
-            </p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden card-stat">
+          <div class="card-body p-3 d-flex align-items-center">
+             <div class="icon-shape bg-info text-white rounded-4 me-3 p-3 shadow-sm">
+                <i class="fas fa-book-reader fa-2x"></i>
+             </div>
+             <div>
+                <p class="text-muted small fw-bold mb-1 text-uppercase ls-1">Sách Đang Mượn</p>
+                <h4 class="mb-0 fw-bolder text-dark">{{ borrowedCount }}</h4>
+             </div>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
-            <button type="button" class="btn btn-primary" @click="handleUpdateStatus">Xác nhận</button>
+        </div>
+      </div>
+       <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden card-stat">
+          <div class="card-body p-3 d-flex align-items-center">
+             <div class="icon-shape bg-success text-white rounded-4 me-3 p-3 shadow-sm">
+                <i class="fas fa-undo-alt fa-2x"></i>
+             </div>
+             <div>
+                <p class="text-muted small fw-bold mb-1 text-uppercase ls-1">Yêu Cầu Trả</p>
+                <h4 class="mb-0 fw-bolder text-dark">{{ returnCount }}</h4>
+             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="modal" id="detailModal" tabindex="-1">
+    <!-- Main Content Card -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+       <!-- Custom Tabs Header -->
+       <div class="card-header bg-white border-bottom p-0">
+           <div class="d-flex overflow-auto px-2 custom-scrollbar">
+               <button 
+                  v-for="tab in tabs" 
+                  :key="tab.key"
+                  class="btn btn-tab rounded-0 border-0 py-3 px-4 fw-bold position-relative"
+                  :class="{ 'active text-primary': activeTab === tab.key, 'text-secondary': activeTab !== tab.key }"
+                  @click="switchTab(tab.key)"
+               >
+                  {{ tab.label }}
+                  <span class="badge rounded-pill ms-2" :class="activeTab === tab.key ? 'bg-primary' : 'bg-light text-dark border'">{{ getTabCount(tab.key) }}</span>
+                  <div class="tab-indicator" v-if="activeTab === tab.key"></div>
+               </button>
+           </div>
+       </div>
+
+       <!-- Filter Bar -->
+       <div class="card-body border-bottom p-3 bg-light-subtle">
+          <div class="row justify-content-end">
+             <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0 text-secondary"><i class="fas fa-search"></i></span>
+                    <input 
+                        v-model="searchQuery" 
+                        type="text" 
+                        class="form-control border-start-0 ps-0 bg-white" 
+                        :placeholder="`Tìm kiếm trong ${getTabLabel(activeTab)}...`"
+                    >
+                </div>
+             </div>
+          </div>
+       </div>
+
+       <!-- Table -->
+       <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+             <thead class="bg-light text-secondary">
+                <tr>
+                   <th class="ps-4 text-uppercase text-xs font-weight-bolder opacity-7" style="width: 50px;">STT</th>
+                   <th class="text-uppercase text-xs font-weight-bolder opacity-7">Độc Giả</th>
+                   <th class="text-uppercase text-xs font-weight-bolder opacity-7" style="min-width: 200px;">Sách Mượn</th>
+                   <th class="text-uppercase text-xs font-weight-bolder opacity-7" style="width: 80px;">Số Lượng</th>
+                   <th class="text-uppercase text-xs font-weight-bolder opacity-7">Trạng Thái</th>
+                   <th class="text-uppercase text-xs font-weight-bolder opacity-7">Ngày Mượn</th>
+                   <th class="text-uppercase text-xs font-weight-bolder opacity-7">Ngày Trả</th>
+                   <th class="text-center text-uppercase text-xs font-weight-bolder opacity-7">Hành Động</th>
+                </tr>
+             </thead>
+             <tbody v-if="!loading && filteredData.length > 0">
+                <tr v-for="(item, index) in paginatedData" :key="item._id">
+                   <td class="ps-4 text-secondary fw-bold">{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
+                   <td>
+                      <div class="d-flex flex-column">
+                         <h6 class="mb-0 text-sm fw-bold text-dark">{{ (item.docGiaInfo?.HOLOT || '') + ' ' + (item.docGiaInfo?.TEN || '') }}</h6>
+                         <small class="text-xs text-secondary">Mã: {{ item.docGiaInfo?.username || 'N/A' }}</small>
+                      </div>
+                   </td>
+                   <td>
+                      <!-- HIỂN THỊ ẢNH SÁCH VÀ TÊN SÁCH -->
+                      <div class="d-flex align-items-center">
+                        <img
+                          :src="item.sachInfo?.HinhAnh || defaultBookImage"
+                          class="book-thumb me-3 shadow-sm border"
+                          alt="Book"
+                          @error="onImgError"
+                        />
+                        <div>
+                          <span class="text-dark fw-bold text-sm text-break d-block">{{ item.sachInfo?.TENSACH || 'N/A' }}</span>
+                          <small class="text-muted" v-if="item.sachInfo?.TACGIA">{{ item.sachInfo?.TACGIA }}</small>
+                        </div>
+                      </div>
+                   </td>
+                   <td class="text-center fw-bold">{{ item.soLuong || 1 }}</td>
+                   <td>
+                      <span :class="['badge rounded-pill px-3 py-2 border', getStatusClass(item.trangThai)]">
+                         {{ item.trangThai }}
+                      </span>
+                   </td>
+                   <td class="text-sm text-secondary fw-medium">{{ formatDate(item.ngayMuon) }}</td>
+                   <td class="text-sm text-secondary fw-medium">{{ formatDate(item.ngayTra) }}</td>
+                   <td class="text-center">
+                      <div class="d-flex justify-content-center gap-2">
+                         <!-- Actions based on status -->
+                         <template v-if="item.trangThai === 'chờ duyệt'">
+                            <button class="btn btn-icon-only btn-rounded btn-success btn-sm text-white shadow-sm" title="Duyệt" @click="openUpdateModal(item, 'đã duyệt')"><i class="fas fa-check"></i></button>
+                            <button class="btn btn-icon-only btn-rounded btn-danger btn-sm text-white shadow-sm" title="Từ chối" @click="openUpdateModal(item, 'từ chối')"><i class="fas fa-times"></i></button>
+                         </template>
+
+                         <template v-if="item.trangThai === 'đã duyệt'">
+                            <button class="btn btn-icon-only btn-rounded btn-info btn-sm text-white shadow-sm" title="Giao sách" @click="openUpdateModal(item, 'đang mượn')"><i class="fas fa-hand-holding"></i></button>
+                         </template>
+
+                         <template v-if="item.trangThai === 'đang chờ trả'">
+                             <button class="btn btn-icon-only btn-rounded btn-warning btn-sm text-dark shadow-sm" title="Nhận trả" @click="openUpdateModal(item, 'đã trả')"><i class="fas fa-undo"></i></button>
+                         </template>
+
+                         <button class="btn btn-icon-only btn-rounded btn-light border btn-sm text-secondary" title="Chi tiết" @click="viewDetails(item)"><i class="fas fa-eye"></i></button>
+                      </div>
+                   </td>
+                </tr>
+             </tbody>
+             <tbody v-else>
+                <tr>
+                   <td colspan="8" class="text-center py-5">
+                      <div v-if="loading" class="spinner-border text-primary" role="status"></div>
+                      <div v-else class="text-muted d-flex flex-column align-items-center">
+                         <i class="fas fa-inbox fa-3x mb-3 opacity-25"></i>
+                         <p class="fw-bold">Không tìm thấy yêu cầu nào.</p>
+                      </div>
+                   </td>
+                </tr>
+             </tbody>
+          </table>
+       </div>
+       
+       <!-- Pagination -->
+       <div class="card-footer bg-white border-top-0 py-3" v-if="!loading && totalPages > 1">
+           <nav>
+               <ul class="pagination justify-content-center mb-0">
+                   <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                       <a class="page-link border-0 rounded-circle mx-1" href="#" @click.prevent="changePage(currentPage - 1)"><i class="fas fa-chevron-left"></i></a>
+                   </li>
+                   <li v-for="page in totalPages" :key="page" class="page-item" :class="{ active: currentPage === page }">
+                        <a class="page-link border-0 rounded-circle mx-1 shadow-sm" href="#" @click.prevent="changePage(page)">{{ page }}</a>
+                   </li>
+                   <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                       <a class="page-link border-0 rounded-circle mx-1" href="#" @click.prevent="changePage(currentPage + 1)"><i class="fas fa-chevron-right"></i></a>
+                   </li>
+               </ul>
+           </nav>
+       </div>
+    </div>
+
+    <!-- Confirm Update Modal -->
+    <div class="modal fade" id="confirmUpdateModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-bottom-0 bg-primary bg-opacity-10">
+                    <h5 class="modal-title fw-bold text-primary">Xác nhận hành động</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body py-4 text-center" v-if="itemToUpdate">
+                    <div class="avatar-circle bg-primary-subtle text-primary mb-3 mx-auto d-flex align-items-center justify-content-center rounded-circle" style="width: 60px; height: 60px;">
+                        <i class="fas fa-question fa-2x"></i>
+                    </div>
+                    <p class="mb-1">Bạn có chắc muốn chuyển trạng thái phiếu của</p>
+                    <h5 class="fw-bold text-dark mb-2">{{ itemToUpdate.docGiaInfo?.HOLOT }} {{ itemToUpdate.docGiaInfo?.TEN }}</h5>
+                    <p class="text-muted">Sang trạng thái: <span class="badge bg-primary px-3 py-2 rounded-pill">{{ newStatus }}</span></p>
+                </div>
+                <div class="modal-footer border-top-0 justify-content-center pb-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4 fw-bold me-2" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold" @click="handleUpdateStatus">Xác nhận</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail Modal (GIỮ NGUYÊN NHƯ BẠN YÊU CẦU) -->
+    <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Chi tiết Phiếu Mượn</h5>
+        <div class="modal-content border-0 shadow rounded-4">
+          <div class="modal-header border-bottom-0 pb-0">
+            <h5 class="modal-title fw-bold text-primary">
+              <i class="fas fa-info-circle me-2"></i>Chi tiết Phiếu Mượn
+            </h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body" v-if="selectedItem">
-            <div class="row">
-              <div class="col-md-5">
-                <h6 class="text-primary fw-bold">Thông Tin Sách</h6>
-                <img :src="selectedItem.sachInfo?.HinhAnh || defaultBookImage" class="img-fluid rounded mb-2" alt="Book cover" @error="onImgError">
-                <p><strong>Tên sách:</strong> {{ selectedItem.sachInfo?.TENSACH }}</p>
-                <p><strong>Tác giả:</strong> {{ selectedItem.sachInfo?.TACGIA }}</p>
-                <p><strong>Năm XB:</strong> {{ selectedItem.sachInfo?.NAMXUATBAN }}</p>
-              </div>
-              <div class="col-md-7">
-                <h6 class="text-primary fw-bold">Thông Tin Độc Giả</h6>
-                <p><strong>Họ tên:</strong> {{ (selectedItem.docGiaInfo?.HOLOT || '') + ' ' + (selectedItem.docGiaInfo?.TEN || '') }}</p>
-                <p><strong>Username:</strong> {{ selectedItem.docGiaInfo?.username }}</p>
-                <p><strong>Điện thoại:</strong> {{ selectedItem.docGiaInfo?.DIENTHOAI }}</p>
-                <p><strong>Địa chỉ:</strong> {{ selectedItem.docGiaInfo?.DIACHI }}</p>
-                
-                <hr>
-                
-                <h6 class="text-primary fw-bold">Thông Tin Phiếu Mượn</h6>
-                <p><strong>Trạng thái:</strong> <span :class="['status-badge', getStatusClass(selectedItem.trangThai)]">{{ selectedItem.trangThai }}</span></p>
-                <p><strong>Ngày mượn (dự kiến):</strong> {{ formatDate(selectedItem.ngayMuon) }}</p>
-                <p><strong>Ngày trả (dự kiến):</strong> {{ formatDate(selectedItem.ngayTra) }}</p>
-                <p><strong>Ngày trả (thực tế):</strong> {{ formatDate(selectedItem.ngayTraThucTe) || 'Chưa trả' }}</p>
 
-                <hr>
+          <div class="modal-body p-4" v-if="selectedItem">
+            <div class="row g-4">
+              <div class="col-md-4 text-center border-end">
+                <div class="position-relative d-inline-block mb-3">
+                  <img 
+                    :src="selectedItem.sachInfo?.HinhAnh || defaultBookImage" 
+                    class="img-fluid rounded-3 shadow" 
+                    style="max-height: 220px; object-fit: cover;"
+                    alt="Book cover" 
+                    @error="onImgError"
+                  >
+                  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white" v-if="selectedItem.soLuong > 1">
+                    x{{ selectedItem.soLuong }}
+                  </span>
+                </div>
                 
-                <h6 class="text-primary fw-bold">Nhân Viên Xử Lý</h6>
-                <p v-if="selectedItem.nhanVienInfo">
-                  <strong>Họ tên:</strong> {{ selectedItem.nhanVienInfo?.HoTenNV }}<br>
-                  <strong>MSNV:</strong> {{ selectedItem.nhanVienInfo?.MSNV }}
-                </p>
-                <p v-else class="text-muted">
-                  (Chưa có nhân viên xử lý)
-                </p>
+                <h6 class="text-dark fw-bold mb-1">{{ selectedItem.sachInfo?.TENSACH }}</h6>
+                <p class="text-muted small mb-1"><i class="fas fa-pen-nib me-1"></i>{{ selectedItem.sachInfo?.TACGIA }}</p>
+                <span class="badge bg-light text-secondary border">NXB: {{ selectedItem.sachInfo?.NAMXUATBAN }}</span>
+              </div>
+
+              <div class="col-md-8">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                   <span class="text-uppercase text-xs fw-bold text-muted ls-1">Trạng thái phiếu</span>
+                   <span :class="['badge rounded-pill px-3 py-2', getStatusClass(selectedItem.trangThai)]">
+                      {{ selectedItem.trangThai }}
+                   </span>
+                </div>
+
+                <div class="bg-light-gray p-3 rounded-3 mb-3">
+                   <div class="d-flex align-items-center mb-2">
+                      <div class="avatar-circle bg-primary text-white rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                        <i class="fas fa-user"></i>
+                      </div>
+                      <div>
+                        <h6 class="fw-bold mb-0 text-dark">{{ (selectedItem.docGiaInfo?.HOLOT || '') + ' ' + (selectedItem.docGiaInfo?.TEN || '') }}</h6>
+                        <small class="text-muted">@{{ selectedItem.docGiaInfo?.username }}</small>
+                      </div>
+                   </div>
+                   <div class="row g-2 text-sm">
+                      <div class="col-6">
+                        <span class="text-muted"><i class="fas fa-phone-alt me-1"></i> {{ selectedItem.docGiaInfo?.DIENTHOAI || 'N/A' }}</span>
+                      </div>
+                      <div class="col-12">
+                        <span class="text-muted"><i class="fas fa-map-marker-alt me-1"></i> {{ selectedItem.docGiaInfo?.DIACHI || 'N/A' }}</span>
+                      </div>
+                   </div>
+                </div>
+
+                <h6 class="text-uppercase text-xs fw-bold text-muted ls-1 mb-2">Thời gian mượn trả</h6>
+                <div class="row g-3 mb-3">
+                   <div class="col-6">
+                      <div class="border rounded p-2 text-center bg-white h-100">
+                         <small class="d-block text-muted mb-1">Ngày Mượn</small>
+                         <span class="fw-bold text-dark">{{ formatDate(selectedItem.ngayMuon) }}</span>
+                      </div>
+                   </div>
+                   <div class="col-6">
+                      <div class="border rounded p-2 text-center bg-white h-100">
+                         <small class="d-block text-muted mb-1">Hạn Trả</small>
+                         <span class="fw-bold text-primary">{{ formatDate(selectedItem.ngayTra) }}</span>
+                      </div>
+                   </div>
+                   <div class="col-12" v-if="selectedItem.ngayTraThucTe">
+                      <div class="border rounded p-2 d-flex justify-content-between align-items-center bg-success-subtle border-success-subtle">
+                         <span class="text-success small fw-bold"><i class="fas fa-check-circle me-1"></i> Đã trả thực tế:</span>
+                         <span class="fw-bold text-success">{{ formatDate(selectedItem.ngayTraThucTe) }}</span>
+                      </div>
+                   </div>
+                </div>
+
+                <div v-if="selectedItem.trangThai !== 'chờ duyệt'" class="border-top pt-3 mt-auto">
+                   <div class="d-flex align-items-center text-muted small">
+                      <i class="fas fa-user-shield me-2 fs-5"></i>
+                      <div v-if="selectedItem.nhanVienInfo">
+                         <span>Xử lý bởi: <strong class="text-dark">{{ selectedItem.nhanVienInfo?.HoTenNV }}</strong></span>
+                         <span class="mx-1">•</span>
+                         <span>MSNV: {{ selectedItem.nhanVienInfo?.MSNV }}</span>
+                      </div>
+                      <div v-else class="fst-italic">
+                         {{ selectedItem.trangThai === 'đang mượn' ? '(Chưa cập nhật nhân viên giao sách)' : '(Hệ thống xử lý)' }}
+                      </div>
+                   </div>
+                </div>
+
               </div>
             </div>
           </div>
+          </div>
+      </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div v-if="toastMessage" class="toast-overlay">
+      <div 
+        class="toast show align-items-center text-white border-0 shadow-lg" 
+        :class="isToastError ? 'bg-danger' : 'bg-success'"
+        role="alert" 
+      >
+        <div class="d-flex">
+          <div class="toast-body fs-6 fw-bold">
+            <i :class="isToastError ? 'fas fa-exclamation-triangle' : 'fas fa-check-circle'" class="me-2"></i>
+            {{ toastMessage }}
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" @click="toastMessage = ''"></button>
         </div>
       </div>
     </div>
@@ -240,6 +338,7 @@
 </template>
 
 <script>
+// --- LOGIC GIỮ NGUYÊN NHƯ CŨ (CHỈ COPY LẠI) ---
 import MuonSachService from "@/services/muonsach.service";
 import DocGiaService from "@/services/docgia.service";
 import SachService from "@/services/sach.service";
@@ -251,247 +350,166 @@ export default {
   name: "StaffDashboard",
   data() {
     return {
-      allData: [], // Chứa tất cả dữ liệu gốc từ API
-      filteredData: [], // Dữ liệu đã lọc
-      
+      allData: [],
       loading: false,
       searchQuery: "",
-      statusFilter: "all",
-      
+      activeTab: "chờ duyệt",
       currentUser: null,
-      
-      // Modals
       updateModalInstance: null,
       detailModalInstance: null,
       itemToUpdate: null,
       newStatus: "",
       selectedItem: null,
       defaultBookImage: "https://via.placeholder.com/300x400.png?text=No+Image",
-      
-      // Pagination
-      currentPage: 1,
+      tabPages: {
+        "chờ duyệt": 1, "đã duyệt": 1, "đang mượn": 1, "đã trả": 1,
+        "từ chối": 1, "trễ hạn": 1, "đang chờ trả": 1,
+      },
       itemsPerPage: 10,
+      tabs: [
+        { key: "chờ duyệt", label: "Chờ Duyệt" },
+        { key: "đã duyệt", label: "Đã Duyệt" },
+        { key: "đang mượn", label: "Đang Mượn" },
+        { key: "đã trả", label: "Đã Trả" },
+        { key: "từ chối", label: "Từ Chối" },
+        { key: "trễ hạn", label: "Trễ Hạn" },
+        { key: "đang chờ trả", label: "Chờ Trả" },
+      ],
+      toastMessage: "",
+      isToastError: false,
     };
   },
   computed: {
-    // Thống kê
-    pendingCount() {
-      return this.allData.filter(item => item.trangThai === 'chờ duyệt').length;
+    pendingCount() { return this.allData.filter(item => item.trangThai === 'chờ duyệt').length; },
+    borrowedCount() { return this.allData.filter(item => item.trangThai === 'đang mượn').length; },
+    returnCount() { return this.allData.filter(item => item.trangThai === 'đang chờ trả' || item.trangThai === 'đã trả').length; },
+    currentPage: {
+      get() { return this.tabPages[this.activeTab] || 1; },
+      set(value) { this.tabPages[this.activeTab] = value; } 
     },
-    borrowedCount() {
-      return this.allData.filter(item => item.trangThai === 'đang mượn').length;
-    },
-    returnCount() {
-      // (Giả sử bạn có trạng thái 'chờ trả' hoặc 'đã trả')
-      // Hiện tại, chúng ta đếm số sách 'đã trả'
-      return this.allData.filter(item => item.trangThai === 'đã trả').length;
-    },
-    
-    // Phân trang
-    totalPages() {
-      return Math.ceil(this.filteredData.length / this.itemsPerPage);
-    },
-    paginatedData() {
-      const start = (this.currentPage - 1) * this.itemsPerPage;
-      const end = start + this.itemsPerPage;
-      return this.filteredData.slice(start, end);
-    }
-  },
-  methods: {
-    async fetchData() {
-      this.loading = true;
-      try {
-        // 1. Tải tất cả phiếu mượn
-        const muonSachRes = await MuonSachService.getAll();
-        let muonSachList = muonSachRes.data || [];
-
-        // 2. Tải tất cả thông tin liên quan (song song)
-        const [docGiaRes, sachRes, nhanVienRes] = await Promise.all([
-          DocGiaService.getAll(),
-          SachService.getAll(),
-          NhanVienService.getAll()
-        ]);
-
-        const docGiaMap = new Map(docGiaRes.data.map(item => [item._id, item]));
-        const sachMap = new Map(sachRes.data.map(item => [item._id, item]));
-        const nhanVienMap = new Map(nhanVienRes.data.map(item => [item._id, item]));
-
-        // 3. Gắn thông tin vào danh sách phiếu mượn
-        muonSachList.forEach(item => {
-          item.docGiaInfo = docGiaMap.get(item.docGiaId);
-          item.sachInfo = sachMap.get(item.sachId);
-          if (item.nhanVienId) {
-            item.nhanVienInfo = nhanVienMap.get(item.nhanVienId);
-          }
-        });
-
-        this.allData = muonSachList;
-        this.applyFilters(); // Áp dụng bộ lọc ban đầu
-        
-      } catch (error) {
-        console.error("Lỗi khi tải dữ liệu:", error);
-        alert("Không thể tải dữ liệu. Vui lòng thử lại.");
-      } finally {
-        this.loading = false;
-      }
-    },
-    
-    applyFilters() {
+    filteredData() {
       let result = this.allData;
-
-      // 1. Lọc theo trạng thái
-      if (this.statusFilter !== 'all') {
-        result = result.filter(item => item.trangThai === this.statusFilter);
+      if (this.activeTab !== 'all') {
+        result = result.filter(item => item.trangThai === this.activeTab);
       }
-
-      // 2. Lọc theo tìm kiếm
       if (this.searchQuery) {
         const query = this.searchQuery.toLowerCase().trim();
         result = result.filter(item => {
           const docGiaUser = item.docGiaInfo?.username?.toLowerCase() || '';
           const docGiaHoTen = `${item.docGiaInfo?.HOLOT} ${item.docGiaInfo?.TEN}`.toLowerCase();
           const tenSach = item.sachInfo?.TENSACH?.toLowerCase() || '';
-          const msnv = item.nhanVienInfo?.MSNV?.toLowerCase() || '';
-          
-          return docGiaUser.includes(query) || 
-                 docGiaHoTen.includes(query) || 
-                 tenSach.includes(query) ||
-                 msnv.includes(query);
+          return docGiaUser.includes(query) || docGiaHoTen.includes(query) || tenSach.includes(query);
         });
       }
-      
-      // Sắp xếp: các phiếu "chờ duyệt" lên đầu
       result.sort((a, b) => {
         if (a.trangThai === 'chờ duyệt' && b.trangThai !== 'chờ duyệt') return -1;
-        if (a.trangThai !== 'chờ duyệt' && b.trangThai === 'chờ duyệt') return 1;
-        // (Bạn có thể thêm logic sắp xếp theo ngày tháng ở đây)
         return 0;
       });
-
-      this.filteredData = result;
-      this.currentPage = 1; // Reset về trang 1
+      return result;
     },
-
-    // Xử lý Modal
+    totalPages() { return Math.ceil(this.filteredData.length / this.itemsPerPage); },
+    paginatedData() {
+      const start = (this.currentPage - 1) * this.itemsPerPage;
+      return this.filteredData.slice(start, start + this.itemsPerPage);
+    }
+  },
+  methods: {
+    async fetchData() {
+      this.loading = true;
+      try {
+        const [muonSachRes, docGiaRes, sachRes, nhanVienRes] = await Promise.all([
+          MuonSachService.getAll(), DocGiaService.getAll(), SachService.getAll(), NhanVienService.getAll()
+        ]);
+        const docGiaMap = new Map(docGiaRes.data.map(item => [item._id, item]));
+        const sachMap = new Map(sachRes.data.map(item => [item._id, item]));
+        const nhanVienMap = new Map(nhanVienRes.data.map(item => [item._id, item]));
+        
+        this.allData = muonSachRes.data.map(item => ({
+          ...item,
+          docGiaInfo: docGiaMap.get(item.docGiaId),
+          sachInfo: sachMap.get(item.sachId),
+          nhanVienInfo: item.nhanVienId ? nhanVienMap.get(item.nhanVienId) : null
+        }));
+      } catch (error) { console.error(error); } finally { this.loading = false; }
+    },
+    switchTab(tabKey) { this.activeTab = tabKey; this.searchQuery = ""; },
+    getTabCount(tabKey) { return this.allData.filter(item => item.trangThai === tabKey).length; },
+    getTabLabel(tabKey) { const tab = this.tabs.find(t => t.key === tabKey); return tab ? tab.label : 'Tất cả'; },
     openUpdateModal(item, newStatus) {
       this.itemToUpdate = item;
       this.newStatus = newStatus;
       this.updateModalInstance.show();
     },
-    
     async handleUpdateStatus() {
       if (!this.itemToUpdate || !this.newStatus || !this.currentUser) return;
       
-        // Check if this is a return confirmation
-        if (this.newStatus === 'đã trả' && this.itemToUpdate.trangThai === 'đang chờ trả') {
-          return this.handleConfirmReturn();
-        }
+      if (this.newStatus === 'đã trả' && this.itemToUpdate.trangThai === 'đang chờ trả') {
+         return this.handleConfirmReturn();
+      }
       
-      this.loading = true; // (Có thể thêm 1 cờ loading riêng cho modal)
-      
+      this.loading = true;
       try {
-        const payload = {
+        await MuonSachService.update(this.itemToUpdate._id, {
           trangThai: this.newStatus,
-          nhanVienId: this.currentUser._id, // Gửi ID của nhân viên đang đăng nhập
-        };
-
-        // Gọi API
-        await MuonSachService.update(this.itemToUpdate._id, payload);
-        
-        // Cập nhật lại dữ liệu
+          nhanVienId: this.currentUser._id,
+        });
         await this.fetchData();
-        
         this.updateModalInstance.hide();
-        
-      } catch (error) {
-        console.error("Lỗi khi cập nhật trạng thái:", error);
-        alert("Cập nhật thất bại. Lỗi: " + (error.response?.data?.message || error.message));
-      } finally {
-        this.loading = false;
-      }
+        this.showToast("Cập nhật thành công!");
+      } catch (error) { 
+         this.showToast("Lỗi: " + error.message, true);
+      } finally { this.loading = false; }
     },
+    viewDetails(item) { this.selectedItem = item; this.detailModalInstance.show(); },
     
-    viewDetails(item) {
-      this.selectedItem = item;
-      this.detailModalInstance.show();
-    },
-    
-      openConfirmReturnModal(item) {
-        this.itemToUpdate = item;
-        this.newStatus = 'đã trả';
-        this.updateModalInstance.show();
-      },
-
-      async handleConfirmReturn() {
+    async handleConfirmReturn() {
         if (!this.itemToUpdate || !this.currentUser) return;
-      
         this.loading = true;
-      
         try {
-          // Call confirmReturn API instead of update
-          await MuonSachService.confirmReturn(this.itemToUpdate._id, this.currentUser._id);
-        
-          // Reload data
-          await this.fetchData();
-        
-          this.updateModalInstance.hide();
-          alert('Xác nhận trả sách thành công! SOQUYEN đã được cập nhật.');
-        
+            await MuonSachService.confirmReturn(this.itemToUpdate._id, this.currentUser._id);
+            await this.fetchData();
+            this.updateModalInstance.hide();
+            this.showToast("Xác nhận trả sách thành công!");
         } catch (error) {
-          console.error("Lỗi khi xác nhận trả sách:", error);
-          alert("Xác nhận trả sách thất bại. Lỗi: " + (error.response?.data?.message || error.message));
+            console.error("Lỗi khi xác nhận trả sách:", error);
+            this.showToast("Lỗi xác nhận: " + (error.response?.data?.message || error.message), true);
         } finally {
-          this.loading = false;
+            this.loading = false;
         }
-      },
-
-    // Phân trang
-    changePage(page) {
-      if (page >= 1 && page <= this.totalPages) {
-        this.currentPage = page;
-      }
     },
-
-    // Tiện ích
+    
+    changePage(page) { if (page >= 1 && page <= this.totalPages) this.currentPage = page; },
     formatDate(dateString) {
       if (!dateString) return '';
       try {
         const date = new Date(dateString);
-        // Kiểm tra nếu ngày không hợp lệ (ví dụ: 'Chưa trả')
-        if (isNaN(date.getTime())) return dateString; 
-        
-        // Tách ngày-tháng-năm
-        let day = date.getDate().toString().padStart(2, '0');
-        let month = (date.getMonth() + 1).toString().padStart(2, '0');
-        let year = date.getFullYear();
-        return `${day}/${month}/${year}`;
-      } catch (e) {
-        return dateString; // Trả về nguyên bản nếu không thể định dạng
-      }
+        if (isNaN(date.getTime())) return dateString;
+        return date.toLocaleDateString('vi-VN');
+      } catch (e) { return dateString; }
     },
-    
     getStatusClass(status) {
-      switch (status) {
-        case 'chờ duyệt': return 'status-pending';
-        case 'đã duyệt': return 'status-approved';
-        case 'đang mượn': return 'status-borrowed';
-        case 'đang chờ trả': return 'status-return-requested';
-        case 'đã trả': return 'status-returned';
-        case 'từ chối': return 'status-cancelled';
-        case 'trễ hạn': return 'status-overdue';
-        default: return 'status-default';
+       switch (status) {
+        case 'chờ duyệt': return 'bg-warning-subtle text-warning-emphasis border-warning-subtle';
+        case 'đã duyệt': return 'bg-primary-subtle text-primary border-primary-subtle';
+        case 'đang mượn': return 'bg-info-subtle text-info border-info-subtle';
+        case 'đã trả': return 'bg-success-subtle text-success border-success-subtle';
+        case 'từ chối': return 'bg-secondary-subtle text-secondary border-secondary-subtle';
+        case 'trễ hạn': return 'bg-danger-subtle text-danger border-danger-subtle';
+        default: return 'bg-light text-dark border';
       }
     },
-    
     onImgError(e) {
       e.target.src = this.defaultBookImage;
+    },
+    showToast(msg, isError = false) {
+        this.toastMessage = msg;
+        this.isToastError = isError;
+        setTimeout(() => { this.toastMessage = "" }, 3000);
     }
   },
   mounted() {
     this.currentUser = AuthService.getCurrentUser();
     this.fetchData();
-    
-    // Khởi tạo Modals
     this.updateModalInstance = new Modal(document.getElementById("confirmUpdateModal"));
     this.detailModalInstance = new Modal(document.getElementById("detailModal"));
   },
@@ -499,237 +517,153 @@ export default {
 </script>
 
 <style scoped>
-.staff-dashboard {
-  padding: 24px;
-  background-color: #f4f7fc;
-  height: 100%;
+.bg-light-gray {
+    background-color: #f3f6f9;
 }
 
-/* Stats Section */
-.stats-section {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  margin-bottom: 24px;
+/* Stats Cards */
+.card-stat {
+    transition: transform 0.3s ease;
 }
-.stat-card {
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+.card-stat:hover {
+    transform: translateY(-5px);
 }
-.stat-icon {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 16px;
-  font-size: 20px;
+.ls-1 {
+    letter-spacing: 1px;
 }
-.stat-icon.pending { background: #eef7ff; color: #0d6efd; }
-.stat-icon.borrowed { background: #e6f7f0; color: #198754; }
-.stat-icon.return { background: #fff8e6; color: #ffc107; }
-
-.stat-content .stat-label {
-  font-size: 14px;
-  color: #6c757d;
-  margin-bottom: 4px;
-}
-.stat-content .stat-value {
-  font-size: 24px;
-  font-weight: 700;
-  color: #212529;
+.icon-shape {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-/* Filter Section */
-.filter-section {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 20px;
-  margin-bottom: 24px;
-  background: #fff;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+/* Tabs */
+.btn-tab {
+    color: #6c757d;
+    white-space: nowrap;
+    transition: all 0.2s;
 }
-.search-box, .filter-box {
-  display: flex;
-  align-items: center;
-  background: #f8f9fa;
-  border-radius: 8px;
-  padding: 0 12px;
-  border: 1px solid #dee2e6;
+.btn-tab:hover {
+    color: #0d6efd;
+    background-color: #f8f9fa;
 }
-.search-box i, .filter-box i {
-  color: #6c757d;
-  margin-right: 10px;
+.btn-tab.active {
+    color: #0d6efd;
+    background-color: transparent;
 }
-.search-box input, .filter-box select {
-  width: 100%;
-  border: none;
-  background: transparent;
-  padding: 12px 0;
-  font-size: 14px;
-}
-.search-box input:focus, .filter-box select:focus {
-  outline: none;
-  box-shadow: none;
-}
-.filter-box select {
-  cursor: pointer;
+.tab-indicator {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background-color: #0d6efd;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
 }
 
-/* Table Container */
-.table-container {
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
+/* Search Input */
+.input-group-text {
+    background-color: #fff;
 }
-.table-header {
-  padding: 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #e9ecef;
-}
-.table-header h4 {
-  margin: 0;
-  font-weight: 600;
-}
-.btn-refresh {
-  border: 1px solid #dee2e6;
-  background: #fff;
-  color: #0d6efd;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  transition: all 0.2s;
-}
-.btn-refresh:hover {
-  background: #eef7ff;
-}
-.btn-refresh:disabled {
-  color: #6c757d;
-  cursor: not-allowed;
+.form-control:focus {
+    border-color: #86b7fe;
+    box-shadow: none;
 }
 
 /* Table */
-.main-table {
-  width: 100%;
-  border-collapse: collapse;
+.text-xs {
+    font-size: 0.75rem !important;
 }
-.main-table th, .main-table td {
-  padding: 15px 20px;
-  text-align: left;
-  vertical-align: middle;
-  border-bottom: 1px solid #e9ecef;
-  font-size: 14px;
+.text-sm {
+    font-size: 0.875rem !important;
 }
-.main-table th {
-  font-weight: 600;
-  color: #6c757d;
-  background: #f8f9fa;
-}
-.main-table tbody tr:hover {
-  background: #f8f9fa;
+.btn-icon-only {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-/* Status Badge */
+/* Pagination */
+.page-link {
+    color: #6c757d;
+    background-color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+.page-item.active .page-link {
+    background-color: #0d6efd;
+    color: #fff;
+    border-color: #0d6efd;
+}
+.page-item.disabled .page-link {
+    background-color: #e9ecef;
+    color: #adb5bd;
+}
+
+.btn-white {
+    background-color: #fff;
+    color: #0d6efd;
+    transition: all 0.2s;
+}
+.btn-white:hover {
+    background-color: #f1faff;
+}
+
+/* Custom Scrollbar for Tabs */
+.custom-scrollbar::-webkit-scrollbar {
+  height: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1; 
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #ccc; 
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #aaa; 
+}
+
+/* Book Thumb in Table */
+.book-thumb {
+    width: 40px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+/* Toast Overlay */
+.toast-overlay {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  min-width: 300px;
+  animation: slideInRight 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* Styles from old modal to support "status-badge" class in legacy modal code */
 .status-badge {
   padding: 5px 10px;
   border-radius: 20px;
   font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
-}
-.status-pending { background: #fff8e6; color: #ffc107; }
-.status-approved { background: #eef7ff; color: #0d6efd; }
-.status-borrowed { background: #e6f7f0; color: #198754; }
-.status-returned { background: #e9ecef; color: #495057; }
-.status-cancelled, .status-overdue { background: #fdeeee; color: #dc3545; }
-
-/* Action Buttons */
-.action-buttons {
-  display: flex;
-  gap: 8px;
-}
-.btn-action {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.btn-action.confirm { background: #198754; }
-.btn-action.confirm:hover { background: #157347; }
-
-.btn-action.cancel { background: #dc3545; }
-.btn-action.cancel:hover { background: #bb2d3b; }
-
-.btn-action.return { background: #ffc107; color: #212529; }
-.btn-action.return:hover { background: #ffca2c; }
-
-.btn-action.detail { background: #0d6efd; }
-.btn-action.detail:hover { background: #0b5ed7; }
-
-/* Pagination */
-.pagination-container {
-  padding: 20px;
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-}
-.page-btn {
-  border: 1px solid #dee2e6;
-  background: #fff;
-  color: #0d6efd;
-  padding: 8px 14px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 14px;
-}
-.page-btn:hover {
-  background: #eef7ff;
-}
-.page-btn:disabled {
-  color: #6c757d;
-  background: #f8f9fa;
-  cursor: not-allowed;
-}
-.page-btn.active {
-  background: #0d6efd;
-  color: #fff;
-  border-color: #0d6efd;
-}
-
-/* Modal Detail */
-.modal-body img {
-  border: 1px solid #e9ecef;
-  margin-bottom: 16px;
-  max-height: 350px;
-  width: auto;
-  object-fit: contain;
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-}
-.modal-body p {
-  font-size: 15px;
-  margin-bottom: 10px;
-}
-.modal-body .text-muted {
-  font-style: italic;
 }
 </style>

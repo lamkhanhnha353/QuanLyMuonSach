@@ -216,16 +216,14 @@ async create(payload) {
             );
         }
 
-        // Trả sách (+1 SOQUYEN) nếu:
+        // Trả sách (+ SOQUYEN) nếu:
         // 1. Trạng thái mới là "đã trả" (VÀ trạng thái cũ chưa phải là "đã trả")
-        // 2. Trạng thái mới là "từ chối" (VÀ trạng thái cũ là "chờ duyệt" hoặc "đã duyệt" hoặc "đang mượn")
-        // 3. Trạng thái mới là "đang chờ trả" (độc giả yêu cầu trả sách)
+        // 2. Trạng thái mới là "từ chối" (VÀ trạng thái cũ là "chờ duyệt" hoặc "đã duyệt" hoặc "đang mượn" hoặc "đang chờ trả")
 
         const isReturning = (newTrangThai === "đã trả" && oldTrangThai !== "đã trả");
         const isRejected = (newTrangThai === "từ chối" && ["chờ duyệt", "đã duyệt", "đang mượn", "đang chờ trả"].includes(oldTrangThai));
-        const isReturnRequested = (newTrangThai === "đang chờ trả" && oldTrangThai === "đang mượn");
 
-        if (isReturning || isRejected || isReturnRequested) {
+        if (isReturning || isRejected) {
             // Cộng soLuong trả lại SOQUYEN cho sách
             await this.Sach.updateOne(
                 { _id: sachId },
