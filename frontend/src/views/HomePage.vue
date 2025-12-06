@@ -1,7 +1,6 @@
 ﻿<template>
   <div class="home-page">
     
-    <!-- 1. HERO SECTION (Hiệu ứng chữ chạy) -->
     <section class="hero-section position-relative overflow-hidden">
       <div class="container position-relative z-2">
         <div class="row align-items-center min-vh-75">
@@ -27,11 +26,9 @@
           </div>
           
           <div class="col-lg-6 mt-5 mt-lg-0 text-center position-relative">
-            <!-- Animated Blob Background -->
             <div class="blob-bg"></div>
             <div class="hero-image-container animate-zoom-in" style="animation-delay: 0.8s;">
                <i class="fas fa-book-reader text-white" style="font-size: 15rem; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));"></i>
-               <!-- Floating Elements -->
                <div class="floating-card card-1 bg-white p-3 rounded-3 shadow text-dark">
                   <i class="fas fa-check-circle text-success me-2"></i> 10k+ Sách
                </div>
@@ -42,7 +39,6 @@
           </div>
         </div>
       </div>
-      <!-- Wave Shape Divider -->
       <div class="custom-shape-divider-bottom-1680000000">
           <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
               <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" class="shape-fill"></path>
@@ -50,7 +46,6 @@
       </div>
     </section>
 
-    <!-- 2. CATEGORIES SECTION (Slide Up on Scroll) -->
     <section class="categories-section py-5 bg-light-gray">
       <div class="container">
         <div class="text-center mb-5 scroll-animate fade-in-up">
@@ -62,7 +57,7 @@
            <div class="col-6 col-md-3 scroll-animate fade-in-up" v-for="(cat, index) in categories" :key="index" :style="{ transitionDelay: `${index * 100}ms` }">
               <div class="category-card bg-white p-4 rounded-4 text-center shadow-hover cursor-pointer h-100">
                   <div class="cat-icon mb-3" :class="cat.colorClass">
-                     <i :class="cat.icon"></i>
+                      <i :class="cat.icon"></i>
                   </div>
                   <h6 class="fw-bold text-dark">{{ cat.name }}</h6>
                   <small class="text-muted">{{ cat.count }} cuốn</small>
@@ -72,7 +67,6 @@
       </div>
     </section>
 
-    <!-- 3. FEATURED BOOKS (Mới thêm) -->
     <section class="featured-section py-5 bg-white">
       <div class="container">
          <div class="d-flex justify-content-between align-items-end mb-5 scroll-animate slide-in-left">
@@ -109,7 +103,6 @@
       </div>
     </section>
 
-    <!-- 4. PROCESS SECTION (Quy trình mượn sách - Mới) -->
     <section class="process-section py-5 bg-light position-relative overflow-hidden">
        <div class="container position-relative z-2">
           <div class="text-center mb-5 scroll-animate fade-in-up">
@@ -152,7 +145,6 @@
        </div>
     </section>
 
-    <!-- 5. STATISTICS (Có số nhảy) -->
     <section class="stats-section py-5 bg-primary text-white">
       <div class="container">
         <div class="row g-4 text-center">
@@ -184,11 +176,9 @@
       </div>
     </section>
 
-    <!-- 6. TESTIMONIALS & NEWS (Layout lưới) -->
     <section class="py-5 bg-white">
        <div class="container">
           <div class="row g-5">
-             <!-- Testimonials -->
              <div class="col-lg-6 scroll-animate slide-in-left">
                 <h4 class="fw-bold mb-4 border-start border-4 border-primary ps-3">Cảm Nhận Độc Giả</h4>
                 <div class="card border-0 bg-light p-4 rounded-4 mb-3 position-relative">
@@ -208,13 +198,12 @@
                       <div class="bg-info text-white rounded-circle d-flex align-items-center justify-content-center fw-bold me-3" style="width: 40px; height: 40px;">L</div>
                       <div>
                          <h6 class="fw-bold mb-0">Lê Thị Lan</h6>
-                         <small class="text-muted">Giảng viên</small>
+                         <small class="text-muted">Sinh viên FPT</small>
                       </div>
                    </div>
                 </div>
              </div>
 
-             <!-- News -->
              <div class="col-lg-6 scroll-animate slide-in-right">
                 <h4 class="fw-bold mb-4 border-start border-4 border-warning ps-3">Tin Tức Mới</h4>
                 <div class="list-group list-group-flush">
@@ -224,7 +213,7 @@
                          <small class="text-muted text-uppercase" style="font-size: 10px;">Th12</small>
                       </div>
                       <div>
-                         <h6 class="fw-bold mb-1">Thông báo lịch nghỉ Tết Dương Lịch 2024</h6>
+                         <h6 class="fw-bold mb-1">Thông báo lịch nghỉ Tết Dương Lịch 2025</h6>
                          <p class="text-muted small mb-0 text-truncate-2">Thư viện xin thông báo lịch nghỉ tết dương lịch đến toàn thể độc giả...</p>
                       </div>
                    </a>
@@ -254,7 +243,6 @@
        </div>
     </section>
 
-    <!-- 7. NEWSLETTER (Thay thế CTA cũ) -->
     <section class="newsletter-section py-5">
        <div class="container">
           <div class="newsletter-box p-5 rounded-4 text-white shadow-lg scroll-animate zoom-in position-relative overflow-hidden">
@@ -279,28 +267,54 @@
                 </div>
              </div>
              
-             <!-- Decorative Circles -->
              <div class="deco-circle circle-1"></div>
              <div class="deco-circle circle-2"></div>
           </div>
        </div>
     </section>
 
-    <footer class="bg-dark text-white py-4 border-top border-secondary">
-       <div class="container text-center">
-          <div class="row">
-             <div class="col-md-6 text-md-start mb-3 mb-md-0">
-                <h5 class="fw-bold text-primary mb-1"><i class="fas fa-book-reader me-2"></i>LibManager</h5>
-                <small class="text-white-50">Nền tảng quản lý thư viện số hiện đại.</small>
+    <footer class="bg-dark text-white py-5 border-top border-secondary">
+       <div class="container">
+          <div class="row gy-4 justify-content-between align-items-center">
+             
+             <div class="col-md-5 text-center text-md-start">
+                <h5 class="fw-bold text-primary mb-2"><i class="fas fa-book-reader me-2"></i>LibManager</h5>
+                <p class="text-white-50 small mb-3">Nền tảng quản lý thư viện số hiện đại.</p>
+                <div class="d-flex gap-3 justify-content-center justify-content-md-start">
+                   <a href="#" class="text-white-50 hover-white"><i class="fab fa-facebook fa-lg"></i></a>
+                   <a href="#" class="text-white-50 hover-white"><i class="fab fa-twitter fa-lg"></i></a>
+                   <a href="#" class="text-white-50 hover-white"><i class="fab fa-instagram fa-lg"></i></a>
+                </div>
              </div>
-             <div class="col-md-6 text-md-end d-flex align-items-center justify-content-md-end justify-content-center gap-3">
-                <a href="#" class="text-white-50 hover-white"><i class="fab fa-facebook fa-lg"></i></a>
-                <a href="#" class="text-white-50 hover-white"><i class="fab fa-twitter fa-lg"></i></a>
-                <a href="#" class="text-white-50 hover-white"><i class="fab fa-instagram fa-lg"></i></a>
+
+             <div class="col-md-6 d-flex justify-content-center justify-content-md-end">
+                <div class="p-3 border border-secondary rounded-3 bg-secondary bg-opacity-10 text-start" style="min-width: 320px;">
+                    <h6 class="text-uppercase fw-bold text-warning mb-3 border-bottom border-secondary pb-2">
+                        <i class="fas fa-user-graduate me-2"></i>Thông Tin Sinh Viên
+                    </h6>
+                    <ul class="list-unstyled text-white mb-0">
+                       <li class="mb-2">
+                          <span class="text-white-50 me-2">Họ và Tên:</span> 
+                          <span class="fw-bold">Lâm Khánh Nhả</span>
+                       </li>
+                       <li class="mb-2">
+                          <span class="text-white-50 me-2">MSSV:</span> 
+                          <span>B2303836</span>
+                       </li>
+                       <li>
+                          <span class="text-white-50 me-2">Chuyên ngành:</span> 
+                          <span>Kĩ thuật phần mềm K49</span>
+                       </li>
+                    </ul>
+                </div>
              </div>
           </div>
-          <hr class="border-secondary opacity-25 my-3">
-          <p class="small text-white-50 mb-0">&copy; 2023 LibManager. All rights reserved.</p>
+
+          <hr class="border-secondary opacity-25 my-4">
+          
+          <div class="text-center">
+             <p class="small text-white-50 mb-0">&copy; 2025 LibManager - Student Project.</p>
+          </div>
        </div>
     </footer>
 
@@ -330,7 +344,6 @@ export default {
        this.loading = true;
        try {
           const res = await SachService.getAll();
-          // Lấy 4 sách mới nhất (giả sử mảng trả về đã sort hoặc lấy ngẫu nhiên)
           this.featuredBooks = res.data.slice(0, 4); 
        } catch (error) {
           console.error(error);
@@ -343,7 +356,6 @@ export default {
           entries.forEach(entry => {
              if (entry.isIntersecting) {
                 entry.target.classList.add('show');
-                // observer.unobserve(entry.target); // Uncomment nếu chỉ muốn chạy 1 lần
              }
           });
        }, { threshold: 0.1 });
@@ -354,7 +366,6 @@ export default {
   },
   mounted() {
      this.fetchFeaturedBooks();
-     // Đợi DOM render xong để gắn observer
      setTimeout(() => {
         this.setupIntersectionObserver();
      }, 100);
@@ -363,6 +374,7 @@ export default {
 </script>
 
 <style scoped>
+/* CSS giữ nguyên như cũ */
 .home-page {
     font-family: 'Inter', sans-serif;
     overflow-x: hidden;

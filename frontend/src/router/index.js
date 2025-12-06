@@ -46,6 +46,7 @@ import StaffDocGiaManagement from "@/views/StaffDocGiaManagement.vue";
 import StaffDocGiaAdd from "@/views/StaffDocGiaAdd.vue";
 import StaffNhaXuatBanManagement from "@/views/StaffNhaXuatBanManagement.vue";
 import NhanVienAccount from "@/views/NhanVienAccount.vue";
+import NotFound from "@/views/NotFound.vue";
 
 
 
@@ -138,6 +139,13 @@ const routes = [
       // { path: "nguoidung", name: "staff.nguoidung", component: StaffNguoiDungManagement }
       // khi bạn tạo file component đó.
     ],
+  },
+
+  // --- 404 Not Found ---
+  {
+    path: "/:pathMatch(.*)*",
+    name: "not-found",
+    component: NotFound,
   },
 ];
 

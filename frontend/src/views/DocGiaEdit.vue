@@ -55,7 +55,7 @@
                 <!-- Hàng 1: Họ tên -->
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold text-muted small">Họ & Tên lót <span class="text-danger">*</span></label>
+                        <label class="form-label fw-semibold text-muted small">Họ lót <span class="text-danger">*</span></label>
                         <div class="input-group" :class="{ 'is-invalid-group': errors.HOLOT }">
                             <span class="input-group-text bg-light border-end-0 text-secondary"><i class="fas fa-user"></i></span>
                             <Field name="HOLOT" type="text" class="form-control bg-light border-start-0 ps-0" placeholder="Ví dụ: Nguyễn Văn" />
@@ -119,7 +119,7 @@
                                 <option value="" disabled>Chọn giới tính</option>
                                 <option value="Nam">Nam</option>
                                 <option value="Nữ">Nữ</option>
-                                <option value="Khác">Khác</option>
+                                <!-- <option value="Khác">Khác</option> -->
                             </Field>
                         </div>
                         <ErrorMessage name="GIOITINH" class="text-danger small mt-1" />

@@ -234,7 +234,7 @@
                   </div>
                   <div class="col-md-6">
                     <div class="border-start border-info border-3 ps-3">
-                      <small class="text-muted fw-semibold">Nhà Xuất Bản</small>
+                      <small class="text-muted fw-semibold">Mã NXB</small>
                       <p class="mb-0 fw-bold text-dark">{{ selectedBook.MANXB }}</p>
                     </div>
                   </div>

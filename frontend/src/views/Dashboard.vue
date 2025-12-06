@@ -6,7 +6,7 @@
         <div class="welcome-header">
           <div class="d-flex justify-content-between align-items-center">
             <div>
-              <h2 class="fw-bold text-white mb-1">Dashboard Quản Trị Viên</h2>
+              <h2 class="fw-bold text-white mb-1">Quản Trị Viên Admin</h2>
               <p class="text-white-50 mb-0">Tổng quan hệ thống thư viện</p>
             </div>
             <div class="text-white text-end">

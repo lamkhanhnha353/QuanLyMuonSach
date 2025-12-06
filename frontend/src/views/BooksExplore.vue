@@ -10,7 +10,7 @@
               <h4 class="mb-0 fw-bold text-dark library-title">Khám phá thư viện</h4>
             </div>
 
-            <div class="col-md-6">
+            <div class="col-md-5">
               <div class="input-group search-input shadow-sm">
                 <span class="input-group-text bg-white border-end-0 text-muted">
                     <i class="fas fa-search"></i>
@@ -19,7 +19,7 @@
                 <input
                     type="text"
                     class="form-control border-start-0 border-end-0 ps-0 bg-white"
-                    placeholder="Tìm kiếm sách, tác giả, ISBN..."
+                    placeholder="Tìm kiếm sách, tác giả..."
                     v-model="searchText"
                     @keyup.enter="applySearch"
                 >
@@ -40,9 +40,23 @@
                 <button class="btn btn-primary px-4 fw-bold" @click="applySearch">Tìm</button>
               </div>
             </div>
-            <div class="col-md-3">
+
+            <div class="col-md-4">
               <div class="d-flex align-items-center gap-2 justify-content-end sort-area">
-                <label class="mb-0 sort-label text-muted" style="white-space: nowrap;">Sắp xếp:</label>
+                
+                <label class="mb-0 sort-label text-muted small" style="white-space: nowrap;">Hiển thị:</label>
+                <select 
+                  class="form-select form-select-sm sort-select me-2" 
+                  style="width: 70px;" 
+                  v-model.number="itemsPerPage"
+                  @change="handlePageSizeChange"
+                >
+                  <option :value="12">12</option>
+                  <option :value="24">24</option>
+                  <option :value="48">48</option>
+                </select>
+
+                <label class="mb-0 sort-label text-muted small" style="white-space: nowrap;">Sắp xếp:</label>
                 <select class="form-select form-select-sm sort-select" v-model="sortOption">
                   <option value="newest">Mới nhất</option>
                   <option value="title">Tên A-Z</option>
@@ -106,7 +120,9 @@
 
         <main class="col-xl-10 col-lg-9">
           <div class="d-flex justify-content-between align-items-center mb-3">
-              <span class="text-muted small">Hiển thị <b>{{ paginatedBooks.length }}</b> trên tổng số <b>{{ filteredBooks.length }}</b> sách</span>
+              <span class="text-muted small">
+                Hiển thị <b>{{ paginatedBooks.length }}</b> trên tổng số <b>{{ filteredBooks.length }}</b> sách
+              </span>
           </div>
 
           <div class="books-grid">
@@ -175,8 +191,14 @@
             <button class="btn btn-primary btn-sm mt-2" @click="clearFilters">Xóa bộ lọc</button>
           </div>
 
-          <div class="pagination-container mt-5 mb-4" v-if="totalPages > 1">
-            <ul class="pagination justify-content-center">
+          <div class="pagination-container mt-5 mb-5" v-if="totalPages > 1">
+            <ul class="pagination justify-content-center flex-wrap">
+              <li class="page-item" :class="{ disabled: currentPage === 1 }" v-if="totalPages > 5">
+                <a class="page-link" href="#" @click.prevent="changePage(1)" title="Trang đầu">
+                  <i class="fas fa-angle-double-left"></i>
+                </a>
+              </li>
+
               <li class="page-item prev-next" :class="{ disabled: currentPage === 1 }">
                 <a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)">
                   <i class="fas fa-chevron-left"></i>
@@ -190,6 +212,12 @@
               <li class="page-item prev-next" :class="{ disabled: currentPage === totalPages }">
                 <a class="page-link" href="#" @click.prevent="changePage(currentPage + 1)">
                   <i class="fas fa-chevron-right"></i>
+                </a>
+              </li>
+
+               <li class="page-item" :class="{ disabled: currentPage === totalPages }" v-if="totalPages > 5">
+                <a class="page-link" href="#" @click.prevent="changePage(totalPages)" title="Trang cuối">
+                  <i class="fas fa-angle-double-right"></i>
                 </a>
               </li>
             </ul>
@@ -215,7 +243,7 @@ export default {
       statusFilter: "all",
       sortOption: "newest",
       currentPage: this.$route.query.page ? parseInt(this.$route.query.page) : 1,
-      itemsPerPage: 12,
+      itemsPerPage: 12, // Giá trị mặc định
       placeholderImage: "https://via.placeholder.com/300x450?text=Book+Cover",
       isLoggedIn: false,
       isListening: false,
@@ -256,14 +284,27 @@ export default {
       return this.filteredBooks.slice(start, start + this.itemsPerPage);
     },
     pageRange() {
+      // Logic hiển thị phân trang thông minh: Luôn hiện trang đầu, cuối và xung quanh trang hiện tại
+      const total = this.totalPages;
+      const current = this.currentPage;
+      const delta = 2; // Số trang hiện bên cạnh trang hiện tại
       const range = [];
-      for (let i = 1; i <= this.totalPages; i++) {
-        if (i === 1 || i === this.totalPages || (i >= this.currentPage - 1 && i <= this.currentPage + 1)) {
+      const rangeWithDots = [];
+      let l;
+
+      for (let i = 1; i <= total; i++) {
+        if (i === 1 || i === total || (i >= current - delta && i <= current + delta)) {
           range.push(i);
         }
       }
-      return [...new Set(range)].sort((a, b) => a - b);
+      return range;
     }
+  },
+  watch: {
+    // Khi bộ lọc thay đổi, reset về trang 1
+    selectedCategories() { this.currentPage = 1; },
+    statusFilter() { this.currentPage = 1; },
+    searchText() { this.currentPage = 1; },
   },
   methods: {
     async retrieveBooks() {
@@ -277,17 +318,23 @@ export default {
     applySearch() {
       this.currentPage = 1;
     },
+    handlePageSizeChange() {
+        this.currentPage = 1; // Reset về trang 1 khi đổi số lượng hiển thị
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    },
     clearFilters() {
       this.selectedCategories = [];
       this.statusFilter = "all";
       this.searchText = "";
       this.sortOption = "newest";
       this.currentPage = 1;
+      this.itemsPerPage = 12; // Reset cả số lượng hiển thị
     },
     changePage(page) {
       if (page < 1 || page > this.totalPages) return;
       this.currentPage = page;
-      this.$router.push({ query: { page: page } });
+      // Cập nhật URL mà không reload trang (Optional)
+      this.$router.replace({ query: { ...this.$route.query, page: page } }).catch(()=>{});
       window.scrollTo({ top: 0, behavior: "smooth" });
     },
     requestLogin(book) {
@@ -321,7 +368,7 @@ export default {
       this.recognition = new SpeechRecognition();
       this.recognition.continuous = false;
       this.recognition.interimResults = false;
-      this.recognition.lang = 'vi-VN'; // Vietnamese language
+      this.recognition.lang = 'vi-VN'; 
 
       this.recognition.onstart = () => {
         this.isListening = true;
@@ -361,6 +408,8 @@ export default {
 </script>
 
 <style scoped>
+/* Giữ nguyên toàn bộ CSS cũ của bạn, chỉ thêm css cho cột mới nếu cần (Bootstrap đã lo phần lớn) */
+
 /* --- 1. Global & Page Setup --- */
 .books-explore {
   background-color: #f8f9fa;
@@ -385,12 +434,11 @@ export default {
   letter-spacing: -0.5px;
 }
 
-/* Search Input: Nền trắng */
+/* Search Input */
 .search-input .form-control {
   background-color: #fff; 
   border: 1px solid #dee2e6;
   border-left: none;
-  /* Bỏ border phải để nối với nút micro */
   border-right: none; 
 }
 .search-input .form-control:focus {
@@ -404,7 +452,6 @@ export default {
   border-right: none;
 }
 
-/* Thêm style cho nút khi hover */
 .search-input button.btn-light:hover, 
 .search-input button.bg-white:hover {
     background-color: #f8f9fa !important;
@@ -414,7 +461,6 @@ export default {
 .sort-select {
   border-color: #dee2e6;
   cursor: pointer;
-  max-width: 160px;
 }
 .sort-select:focus {
     box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
