@@ -244,7 +244,7 @@ export default {
       sortOption: "newest",
       currentPage: this.$route.query.page ? parseInt(this.$route.query.page) : 1,
       itemsPerPage: 12, // Giá trị mặc định
-      placeholderImage: "https://via.placeholder.com/300x450?text=Book+Cover",
+      placeholderImage: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNCIgZmlsbD0iIzk5YTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkJvb2sgQ292ZXI8L3RleHQ+PC9zdmc+",
       isLoggedIn: false,
       isListening: false,
       recognition: null,

@@ -16,12 +16,8 @@ class DocGiaService {
             GIOITINH: payload.GIOITINH, // <-- Dùng GIOITINH (theo code của bạn)
             DIACHI: payload.DIACHI,
             DIENTHOAI: payload.DIENTHOAI,
+            favorites: payload.favorites || [], // Initialize as empty array if not provided
         };
-
-        // Only include favorites if explicitly provided in payload
-        if (payload.favorites !== undefined) {
-            docgia.favorites = payload.favorites;
-        }
 
         Object.keys(docgia).forEach(
             (key) => docgia[key] === undefined && delete docgia[key]
@@ -116,7 +112,7 @@ class DocGiaService {
         });
     }
  
-      // Cập nhật thông tin độc giả (dùng cho Admin).
+    // Cập nhật thông tin độc giả (dùng cho Admin).
     async update(id, payload) {
         let objectId;
         if (ObjectId.isValid(id)) {
@@ -142,6 +138,11 @@ class DocGiaService {
         // Nếu không có username mới, xóa trường này để không ghi đè
         if (update.username === undefined) {
              delete update.username;
+        }
+
+        // Nếu favorites không được cung cấp, xóa khỏi update để không ghi đè
+        if (payload.favorites === undefined) {
+            delete update.favorites;
         }
 
         const result = await this.DocGia.findOneAndUpdate(

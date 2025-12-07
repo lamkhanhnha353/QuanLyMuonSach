@@ -108,7 +108,7 @@
                 <td class="text-center">
                   <div class="d-flex justify-content-center gap-2">
                     <router-link
-                      :to="{ name: 'admin.docgia.edit', params: { id: docgia._id }, query: { page: currentPage } }"
+                      :to="{ name: 'admin.docgia.edit', params: { id: docgia._id }, query: { page: currentPage, itemsPerPage: itemsPerPage, searchText: searchText } }"
                       class="btn btn-icon-only btn-rounded btn-outline-info mb-0 me-1 btn-sm d-flex align-items-center justify-content-center"
                       title="Chỉnh sửa"
                     >
@@ -335,11 +335,26 @@ export default {
     if (page && parseInt(page) > 0) {
       this.currentPage = parseInt(page);
     }
+
+    // Set searchText from query parameter if present
+    const search = this.$route.query.searchText;
+    if (search) {
+      this.searchText = search;
+    }
   },
   watch: {
     '$route.query.page'(newPage) {
       if (newPage && parseInt(newPage) > 0) {
         this.currentPage = parseInt(newPage);
+        // Clamp currentPage to valid range after setting
+        this.currentPage = Math.min(this.currentPage, this.totalPages) || 1;
+      }
+    },
+    '$route.query.searchText'(newSearch) {
+      if (newSearch !== undefined) {
+        this.searchText = newSearch;
+        // After searchText changes, clamp currentPage if it exceeds totalPages
+        this.currentPage = Math.min(this.currentPage, this.totalPages) || 1;
       }
     }
   },

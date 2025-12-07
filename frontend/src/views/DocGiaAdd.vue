@@ -3,7 +3,7 @@
     <!-- Header Section -->
     <div class="row align-items-center mb-3">
       <div class="col-auto">
-        <router-link to="/admin/docgia" class="btn btn-light shadow-sm rounded-pill px-3 fw-bold text-primary">
+        <router-link :to="{ name: 'admin.docgia', query: { page: pageFromQuery, itemsPerPage: itemsPerPageFromQuery, searchText: searchTextFromQuery } }" class="btn btn-light shadow-sm rounded-pill px-3 fw-bold text-primary">
           <i class="fas fa-arrow-left me-2"></i> Quay lại
         </router-link>
       </div>
@@ -47,7 +47,7 @@
                       name="HOLOT" 
                       type="text" 
                       class="form-control bg-light border-start-0 ps-0" 
-                      placeholder="Ví dụ: Nguyễn Văn" 
+                      placeholder="Ví dụ: Nguyễn" 
                     />
                   </div>
                   <ErrorMessage name="HOLOT" class="text-danger small mt-1" />
@@ -60,7 +60,7 @@
                       name="TEN" 
                       type="text" 
                       class="form-control bg-light border-start-0 ps-0" 
-                      placeholder="Ví dụ: A" 
+                      placeholder="Ví dụ: Văn A" 
                     />
                   </div>
                   <ErrorMessage name="TEN" class="text-danger small mt-1" />
@@ -118,7 +118,7 @@
                       <option value="" disabled selected>Chọn giới tính</option>
                       <option value="Nam">Nam</option>
                       <option value="Nữ">Nữ</option>
-                      <option value="Khác">Khác</option>
+                      <!-- <option value="Khác">Khác</option> -->
                     </Field>
                   </div>
                   <ErrorMessage name="GIOITINH" class="text-danger small mt-1" />
@@ -127,7 +127,7 @@
                   <label class="form-label fw-semibold text-muted small">Điện thoại <span class="text-danger">*</span></label>
                   <div class="input-group" :class="{ 'is-invalid-group': errors.DIENTHOAI }">
                     <span class="input-group-text bg-light border-end-0 text-secondary"><i class="fas fa-phone"></i></span>
-                    <Field name="DIENTHOAI" type="text" class="form-control bg-light border-start-0 ps-0" placeholder="09xxxxxxxx" />
+                    <Field name="DIENTHOAI" type="text" class="form-control bg-light border-start-0 ps-0" placeholder="Nhập số điện thoại" />
                   </div>
                   <ErrorMessage name="DIENTHOAI" class="text-danger small mt-1" />
                 </div>
@@ -211,16 +211,62 @@ export default {
       isError: false,
       registerSchema,
       showPassword: false,
+      pageFromQuery: this.$route.query.page,
+      itemsPerPageFromQuery: this.$route.query.itemsPerPage || 5,
+      searchTextFromQuery: this.$route.query.searchText || '',
     };
   },
   methods: {
+    async calculateReaderPage(newReader) {
+      try {
+        // Fetch all readers to find the position of the new reader
+        const response = await DocGiaService.getAll();
+        const readers = response.data;
+
+        // Add the new reader to the list (since it might not be in the fetched list yet)
+        readers.push(newReader);
+
+        // Sort readers by HOLOT then TEN (assuming this is the default sort order)
+        readers.sort((a, b) => {
+          const aName = (a.HOLOT + ' ' + a.TEN).toLowerCase();
+          const bName = (b.HOLOT + ' ' + b.TEN).toLowerCase();
+          return aName.localeCompare(bName);
+        });
+
+        // Apply search filter if there's search text
+        let filteredReaders = readers;
+        if (this.searchTextFromQuery) {
+          const lowerSearch = this.searchTextFromQuery.toLowerCase();
+          filteredReaders = readers.filter(
+            (dg) =>
+              dg.HOLOT.toLowerCase().includes(lowerSearch) ||
+              dg.TEN.toLowerCase().includes(lowerSearch) ||
+              (dg.DIENTHOAI && dg.DIENTHOAI.includes(lowerSearch))
+          );
+        }
+
+        // Find the index of the new reader in the filtered list
+        const readerIndex = filteredReaders.findIndex(reader => reader._id === newReader._id);
+        if (readerIndex !== -1) {
+          const itemsPerPage = parseInt(this.itemsPerPageFromQuery) || 5;
+          const calculatedPage = Math.ceil((readerIndex + 1) / itemsPerPage);
+          return calculatedPage;
+        } else {
+          return 1; // Fallback to page 1 if not found
+        }
+      } catch (error) {
+        console.error("Error calculating reader page:", error);
+        return 1; // Fallback
+      }
+    },
+
     async handleRegister(user, { resetForm, setErrors }) {
       this.loading = true;
       this.message = "";
       this.isError = false;
 
       try {
-        await DocGiaService.create({
+        const response = await DocGiaService.create({
           username: user.username,
           password: user.password,
           HOLOT: user.HOLOT,
@@ -230,20 +276,27 @@ export default {
           DIACHI: user.DIACHI,
           DIENTHOAI: user.DIENTHOAI,
         });
-        
+
         this.message = "Thêm độc giả thành công!";
         this.isError = false;
-        
-        resetForm(); 
-        
+
+        resetForm();
+
+        // Calculate the page where the new reader will be located
+        const calculatedPage = await this.calculateReaderPage(response.data);
+
         setTimeout(() => {
-          this.$router.push('/admin/docgia');
+          const query = {};
+          if (calculatedPage > 1) query.page = calculatedPage;
+          if (this.itemsPerPageFromQuery) query.itemsPerPage = this.itemsPerPageFromQuery;
+          if (this.searchTextFromQuery) query.searchText = this.searchTextFromQuery;
+          this.$router.push({ name: 'admin.docgia', query });
         }, 1500);
 
       } catch (error) {
         this.isError = true;
-        
-        if (error.response && error.response.status === 409) { 
+
+        if (error.response && error.response.status === 409) {
              this.message = "Tên đăng nhập đã tồn tại. Vui lòng chọn tên khác.";
              setErrors({ username: 'Tên đăng nhập đã được sử dụng' });
         } else {

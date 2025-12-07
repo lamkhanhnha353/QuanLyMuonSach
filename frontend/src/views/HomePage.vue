@@ -84,8 +84,11 @@
          <div v-else class="row g-4">
             <div class="col-md-3 col-sm-6" v-for="(book, i) in featuredBooks" :key="book._id">
                <div class="book-card h-100 scroll-animate fade-in-up" :style="{ transitionDelay: `${i * 100}ms` }">
-                  <div class="book-cover-wrapper rounded-3 overflow-hidden position-relative mb-3">
-                     <img :src="book.HinhAnh || placeholderImage" class="w-100 h-100 object-fit-cover transition-transform" :alt="book.TENSACH">
+                  <div class="book-cover-wrapper rounded-3 overflow-hidden position-relative mb-3 bg-light">
+                     <img :src="book.HinhAnh || placeholderImage" 
+                          class="w-100 h-100 object-fit-contain transition-transform" 
+                          :alt="book.TENSACH">
+                          
                      <div class="book-overlay d-flex align-items-center justify-content-center gap-2">
                         <button class="btn btn-light btn-icon rounded-circle text-primary shadow" title="Xem chi tiết">
                            <i class="fas fa-eye"></i>
@@ -330,7 +333,7 @@ export default {
     return {
       featuredBooks: [],
       loading: true,
-      placeholderImage: "https://via.placeholder.com/200x300?text=No+Image",
+      placeholderImage: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNCIgZmlsbD0iIzk5YTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==",
       categories: [
          { name: "Văn Học", count: 120, icon: "fas fa-feather-alt", colorClass: "text-danger bg-danger-subtle" },
          { name: "Kinh Tế", count: 85, icon: "fas fa-chart-line", colorClass: "text-success bg-success-subtle" },

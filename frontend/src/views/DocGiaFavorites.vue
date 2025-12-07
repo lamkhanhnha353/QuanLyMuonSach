@@ -75,7 +75,7 @@ export default {
       favorites: [],
       loading: true,
       removing: null,
-      placeholderImage: "https://via.placeholder.com/300x400?text=No+Cover",
+      placeholderImage: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNCIgZmlsbD0iIzk5YTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIENvdmVyPC90ZXh0Pjwvc3ZnPg==",
     };
   },
   methods: {
@@ -92,9 +92,20 @@ export default {
         const favoriteIds = response.data || [];
 
         if (favoriteIds && Array.isArray(favoriteIds) && favoriteIds.length > 0) {
-          const bookPromises = favoriteIds.map(id => SachService.get(id));
-          const bookResponses = await Promise.all(bookPromises);
-          this.favorites = bookResponses.map(res => res.data || res);
+          // Filter out invalid IDs (empty strings, null, undefined)
+          const validIds = favoriteIds.filter(id => id && typeof id === 'string' && id.trim() !== '');
+
+          if (validIds.length > 0) {
+            const bookPromises = validIds.map(id => SachService.get(id));
+            const bookResults = await Promise.allSettled(bookPromises);
+
+            // Only include successfully fetched books
+            this.favorites = bookResults
+              .filter(result => result.status === 'fulfilled')
+              .map(result => result.value.data || result.value);
+          } else {
+            this.favorites = [];
+          }
         } else {
           this.favorites = [];
         }

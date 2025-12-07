@@ -3,7 +3,7 @@
     <!-- Header Section -->
     <div class="row align-items-center mb-3">
       <div class="col-auto">
-        <router-link to="/admin/docgia" class="btn btn-light shadow-sm rounded-pill px-3 fw-bold text-primary">
+        <router-link :to="{ name: 'admin.docgia', query: { page: pageFromQuery, itemsPerPage: itemsPerPageFromQuery, searchText: searchTextFromQuery } }" class="btn btn-light shadow-sm rounded-pill px-3 fw-bold text-primary">
           <i class="fas fa-arrow-left me-2"></i> Quay lại
         </router-link>
       </div>
@@ -222,7 +222,10 @@ export default {
       docgia: null,
       editSchema,
       showPassword: false,
-      pageFromQuery: this.$route.query.page || 1,
+      pageFromQuery: this.$route.query.page,
+      itemsPerPageFromQuery: this.$route.query.itemsPerPage || 5,
+      searchTextFromQuery: this.$route.query.searchText || '',
+      calculatedPage: null,
     };
   },
   methods: {
@@ -247,6 +250,25 @@ export default {
         this.loading = false;
       }
     },
+
+    async calculateReaderPage() {
+      try {
+        // Fetch all readers to find the position of the updated reader
+        const response = await DocGiaService.getAll();
+        const readers = response.data;
+        const readerIndex = readers.findIndex(reader => reader._id === this.docgia._id);
+        if (readerIndex !== -1) {
+          const itemsPerPage = parseInt(this.itemsPerPageFromQuery) || 5;
+          this.calculatedPage = Math.ceil((readerIndex + 1) / itemsPerPage);
+        } else {
+          this.calculatedPage = 1; // Fallback to page 1 if not found
+        }
+      } catch (error) {
+        console.error("Error calculating reader page:", error);
+        this.calculatedPage = 1; // Fallback
+      }
+    },
+
 
     async handleUpdate(data, { setErrors }) {
         this.isSubmitting = true;
@@ -290,7 +312,11 @@ export default {
 
           // Chuyển trang sau 1.5s
           setTimeout(() => {
-            this.$router.push({ name: 'admin.docgia', query: { page: this.pageFromQuery } });
+            const query = {};
+            if (this.pageFromQuery) query.page = this.pageFromQuery;
+            if (this.itemsPerPageFromQuery) query.itemsPerPage = this.itemsPerPageFromQuery;
+            if (this.searchTextFromQuery) query.searchText = this.searchTextFromQuery;
+            this.$router.push({ name: 'admin.docgia', query });
           }, 1500);
 
         } catch (error) {
