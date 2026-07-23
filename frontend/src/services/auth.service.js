@@ -15,10 +15,10 @@ class AuthService {
         if (response.data && response.data.data) {
           // Chỉ lưu thông tin user (response.data.data)
           localStorage.setItem("user", JSON.stringify(response.data.data));
+          if (response.data.token) localStorage.setItem("token", response.data.token);
           return response.data.data;
-        } else {
-          return null; 
         }
+        return null;
       });
   }
 
@@ -38,7 +38,7 @@ class AuthService {
           localStorage.setItem("user", JSON.stringify(response.data.data));
           return response.data.data;
         } else {
-          return null; 
+          return null;
         }
       });
   }
