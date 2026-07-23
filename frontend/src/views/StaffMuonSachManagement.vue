@@ -459,20 +459,11 @@ export default {
             // Tìm nhà xuất bản có MANXB matching
             nhaXuatBanInfo = nhaXuatBanRes.data.find(nxb => nxb.MANXB === sachInfo.MANXB);
           }
-
-          // Tính tiền phạt cho sách trễ hạn
-          let tienPhat = 0;
-          if (item.trangThai === 'trễ hạn') {
-            const soLuong = item.soLuong || 1;
-            tienPhat = soLuong * 50000; // 50,000đ mỗi cuốn
-          }
-
           return {
             ...item,
             docGiaInfo: docGiaMap.get(item.docGiaId),
             sachInfo: sachInfo ? { ...sachInfo, tenNhaXuatBan: nhaXuatBanInfo?.TENNXB || 'N/A' } : null,
             nhanVienInfo: item.nhanVienId ? nhanVienMap.get(item.nhanVienId) : null,
-            tienPhat: tienPhat
           };
         });
       } catch (error) { console.error(error); } finally { this.loading = false; }

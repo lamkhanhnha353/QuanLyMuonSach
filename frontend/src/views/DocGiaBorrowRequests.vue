@@ -363,15 +363,8 @@ export default {
             }
           }
 
-          let tienPhat = 0;
-          if (out.displayTrangThai === 'trễ hạn') {
-            const soLuong = out.soLuong || 1;
-            tienPhat = soLuong * 50000;
-          }
-
           return {
             ...out,
-            tienPhat: tienPhat
           };
         }));
 
