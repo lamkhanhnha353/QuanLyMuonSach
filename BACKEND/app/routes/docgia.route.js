@@ -11,7 +11,7 @@ router.route("/login")
 router.route("/")
     .get(verifyToken, checkRole(["Admin"]), docgia.findAll)
     .post(docgia.create) // Đây là Đăng Ký
-    .delete(verify, checkRole(["Admin"]), docgia.deleteAll);
+    .delete(verifyToken, checkRole(["Admin"]), docgia.deleteAll);
 
 router.route("/:id")
     .get(verifyToken, checkRole(["Admin"]), docgia.findOne)
@@ -20,10 +20,10 @@ router.route("/:id")
 
 // Favorites routes
 router.route("/:id/favorites")
-    .get(verifyToken, checkToken(["DocGia"]), docgia.getFavorites)
-    .post(verifyToken, checkToken(["DocGia"]), docgia.addFavorite);
+    .get(verifyToken, checkRole(["DocGia"]), docgia.getFavorites)
+    .post(verifyToken, checkRole(["DocGia"]), docgia.addFavorite);
 
 router.route("/:id/favorites/:sachId")
-    .delete(verifyToken, checkToken(["DocGia"]), docgia.removeFavorite);
+    .delete(verifyToken, checkRole(["DocGia"]), docgia.removeFavorite);
 
 module.exports = router;
