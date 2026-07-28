@@ -19,9 +19,9 @@ router.route("/docgia/:id")
 // Route cho Nhân Viên: Quản lý 1 phiếu mượn cụ thể
 // :id ở đây là ID của Phiếu Mượn
 router.route("/:id")
-    .get(verifyToken, checkRole(["Admin"]), muonsach.findOne)
-    .put(verifyToken, checkRole(["Admin"]), muonsach.update) // Dùng để duyệt/trả/từ chối
-    .delete(verifyToken, checkRole(["Admin"]), muonsach.delete);
+    .get(verifyToken, checkRole(["Admin", "Staff"]), muonsach.findOne)
+    .put(verifyToken, checkRole(["Admin", "Staff"]), muonsach.update) // Dùng để duyệt/trả/từ chối
+    .delete(verifyToken, checkRole(["Admin", "Staff"]), muonsach.delete);
 
 // Route cho Độc Giả: Yêu cầu trả sách
 router.route("/:id/request-return")
@@ -29,7 +29,7 @@ router.route("/:id/request-return")
 
 // Route cho Nhân Viên: Xác nhận trả sách (cập nhật ngayTraThucTe và tăng SOQUYEN)
 router.route("/:id/confirm-return")
-    .put(verifyToken, checkRole(["Admin"]), muonsach.confirmReturn);
+    .put(verifyToken, checkRole(["Admin", "Staff"]), muonsach.confirmReturn);
 
 // Route cho Độc Giả: Xác nhận nộp phạt
 router.route("/:id/confirm-fine-payment")
