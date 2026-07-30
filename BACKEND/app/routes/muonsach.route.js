@@ -8,7 +8,7 @@ const router = express.Router();
 // Route cho Độc Giả: Tạo phiếu mượn
 // Route cho Nhân Viên: Xem tất cả phiếu mượn
 router.route("/")
-    .get(verifyToken, checkRole(["Admin"]), muonsach.findAll)
+    .get(verifyToken, checkRole(["Admin", "Staff"]), muonsach.findAll)
     .post(verifyToken, checkRole(["DocGia"]), muonsach.create);
 
 // Route cho Độc Giả: Xem lịch sử mượn của mình
