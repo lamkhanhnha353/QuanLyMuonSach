@@ -8,10 +8,14 @@ module.exports = (req, res, next) => {
         return next(new ApiError(401, "Không có token xác thực"));
     }
     const token = authHeader.split(" ")[1];
-    try {
-        req.user = jwt.verify(token, config.jwt.secret); // { id, role }
+    jwt.verify(token, config.jwt.secret, (err, decoded) => {
+        if (err) {
+            if (err.name === 'TokenExpiredError') {
+                return next(new ApiError(401, "Token đã hết hạn"));
+            }
+            return next(new ApiError(401, "Token không hợp lệ"));
+        }
+        req.user = decoded; // { id, role }
         next();
-    } catch (err) {
-        return next(new ApiError(401, "Token không hợp lệ hoặc đã hết hạn"));
-    }
+    });
 };
