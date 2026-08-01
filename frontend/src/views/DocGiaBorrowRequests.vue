@@ -186,11 +186,12 @@
                         <div class="col-4 text-muted fw-medium small">Phạt trễ hạn:</div>
                         <div class="col-8 text-danger small fw-bold">
                            {{ formatCurrency(selectedRequest.tienPhat || 0) }}
-                           <span v-if="selectedRequest.daXacNhanNopPhat" class="badge bg-success ms-2" style="font-size: 0.7em;">Đã nộp</span>
+                           <span v-if="selectedRequest.daNopPhat" class="badge bg-success ms-2" style="font-size: 0.7em;">Đã nộp</span>
+                           <span v-else-if="selectedRequest.daXacNhanNopPhat" class="badge bg-warning ms-2" style="font-size: 0.7em;">Đang chờ duyệt</span>
                            <span v-else class="badge bg-danger ms-2" style="font-size: 0.7em;">Chưa nộp</span>
                         </div>
                       </div>
-                      <div class="row mb-2" v-if="(selectedRequest.tienPhat && selectedRequest.tienPhat > 0) && !selectedRequest.daXacNhanNopPhat">
+                      <div class="row mb-2" v-if="(selectedRequest.tienPhat && selectedRequest.tienPhat > 0) && !selectedRequest.daNopPhat && !selectedRequest.daXacNhanNopPhat">
                         <div class="col-12">
                           <div class="border rounded p-2 bg-light d-flex justify-content-between align-items-center">
                             <div>
