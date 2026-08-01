@@ -294,6 +294,10 @@ class MuonSachService {
             updateData.daXacNhanNopPhat = payload.daXacNhanNopPhat;
         }
 
+        if (payload.daNopPhat !== undefined) {
+            updateData.daNopPhat = payload.daNopPhat;
+        }
+
         const result = await this.MuonSach.findOneAndUpdate(
             filter,
             { $set: updateData },
