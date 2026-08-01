@@ -182,11 +182,15 @@
                         <div class="col-4 text-muted fw-medium small">Lý do từ chối:</div>
                         <div class="col-8 text-dark small fw-bold">{{ selectedRequest.lyDoTuChoi }}</div>
                       </div>
-                      <div class="row mb-2" v-if="(selectedRequest.displayTrangThai || selectedRequest.trangThai) === 'trễ hạn'">
+                      <div class="row mb-2" v-if="selectedRequest.tienPhat && selectedRequest.tienPhat > 0">
                         <div class="col-4 text-muted fw-medium small">Phạt trễ hạn:</div>
-                        <div class="col-8 text-danger small fw-bold">{{ formatCurrency(selectedRequest.tienPhat || 0) }}</div>
+                        <div class="col-8 text-danger small fw-bold">
+                           {{ formatCurrency(selectedRequest.tienPhat || 0) }}
+                           <span v-if="selectedRequest.daXacNhanNopPhat" class="badge bg-success ms-2" style="font-size: 0.7em;">Đã nộp</span>
+                           <span v-else class="badge bg-danger ms-2" style="font-size: 0.7em;">Chưa nộp</span>
+                        </div>
                       </div>
-                      <div class="row mb-2" v-if="(selectedRequest.displayTrangThai || selectedRequest.trangThai) === 'trễ hạn'">
+                      <div class="row mb-2" v-if="(selectedRequest.tienPhat && selectedRequest.tienPhat > 0) && !selectedRequest.daXacNhanNopPhat">
                         <div class="col-12">
                           <div class="border rounded p-2 bg-light d-flex justify-content-between align-items-center">
                             <div>
@@ -401,7 +405,8 @@ export default {
       return ((r.displayTrangThai || r.trangThai) || '').toLowerCase() === 'chờ duyệt';
     },
     canReturn(r) {
-      return ((r.displayTrangThai || r.trangThai) || '').toLowerCase() === 'đang mượn';
+      const status = ((r.displayTrangThai || r.trangThai) || '').toLowerCase();
+      return status === 'đang mượn' || status === 'trễ hạn';
     },
     showDetail(r) {
       this.selectedRequest = r;
