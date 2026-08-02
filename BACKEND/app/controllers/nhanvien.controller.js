@@ -1,6 +1,8 @@
 const NhanVienService = require("../services/nhanvien.service");
 const MongoDB = require("../utils/mongodb.util");
 const ApiError = require("../api-error");
+const jwt = require("jsonwebtoken");
+const config = require("../config");
 
 // 1. Create (Register): Tạo nhân viên mới
 exports.create = async (req, res, next) => {
@@ -13,7 +15,7 @@ exports.create = async (req, res, next) => {
         const nhanVienService = new NhanVienService(MongoDB.client);
         // (Hàm service.create đã được sửa lỗi insertedId)
         const document = await nhanVienService.create(req.body);
-        
+
         // (Format trả về của bạn)
         return res.send({ message: "Tạo nhân viên thành công", data: document });
     } catch (error) {
@@ -37,9 +39,13 @@ exports.login = async (req, res, next) => {
         const nhanVienService = new NhanVienService(MongoDB.client);
         // (Hàm service.login đã được sửa lỗi so sánh pass)
         const nhanvien = await nhanVienService.login(req.body);
-        
+
+        const token = jwt.sign({
+            _id: nhanvien._id,
+            role: nhanvien.ChucVu
+        }, config.jwt.secret, { expiresIn: config.jwt.expiresIn });
         // (Format trả về của bạn)
-        return res.send({ message: "Đăng nhập thành công", data: nhanvien });
+        return res.send({ message: "Đăng nhập thành công", data: nhanvien, token });
     } catch (error) {
         return next(new ApiError(401, error.message)); // 401 = Unauthorized
     }
@@ -68,7 +74,7 @@ exports.findOne = async (req, res, next) => {
         if (!document) {
             return next(new ApiError(404, "Không tìm thấy nhân viên"));
         }
-        delete document.Password; 
+        delete document.Password;
         return res.send(document);
     } catch (error) {
         return next(
@@ -105,7 +111,7 @@ exports.delete = async (req, res, next) => {
     try {
         const nhanVienService = new NhanVienService(MongoDB.client);
         const document = await nhanVienService.delete(req.params.id);
-        
+
         if (!document || (document.value === null && document.ok !== 1)) {
             return next(new ApiError(404, "Không tìm thấy nhân viên để xóa"));
         }

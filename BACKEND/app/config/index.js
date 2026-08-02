@@ -30,7 +30,13 @@ const config = {
         maxDaysPerBorrow: 14,          // Tối đa 14 ngày mượn
         finePerDay: 5000,              // Phạt 5,000 VNĐ/ngày trễ
         finePerDayText: "5,000 VNĐ",   // Text hiển thị
+    },
+    // Cấu hình JWT (xác thực đăng nhập)
+    jwt: {
+        secret: process.env.JWT_SECRET,
+        expiresIn: process.env.JWT_EXPIRES_IN || "1d",
     }
 };
 
 module.exports = config;
+

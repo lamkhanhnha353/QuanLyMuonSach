@@ -11,122 +11,126 @@ class MuonSachService {
      * 1. Create: Chức năng cho Độc Giả tạo phiếu mượn mới.
      * (Đã thêm logic kiểm tra SOQUYEN)
      */
-   // DÁN ĐÈ TOÀN BỘ HÀM NÀY VÀO 'muonsach.service.js'
+    // DÁN ĐÈ TOÀN BỘ HÀM NÀY VÀO 'muonsach.service.js'
+    _tinhTienPhat(phieuMuon) {
+        const DON_GIA_MOI_NGAY = 5000;
+        const hanTra = new Date(phieuMuon.ngayTra);
+        const ngayDoiChieu = phieuMuon.ngayTraThucTe
+            ? new Date(phieuMuon.ngayTraThucTe)
+            : new Date();
 
-async create(payload) {
+        const soNgayTre = Math.max(
+            0,
+            Math.floor((ngayDoiChieu - hanTra) / (1000 * 60 * 60 * 24))
+        );
 
-    // --- 1. LÀM SẠCH VÀ KIỂM TRA ID SÁCH ---
-    // Đọc 'payload.sachId'
-    const cleanSachId = payload.sachId ? String(payload.sachId).trim().replace(/"/g, '') : null;
-    const sachId = ObjectId.isValid(cleanSachId) ? new ObjectId(cleanSachId) : null;
-    if (!sachId) {
-        throw new Error("ID Sách không hợp lệ");
+        return soNgayTre * DON_GIA_MOI_NGAY * (phieuMuon.soLuong || 1);
     }
 
-    // --- 2. LÀM SẠCH VÀ KIỂM TRA ID ĐỘC GIẢ ---
-    // Đọc 'payload.docGiaId' (CHÍNH XÁC TỪNG CHỮ HOA, THƯỜNG)
-    const cleanDocGiaId = payload.docGiaId ? String(payload.docGiaId).trim().replace(/"/g, '') : null;
-    const docGiaId = ObjectId.isValid(cleanDocGiaId) ? new ObjectId(cleanDocGiaId) : null;
+    async create(payload) {
 
-    if (!docGiaId) {
-        // Lỗi 500 của bạn xuất phát từ đây
-        throw new Error("ID Độc Giả không hợp lệ (Lỗi đọc payload)"); 
-    }
-
-    // --- 2.5. KIỂM TRA VÀ LẤY SỐ LƯỢNG MƯỢN ---
-    let soLuong = payload.soLuong ? parseInt(payload.soLuong) : 1;
-    
-    if (soLuong < 1 || isNaN(soLuong)) {
-        throw new Error("Số lượng mượn phải lớn hơn 0");
-    }
-
-    if (soLuong > 3) {
-        throw new Error("Mỗi lần chỉ được mượn tối đa 3 quyển");
-    }
-
-    // --- 3. KIỂM TRA LOGIC SÁCH (KHÔNG TRỪ KHO NGAY, CHỈ KIỂM TRA TỒN TẠI) ---
-    const sach = await this.Sach.findOne({ _id: sachId });
-    if (!sach) throw new Error("Không tìm thấy sách");
-
-    // --- 3.5. KIỂM TRA SỐ LƯỢNG SÁCH CÒN LẠI ---
-    if (sach.SOQUYEN < soLuong) {
-        throw new Error(`Chỉ còn ${sach.SOQUYEN} quyển, không thể mượn ${soLuong} quyển`);
-    }
-
-    // --- 3.75. KIỂM TRA HẠNMỨC TỔNG CỘNG ĐỦC GIẢ (MAX 10 QUYỂN) ---
-    const docGiaMuonSach = await this.MuonSach.find({
-        docGiaId: docGiaId,
-        trangThai: { $in: ["chờ duyệt", "đã duyệt", "đang mượn"] }
-    }).toArray();
-
-    // Tính tổng số quyển đang mượn
-    const currentBorrowCount = docGiaMuonSach.reduce((sum, record) => sum + (record.soLuong || 1), 0);
-    
-    if (currentBorrowCount + soLuong > 10) {
-        throw new Error(`Bạn đã mượn ${currentBorrowCount} quyển. Không thể vượt quá hạn mức 10 quyển`);
-    }
-
-    // --- 3.85. KIỂM TRA MAX 3 QUYỂN PER SÁCH ---
-    const bookBorrowRecords = await this.MuonSach.find({
-        docGiaId: docGiaId,
-        sachId: sachId,
-        trangThai: { $in: ["chờ duyệt", "đã duyệt", "đang mượn"] }
-    }).toArray();
-
-    const bookBorrowCount = bookBorrowRecords.reduce((sum, record) => sum + (record.soLuong || 1), 0);
-    
-    if (bookBorrowCount + soLuong > 3) {
-        throw new Error(`Cuốn sách này bạn chỉ được mượn tối đa 3 quyển. Hiện tại bạn đã mượn ${bookBorrowCount} quyển`);
-    }
-
-    // --- 4. NÂNG CẤP LOGIC NHÂN VIÊN ---
-    let trangThaiMoi = "chờ duyệt";
-    let nhanVienXuLyId = null;
-
-    // Đọc 'payload.nhanVienId'
-    if (payload.nhanVienId) {
-        const cleanNhanVienId = payload.nhanVienId ? String(payload.nhanVienId).trim().replace(/"/g, '') : null;
-        if (ObjectId.isValid(cleanNhanVienId)) {
-            nhanVienXuLyId = new ObjectId(cleanNhanVienId);
-            trangThaiMoi = "đã duyệt"; // Tự động duyệt luôn
+        // --- 1. LÀM SẠCH VÀ KIỂM TRA ID SÁCH ---
+        // Đọc 'payload.sachId'
+        const cleanSachId = payload.sachId ? String(payload.sachId).trim().replace(/"/g, '') : null;
+        const sachId = ObjectId.isValid(cleanSachId) ? new ObjectId(cleanSachId) : null;
+        if (!sachId) {
+            throw new Error("ID Sách không hợp lệ");
         }
+
+        // --- 2. LÀM SẠCH VÀ KIỂM TRA ID ĐỘC GIẢ ---
+        // Đọc 'payload.docGiaId' (CHÍNH XÁC TỪNG CHỮ HOA, THƯỜNG)
+        const cleanDocGiaId = payload.docGiaId ? String(payload.docGiaId).trim().replace(/"/g, '') : null;
+        const docGiaId = ObjectId.isValid(cleanDocGiaId) ? new ObjectId(cleanDocGiaId) : null;
+
+        if (!docGiaId) {
+            // Lỗi 500 của bạn xuất phát từ đây
+            throw new Error("ID Độc Giả không hợp lệ (Lỗi đọc payload)");
+        }
+
+        // --- 2.5. KIỂM TRA VÀ LẤY SỐ LƯỢNG MƯỢN ---
+        let soLuong = payload.soLuong ? parseInt(payload.soLuong) : 1;
+
+        if (soLuong < 1 || isNaN(soLuong)) {
+            throw new Error("Số lượng mượn phải lớn hơn 0");
+        }
+
+        if (soLuong > 3) {
+            throw new Error("Mỗi lần chỉ được mượn tối đa 3 quyển");
+        }
+
+        // --- 3. KIỂM TRA LOGIC SÁCH (KHÔNG TRỪ KHO NGAY, CHỈ KIỂM TRA TỒN TẠI) ---
+        const sach = await this.Sach.findOne({ _id: sachId });
+        if (!sach) throw new Error("Không tìm thấy sách");
+
+        // --- 3.5. KIỂM TRA SỐ LƯỢNG SÁCH CÒN LẠI ---
+        if (sach.SOQUYEN < soLuong) {
+            throw new Error(`Chỉ còn ${sach.SOQUYEN} quyển, không thể mượn ${soLuong} quyển`);
+        }
+
+        // --- 3.75. KIỂM TRA HẠNMỨC TỔNG CỘNG ĐỦC GIẢ (MAX 10 QUYỂN) ---
+        const docGiaMuonSach = await this.MuonSach.find({
+            docGiaId: docGiaId,
+            trangThai: { $in: ["chờ duyệt", "đã duyệt", "đang mượn"] }
+        }).toArray();
+
+        // Tính tổng số quyển đang mượn
+        const currentBorrowCount = docGiaMuonSach.reduce((sum, record) => sum + (record.soLuong || 1), 0);
+
+        if (currentBorrowCount + soLuong > 10) {
+            throw new Error(`Bạn đã mượn ${currentBorrowCount} quyển. Không thể vượt quá hạn mức 10 quyển`);
+        }
+
+        // --- 3.85. KIỂM TRA MAX 3 QUYỂN PER SÁCH ---
+        const bookBorrowRecords = await this.MuonSach.find({
+            docGiaId: docGiaId,
+            sachId: sachId,
+            trangThai: { $in: ["chờ duyệt", "đã duyệt", "đang mượn"] }
+        }).toArray();
+
+        const bookBorrowCount = bookBorrowRecords.reduce((sum, record) => sum + (record.soLuong || 1), 0);
+
+        if (bookBorrowCount + soLuong > 3) {
+            throw new Error(`Cuốn sách này bạn chỉ được mượn tối đa 3 quyển. Hiện tại bạn đã mượn ${bookBorrowCount} quyển`);
+        }
+
+        // Độc giả tạo luôn là "chờ duyệt", nhân viên sẽ duyệt sau
+        let trangThaiMoi = "chờ duyệt";
+        let nhanVienXuLyId = null;
+
+        const phieuMuonData = {
+            docGiaId: docGiaId,
+            sachId: sachId,
+            soLuong: soLuong,
+            ngayMuon: payload.ngayMuon,
+            ngayTra: payload.ngayTra,
+            trangThai: trangThaiMoi,
+            nhanVienId: nhanVienXuLyId,
+            ngayTraThucTe: null,
+        };
+
+        const result = await this.MuonSach.insertOne(phieuMuonData);
+        return await this.findById(result.insertedId);
     }
-    // --- KẾT THÚC NÂNG CẤP ---
 
-    const phieuMuonData = {
-        docGiaId: docGiaId,
-        sachId: sachId,
-        soLuong: soLuong,
-        ngayMuon: payload.ngayMuon,
-        ngayTra: payload.ngayTra,
-        trangThai: trangThaiMoi, 
-        nhanVienId: nhanVienXuLyId,
-        ngayTraThucTe: null, 
-    };
 
-    const result = await this.MuonSach.insertOne(phieuMuonData);
-    return await this.findById(result.insertedId);
-}
+    //2. Find: Chức năng cho Nhân Viên/Admin xem tất cả phiếu mượn.
 
-    
-     //2. Find: Chức năng cho Nhân Viên/Admin xem tất cả phiếu mượn.
-     
     async find(filter) {
         const cursor = await this.MuonSach.find(filter);
         return await cursor.toArray();
     }
 
-     //3. Find by ID: Lấy chi tiết 1 phiếu mượn. 
+    //3. Find by ID: Lấy chi tiết 1 phiếu mượn. 
     async findById(id) {
         return await this.MuonSach.findOne({
             _id: ObjectId.isValid(id) ? new ObjectId(id) : null,
         });
     }
 
-     //4. Find by DocGiaId: Chức năng cho Độc Giả xem lịch sử mượn.
+    //4. Find by DocGiaId: Chức năng cho Độc Giả xem lịch sử mượn.
     async findByDocGia(docGiaId) {
         const filter = {
-             docGiaId: ObjectId.isValid(docGiaId) ? new ObjectId(docGiaId) : null
+            docGiaId: ObjectId.isValid(docGiaId) ? new ObjectId(docGiaId) : null
         };
         const records = await this.find(filter);
 
@@ -156,18 +160,18 @@ async create(payload) {
                         out.TENSACH = sach.TENSACH || out.TENSACH;
                         out.TACGIA = sach.TACGIA || out.TACGIA;
                         out.NAMXB = sach.NAMXUATBAN || sach.NAMXB || out.NAMXB;
-                        
+
                         // Populate NXB name - find by MANXB (code) or _id
                         out.nxbName = 'N/A'; // Default value
                         if (sach.MANXB) {
                             // Try to find by MANXB first (string field)
                             let nxb = await this.client.db().collection("NHAXUATBAN").findOne({ MANXB: sach.MANXB });
-                            
+
                             // If not found and MANXB is valid ObjectId, try by _id
                             if (!nxb && ObjectId.isValid(sach.MANXB)) {
                                 nxb = await this.client.db().collection("NHAXUATBAN").findOne({ _id: new ObjectId(sach.MANXB) });
                             }
-                            
+
                             if (nxb) {
                                 out.nxbName = nxb.TENNXB;
                             } else {
@@ -205,7 +209,7 @@ async create(payload) {
 
         // B. Kiểm tra và cập nhật số lượng sách
         const soLuong = currentPhieuMuon.soLuong || 1; // Lấy số lượng từ phiếu
-        
+
         // Giảm SOQUYEN khi duyệt phiếu mượn (giảm theo số lượng)
         if (newTrangThai === "đã duyệt" && oldTrangThai === "chờ duyệt") {
             const sach = await this.Sach.findOne({ _id: sachId });
@@ -222,7 +226,7 @@ async create(payload) {
         // 2. Trạng thái mới là "từ chối" (VÀ trạng thái cũ là "chờ duyệt" hoặc "đã duyệt" hoặc "đang mượn" hoặc "đang chờ trả")
 
         const isReturning = (newTrangThai === "đã trả" && oldTrangThai !== "đã trả");
-        const isRejected = (newTrangThai === "từ chối" && ["chờ duyệt", "đã duyệt", "đang mượn", "đang chờ trả"].includes(oldTrangThai));
+        const isRejected = (newTrangThai === "từ chối" && ["đã duyệt", "đang mượn", "đang chờ trả"].includes(oldTrangThai));
 
         if (isReturning || isRejected) {
             // Cộng soLuong trả lại SOQUYEN cho sách
@@ -243,7 +247,7 @@ async create(payload) {
         } else if (!newTrangThai && payload.daXacNhanNopPhat !== undefined) {
             // Cho phép cập nhật daXacNhanNopPhat mà không cần trạng thái mới
         } else {
-             throw new Error("Trạng thái cập nhật không hợp lệ");
+            throw new Error("Trạng thái cập nhật không hợp lệ");
         }
 
         // Chỉ yêu cầu nhanVienId khi không phải yêu cầu trả sách từ độc giả hoặc cập nhật daXacNhanNopPhat
@@ -264,6 +268,10 @@ async create(payload) {
 
         if (newTrangThai === "đã trả") {
             updateData.ngayTraThucTe = new Date().toISOString().split('T')[0]; // Ghi nhận ngày hôm nay
+            updateData.tienPhat = this._tinhTienPhat({
+                ...currentPhieuMuon,
+                ngayTraThucTe: updateData.ngayTraThucTe
+            });
         }
 
         // Thêm lý do từ chối nếu trạng thái là 'từ chối'
@@ -274,6 +282,10 @@ async create(payload) {
         // Thêm xác nhận nộp phạt từ độc giả
         if (payload.daXacNhanNopPhat !== undefined) {
             updateData.daXacNhanNopPhat = payload.daXacNhanNopPhat;
+        }
+
+        if (payload.daNopPhat !== undefined) {
+            updateData.daNopPhat = payload.daNopPhat;
         }
 
         const result = await this.MuonSach.findOneAndUpdate(
@@ -297,7 +309,7 @@ async create(payload) {
             // Nếu phiếu bị xóa khi sách đang ở ngoài (chờ, đã duyệt, đang mượn)
             // thì phải trả sách về kho
             if (["chờ duyệt", "đã duyệt", "đang mượn"].includes(trangThai)) {
-                 await this.Sach.updateOne(
+                await this.Sach.updateOne(
                     { _id: sachId },
                     { $inc: { SOQUYEN: +soLuong } }
                 );
@@ -308,7 +320,7 @@ async create(payload) {
         const result = await this.MuonSach.findOneAndDelete({
             _id: ObjectId.isValid(id) ? new ObjectId(id) : null,
         });
-        return result; 
+        return result;
     }
 }
 

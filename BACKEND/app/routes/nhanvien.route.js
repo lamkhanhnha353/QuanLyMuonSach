@@ -1,6 +1,8 @@
 const express = require("express");
 const nhanvien = require("../controllers/nhanvien.controller");
-    
+const verifyToken = require("../middlewares/verifyToken");
+const checkRole = require("../middlewares/checkRole");
+
 const router = express.Router();
 
 router.route("/login")
@@ -9,13 +11,13 @@ router.route("/login")
 // --- Route CRUD (cho Admin quản lý) ---
 
 router.route("/")
-    .get(nhanvien.findAll)
-    .post(nhanvien.create) // Đây là Đăng Ký nhân viên
-    .delete(nhanvien.deleteAll);
+    .get(verifyToken, checkRole(["Admin"]), nhanvien.findAll)
+    .post(verifyToken, checkRole(["Admin"]), nhanvien.create)
+    .delete(verifyToken, checkRole(["Admin"]), nhanvien.deleteAll);
 
 router.route("/:id")
-    .get(nhanvien.findOne)
-    .put(nhanvien.update)
-    .delete(nhanvien.delete);
+    .get(verifyToken, checkRole(["Admin"]), nhanvien.findOne)
+    .put(verifyToken, checkRole(["Admin"]), nhanvien.update)
+    .delete(verifyToken, checkRole(["Admin"]), nhanvien.delete);
 
 module.exports = router;

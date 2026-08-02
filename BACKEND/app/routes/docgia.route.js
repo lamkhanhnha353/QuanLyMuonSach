@@ -1,27 +1,29 @@
 const express = require("express");
 const docgia = require("../controllers/docgia.controller");
-    
+const verifyToken = require("../middlewares/verifyToken");
+const checkRole = require("../middlewares/checkRole");
+
 const router = express.Router();
 
 router.route("/login")
     .post(docgia.login);
 
 router.route("/")
-    .get(docgia.findAll)
+    .get(verifyToken, checkRole(["Admin", "Staff"]), docgia.findAll)
     .post(docgia.create) // Đây là Đăng Ký
-    .delete(docgia.deleteAll);
+    .delete(verifyToken, checkRole(["Admin"]), docgia.deleteAll);
 
 router.route("/:id")
-    .get(docgia.findOne)
-    .put(docgia.update)
-    .delete(docgia.delete);
+    .get(verifyToken, checkRole(["Admin", "Staff", "DocGia"]), docgia.findOne)
+    .put(verifyToken, checkRole(["Admin"]), docgia.update)
+    .delete(verifyToken, checkRole(["Admin"]), docgia.delete);
 
 // Favorites routes
 router.route("/:id/favorites")
-    .get(docgia.getFavorites)
-    .post(docgia.addFavorite);
+    .get(verifyToken, checkRole(["DocGia"]), docgia.getFavorites)
+    .post(verifyToken, checkRole(["DocGia"]), docgia.addFavorite);
 
 router.route("/:id/favorites/:sachId")
-    .delete(docgia.removeFavorite);
+    .delete(verifyToken, checkRole(["DocGia"]), docgia.removeFavorite);
 
 module.exports = router;

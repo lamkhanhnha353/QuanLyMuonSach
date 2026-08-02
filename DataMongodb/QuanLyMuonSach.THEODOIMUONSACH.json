@@ -1,0 +1,674 @@
+[{
+  "_id": {
+    "$oid": "693118fef72b843d57ddc2be"
+  },
+  "docGiaId": {
+    "$oid": "691a1dbcb000a189393c4f19"
+  },
+  "sachId": {
+    "$oid": "692b97f0ecfd157eacc3b878"
+  },
+  "soLuong": 2,
+  "ngayMuon": "2025-12-04",
+  "ngayTra": "2025-12-18",
+  "trangThai": "đã trả",
+  "nhanVienId": {
+    "$oid": "691380d3ecaf0fb60e29d431"
+  },
+  "ngayTraThucTe": "2025-12-08",
+  "lyDoTuChoi": "bạn bị trễ hạn",
+  "daXacNhanNopPhat": true
+},
+{
+  "_id": {
+    "$oid": "69312a076bbcfdd79276a9b9"
+  },
+  "docGiaId": {
+    "$oid": "69139f99ecaf0fb60e29d43a"
+  },
+  "sachId": {
+    "$oid": "692b943becfd157eacc3b869"
+  },
+  "soLuong": 1,
+  "ngayMuon": "2025-12-04",
+  "ngayTra": "2025-12-18",
+  "trangThai": "trễ hạn",
+  "nhanVienId": null,
+  "ngayTraThucTe": null
+},
+{
+  "_id": {
+    "$oid": "69312d166bbcfdd79276a9be"
+  },
+  "docGiaId": {
+    "$oid": "69139a11ecaf0fb60e29d433"
+  },
+  "sachId": {
+    "$oid": "692b943becfd157eacc3b869"
+  },
+  "soLuong": 2,
+  "ngayMuon": "2025-12-04",
+  "ngayTra": "2025-12-18",
+  "trangThai": "đang chờ trả",
+  "nhanVienId": {
+    "$oid": "691380d3ecaf0fb60e29d431"
+  },
+  "ngayTraThucTe": null
+},
+{
+  "_id": {
+    "$oid": "69312d2f6bbcfdd79276a9bf"
+  },
+  "docGiaId": {
+    "$oid": "69139a11ecaf0fb60e29d433"
+  },
+  "sachId": {
+    "$oid": "692b943becfd157eacc3b869"
+  },
+  "soLuong": 1,
+  "ngayMuon": "2025-12-04",
+  "ngayTra": "2025-12-18",
+  "trangThai": "chờ duyệt",
+  "nhanVienId": null,
+  "ngayTraThucTe": null
+},
+{
+  "_id": {
+    "$oid": "69312d8f6bbcfdd79276a9c0"
+  },
+  "docGiaId": {
+    "$oid": "69139a11ecaf0fb60e29d433"
+  },
+  "sachId": {
+    "$oid": "692b9386ecfd157eacc3b867"
+  },
+  "soLuong": 1,
+  "ngayMuon": "2025-12-04",
+  "ngayTra": "2025-12-18",
+  "trangThai": "từ chối",
+  "nhanVienId": {
+    "$oid": "691380d3ecaf0fb60e29d431"
+  },
+  "ngayTraThucTe": null,
+  "lyDoTuChoi": "Bạn đang quy phạm quy tắc ứng xử"
+},
+{
+  "_id": {
+    "$oid": "69312e996bbcfdd79276a9c1"
+  },
+  "docGiaId": {
+    "$oid": "69139a11ecaf0fb60e29d433"
+  },
+  "sachId": {
+    "$oid": "692b9786ecfd157eacc3b875"
+  },
+  "soLuong": 1,
+  "ngayMuon": "2025-12-04",
+  "ngayTra": "2025-12-18",
+  "trangThai": "từ chối",
+  "nhanVienId": {
+    "$oid": "691380d3ecaf0fb60e29d431"
+  },
+  "ngayTraThucTe": null,
+  "lyDoTuChoi": "Bạn chưa trả sách"
+},
+{
+  "_id": {
+    "$oid": "6931353969217e8aeafd731f"
+  },
+  "docGiaId": {
+    "$oid": "69139b5cecaf0fb60e29d435"
+  },
+  "sachId": {
+    "$oid": "692b943becfd157eacc3b869"
+  },
+  "soLuong": 2,
+  "ngayMuon": "2025-12-04",
+  "ngayTra": "2025-12-18",
+  "trangThai": "chờ duyệt",
+  "nhanVienId": null,
+  "ngayTraThucTe": null
+},
+{
+  "_id": {
+    "$oid": "6931358469217e8aeafd7320"
+  },
+  "docGiaId": {
+    "$oid": "69139b5cecaf0fb60e29d435"
+  },
+  "sachId": {
+    "$oid": "692b97b2ecfd157eacc3b876"
+  },
+  "soLuong": 2,
+  "ngayMuon": "2025-12-04",
+  "ngayTra": "2025-12-18",
+  "trangThai": "đã duyệt",
+  "nhanVienId": {
+    "$oid": "691380d3ecaf0fb60e29d431"
+  },
+  "ngayTraThucTe": null
+},
+{
+  "_id": {
+    "$oid": "693136c069217e8aeafd7321"
+  },
+  "docGiaId": {
+    "$oid": "69139b5cecaf0fb60e29d435"
+  },
+  "sachId": {
+    "$oid": "692b9676ecfd157eacc3b872"
+  },
+  "soLuong": 2,
+  "ngayMuon": "2025-12-04",
+  "ngayTra": "2025-12-18",
+  "trangThai": "đã trả",
+  "nhanVienId": {
+    "$oid": "691380d3ecaf0fb60e29d431"
+  },
+  "ngayTraThucTe": "2025-12-04"
+},
+{
+  "_id": {
+    "$oid": "6931383a69217e8aeafd7322"
+  },
+  "docGiaId": {
+    "$oid": "69139b5cecaf0fb60e29d435"
+  },
+  "sachId": {
+    "$oid": "692b95d2ecfd157eacc3b86f"
+  },
+  "soLuong": 3,
+  "ngayMuon": "2025-12-04",
+  "ngayTra": "2025-12-18",
+  "trangThai": "đã trả",
+  "nhanVienId": {
+    "$oid": "691380d3ecaf0fb60e29d431"
+  },
+  "ngayTraThucTe": "2025-12-07",
+  "daXacNhanNopPhat": true
+},
+{
+  "_id": {
+    "$oid": "69313ce469217e8aeafd7323"
+  },
+  "docGiaId": {
+    "$oid": "69139b5cecaf0fb60e29d435"
+  },
+  "sachId": {
+    "$oid": "692b9386ecfd157eacc3b867"
+  },
+  "soLuong": 3,
+  "ngayMuon": "2025-12-04",
+  "ngayTra": "2025-12-18",
+  "trangThai": "đang mượn",
+  "nhanVienId": {
+    "$oid": "691380d3ecaf0fb60e29d431"
+  },
+  "ngayTraThucTe": null
+},
+{
+  "_id": {
+    "$oid": "693227788465f12f971ae4ad"
+  },
+  "docGiaId": {
+    "$oid": "69139f99ecaf0fb60e29d43a"
+  },
+  "sachId": {
+    "$oid": "692b97b2ecfd157eacc3b876"
+  },
+  "soLuong": 3,
+  "ngayMuon": "2025-12-05",
+  "ngayTra": "2025-12-19",
+  "trangThai": "chờ duyệt",
+  "nhanVienId": null,
+  "ngayTraThucTe": null
+},
+{
+  "_id": {
+    "$oid": "69332787302fd1d68add30d5"
+  },
+  "docGiaId": {
+    "$oid": "6933217f302fd1d68add30d4"
+  },
+  "sachId": {
+    "$oid": "6932d2e84f0d0bf5570eb019"
+  },
+  "soLuong": 3,
+  "ngayMuon": "2025-12-05",
+  "ngayTra": "2025-12-19",
+  "trangThai": "đã trả",
+  "nhanVienId": {
+    "$oid": "691380d3ecaf0fb60e29d431"
+  },
+  "ngayTraThucTe": "2025-12-05"
+},
+{
+  "_id": {
+    "$oid": "69332955302fd1d68add30d6"
+  },
+  "docGiaId": {
+    "$oid": "6933217f302fd1d68add30d4"
+  },
+  "sachId": {
+    "$oid": "6932d2484f0d0bf5570eb017"
+  },
+  "soLuong": 2,
+  "ngayMuon": "2025-12-05",
+  "ngayTra": "2025-12-19",
+  "trangThai": "đã trả",
+  "nhanVienId": {
+    "$oid": "691380d3ecaf0fb60e29d431"
+  },
+  "ngayTraThucTe": "2025-12-06"
+},
+{
+  "_id": {
+    "$oid": "6933295d302fd1d68add30d7"
+  },
+  "docGiaId": {
+    "$oid": "6933217f302fd1d68add30d4"
+  },
+  "sachId": {
+    "$oid": "6932cc394f0d0bf5570eb00a"
+  },
+  "soLuong": 1,
+  "ngayMuon": "2025-12-05",
+  "ngayTra": "2025-12-19",
+  "trangThai": "đang mượn",
+  "nhanVienId": {
+    "$oid": "691380d3ecaf0fb60e29d431"
+  },
+  "ngayTraThucTe": null
+},
+{
+  "_id": {
+    "$oid": "693329ad302fd1d68add30d8"
+  },
+  "docGiaId": {
+    "$oid": "6933217f302fd1d68add30d4"
+  },
+  "sachId": {
+    "$oid": "6932c95c4f0d0bf5570eb003"
+  },
+  "soLuong": 2,
+  "ngayMuon": "2025-12-05",
+  "ngayTra": "2025-12-19",
+  "trangThai": "chờ duyệt",
+  "nhanVienId": null,
+  "ngayTraThucTe": null
+},
+{
+  "_id": {
+    "$oid": "6935d4115c849e69e074462b"
+  },
+  "docGiaId": {
+    "$oid": "69139b09ecaf0fb60e29d434"
+  },
+  "sachId": {
+    "$oid": "6932d0ee4f0d0bf5570eb015"
+  },
+  "soLuong": 3,
+  "ngayMuon": "2025-12-07",
+  "ngayTra": "2025-12-21",
+  "trangThai": "đã duyệt",
+  "nhanVienId": {
+    "$oid": "691380d3ecaf0fb60e29d431"
+  },
+  "ngayTraThucTe": null
+},
+{
+  "_id": {
+    "$oid": "6935d41f5c849e69e074462c"
+  },
+  "docGiaId": {
+    "$oid": "69139b09ecaf0fb60e29d434"
+  },
+  "sachId": {
+    "$oid": "6932cc394f0d0bf5570eb00a"
+  },
+  "soLuong": 3,
+  "ngayMuon": "2025-12-07",
+  "ngayTra": "2025-12-21",
+  "trangThai": "chờ duyệt",
+  "nhanVienId": null,
+  "ngayTraThucTe": null
+},
+{
+  "_id": {
+    "$oid": "6935d4645c849e69e074462d"
+  },
+  "docGiaId": {
+    "$oid": "69139b8eecaf0fb60e29d437"
+  },
+  "sachId": {
+    "$oid": "6932c7434f0d0bf5570eaffe"
+  },
+  "soLuong": 3,
+  "ngayMuon": "2025-12-07",
+  "ngayTra": "2025-12-21",
+  "trangThai": "đang mượn",
+  "nhanVienId": {
+    "$oid": "691380d3ecaf0fb60e29d431"
+  },
+  "ngayTraThucTe": null
+},
+{
+  "_id": {
+    "$oid": "6935d46f5c849e69e074462e"
+  },
+  "docGiaId": {
+    "$oid": "69139b8eecaf0fb60e29d437"
+  },
+  "sachId": {
+    "$oid": "6932cfd14f0d0bf5570eb012"
+  },
+  "soLuong": 2,
+  "ngayMuon": "2025-12-07",
+  "ngayTra": "2025-12-21",
+  "trangThai": "chờ duyệt",
+  "nhanVienId": null,
+  "ngayTraThucTe": null
+},
+{
+  "_id": {
+    "$oid": "6935d5985c849e69e074462f"
+  },
+  "docGiaId": {
+    "$oid": "691bf2ac4af076845089fb9e"
+  },
+  "sachId": {
+    "$oid": "6932c8e64f0d0bf5570eb002"
+  },
+  "soLuong": 3,
+  "ngayMuon": "2025-12-07",
+  "ngayTra": "2025-12-21",
+  "trangThai": "đã duyệt",
+  "nhanVienId": {
+    "$oid": "691380d3ecaf0fb60e29d431"
+  },
+  "ngayTraThucTe": null
+},
+{
+  "_id": {
+    "$oid": "6935d5a05c849e69e0744630"
+  },
+  "docGiaId": {
+    "$oid": "691bf2ac4af076845089fb9e"
+  },
+  "sachId": {
+    "$oid": "6932cda94f0d0bf5570eb00f"
+  },
+  "soLuong": 3,
+  "ngayMuon": "2025-12-07",
+  "ngayTra": "2025-12-21",
+  "trangThai": "trễ hạn",
+  "nhanVienId": {
+    "$oid": "691380d3ecaf0fb60e29d431"
+  }
+},
+{
+  "_id": {
+    "$oid": "6935d5ab5c849e69e0744631"
+  },
+  "docGiaId": {
+    "$oid": "691bf2ac4af076845089fb9e"
+  },
+  "sachId": {
+    "$oid": "6932cc394f0d0bf5570eb00a"
+  },
+  "soLuong": 3,
+  "ngayMuon": "2025-12-07",
+  "ngayTra": "2025-12-21",
+  "trangThai": "đang chờ trả",
+  "nhanVienId": {
+    "$oid": "691380d3ecaf0fb60e29d431"
+  },
+  "ngayTraThucTe": null
+},
+{
+  "_id": {
+    "$oid": "6935d6555c849e69e0744632"
+  },
+  "docGiaId": {
+    "$oid": "69139ba9ecaf0fb60e29d438"
+  },
+  "sachId": {
+    "$oid": "6932d2484f0d0bf5570eb017"
+  },
+  "soLuong": 3,
+  "ngayMuon": "2025-12-07",
+  "ngayTra": "2025-12-21",
+  "trangThai": "trễ hạn",
+  "nhanVienId": {
+    "$oid": "691380d3ecaf0fb60e29d431"
+  }
+},
+{
+  "_id": {
+    "$oid": "6935d7655c849e69e0744633"
+  },
+  "docGiaId": {
+    "$oid": "69139ba9ecaf0fb60e29d438"
+  },
+  "sachId": {
+    "$oid": "6932cd564f0d0bf5570eb00e"
+  },
+  "soLuong": 3,
+  "ngayMuon": "2025-12-07",
+  "ngayTra": "2025-12-21",
+  "trangThai": "từ chối",
+  "nhanVienId": {
+    "$oid": "691380d3ecaf0fb60e29d431"
+  },
+  "ngayTraThucTe": null,
+  "lyDoTuChoi": "Đang trong giai đoạn nghỉ tết"
+},
+{
+  "_id": {
+    "$oid": "6935db1b5c849e69e0744634"
+  },
+  "docGiaId": {
+    "$oid": "69139f99ecaf0fb60e29d43a"
+  },
+  "sachId": {
+    "$oid": "692b9676ecfd157eacc3b872"
+  },
+  "soLuong": 3,
+  "ngayMuon": "2025-12-07",
+  "ngayTra": "2025-12-21",
+  "trangThai": "đã trả",
+  "nhanVienId": {
+    "$oid": "691380d3ecaf0fb60e29d431"
+  },
+  "ngayTraThucTe": "2025-12-07"
+},
+{
+  "_id": {
+    "$oid": "6935db225c849e69e0744635"
+  },
+  "docGiaId": {
+    "$oid": "69139f99ecaf0fb60e29d43a"
+  },
+  "sachId": {
+    "$oid": "6932cf624f0d0bf5570eb011"
+  },
+  "soLuong": 3,
+  "ngayMuon": "2025-12-07",
+  "ngayTra": "2025-12-21",
+  "trangThai": "đã trả",
+  "nhanVienId": {
+    "$oid": "691380d3ecaf0fb60e29d431"
+  },
+  "ngayTraThucTe": "2025-12-07"
+},
+{
+  "_id": {
+    "$oid": "6935db2e5c849e69e0744636"
+  },
+  "docGiaId": {
+    "$oid": "69139f99ecaf0fb60e29d43a"
+  },
+  "sachId": {
+    "$oid": "6932d0ee4f0d0bf5570eb015"
+  },
+  "soLuong": 1,
+  "ngayMuon": "2025-12-07",
+  "ngayTra": "2025-12-21",
+  "trangThai": "đã trả",
+  "nhanVienId": {
+    "$oid": "691380d3ecaf0fb60e29d431"
+  },
+  "ngayTraThucTe": "2025-12-07"
+},
+{
+  "_id": {
+    "$oid": "6935db8b5c849e69e0744637"
+  },
+  "docGiaId": {
+    "$oid": "69139f99ecaf0fb60e29d43a"
+  },
+  "sachId": {
+    "$oid": "6932cf084f0d0bf5570eb010"
+  },
+  "soLuong": 3,
+  "ngayMuon": "2025-12-07",
+  "ngayTra": "2025-12-21",
+  "trangThai": "từ chối",
+  "nhanVienId": {
+    "$oid": "691380d3ecaf0fb60e29d431"
+  },
+  "ngayTraThucTe": null,
+  "lyDoTuChoi": "Đang trong thời gian nghỉ tết"
+},
+{
+  "_id": {
+    "$oid": "6935db965c849e69e0744638"
+  },
+  "docGiaId": {
+    "$oid": "69139f99ecaf0fb60e29d43a"
+  },
+  "sachId": {
+    "$oid": "6932c4554f0d0bf5570eaff6"
+  },
+  "soLuong": 3,
+  "ngayMuon": "2025-12-07",
+  "ngayTra": "2025-12-21",
+  "trangThai": "đang mượn",
+  "nhanVienId": {
+    "$oid": "691380d3ecaf0fb60e29d431"
+  },
+  "ngayTraThucTe": null
+},
+{
+  "_id": {
+    "$oid": "6935db9e5c849e69e0744639"
+  },
+  "docGiaId": {
+    "$oid": "69139f99ecaf0fb60e29d43a"
+  },
+  "sachId": {
+    "$oid": "6932bbda4f0d0bf5570eafe2"
+  },
+  "soLuong": 1,
+  "ngayMuon": "2025-12-07",
+  "ngayTra": "2025-12-21",
+  "trangThai": "đang mượn",
+  "nhanVienId": {
+    "$oid": "691380d3ecaf0fb60e29d431"
+  },
+  "ngayTraThucTe": null
+},
+{
+  "_id": {
+    "$oid": "6935dbfe5c849e69e074463a"
+  },
+  "docGiaId": {
+    "$oid": "69139f99ecaf0fb60e29d43a"
+  },
+  "sachId": {
+    "$oid": "6932c6f64f0d0bf5570eaffd"
+  },
+  "soLuong": 3,
+  "ngayMuon": "2025-12-07",
+  "ngayTra": "2025-12-21",
+  "trangThai": "đang mượn",
+  "nhanVienId": {
+    "$oid": "691380d3ecaf0fb60e29d431"
+  },
+  "ngayTraThucTe": null
+},
+{
+  "_id": {
+    "$oid": "693632087e6e237e186c8f97"
+  },
+  "docGiaId": {
+    "$oid": "69139ba9ecaf0fb60e29d438"
+  },
+  "sachId": {
+    "$oid": "6932d0334f0d0bf5570eb013"
+  },
+  "soLuong": 3,
+  "ngayMuon": "2025-12-08",
+  "ngayTra": "2025-12-22",
+  "trangThai": "chờ duyệt",
+  "nhanVienId": null,
+  "ngayTraThucTe": null
+},
+{
+  "_id": {
+    "$oid": "69363a0a7e6e237e186c8f98"
+  },
+  "docGiaId": {
+    "$oid": "692f33128cca98a2d2a4b1ee"
+  },
+  "sachId": {
+    "$oid": "6932d2484f0d0bf5570eb017"
+  },
+  "soLuong": 3,
+  "ngayMuon": "2025-12-08",
+  "ngayTra": "2025-12-22",
+  "trangThai": "từ chối",
+  "nhanVienId": {
+    "$oid": "691380d3ecaf0fb60e29d431"
+  },
+  "ngayTraThucTe": null,
+  "lyDoTuChoi": "nghỉ eywts"
+},
+{
+  "_id": {
+    "$oid": "69363f787e6e237e186c8f99"
+  },
+  "docGiaId": {
+    "$oid": "691380d3ecaf0fb60e29d431"
+  },
+  "sachId": {
+    "$oid": "6935ad78cf363ffd158b9fd7"
+  },
+  "soLuong": 3,
+  "ngayMuon": "2025-12-08",
+  "ngayTra": "2025-12-22",
+  "trangThai": "đang mượn",
+  "nhanVienId": {
+    "$oid": "691380d3ecaf0fb60e29d431"
+  },
+  "ngayTraThucTe": null
+},
+{
+  "_id": {
+    "$oid": "69365b027e6e237e186c8f9a"
+  },
+  "docGiaId": {
+    "$oid": "691a1dbcb000a189393c4f19"
+  },
+  "sachId": {
+    "$oid": "6932d2484f0d0bf5570eb017"
+  },
+  "soLuong": 3,
+  "ngayMuon": "2025-12-08",
+  "ngayTra": "2025-12-22",
+  "trangThai": "đã trả",
+  "nhanVienId": {
+    "$oid": "691380d3ecaf0fb60e29d431"
+  },
+  "ngayTraThucTe": "2025-12-08"
+}]
