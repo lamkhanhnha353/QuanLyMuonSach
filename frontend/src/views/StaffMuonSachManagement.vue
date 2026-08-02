@@ -110,8 +110,8 @@
                              <button class="btn btn-icon-only btn-rounded btn-warning btn-sm text-dark shadow-sm" title="Nhận trả" @click="openUpdateModal(item, 'đã trả')"><i class="fas fa-undo"></i></button>
                          </template>
 
-                         <template v-if="item.trangThai === 'trễ hạn' && item.daXacNhanNopPhat">
-                             <button class="btn btn-icon-only btn-rounded btn-info btn-sm text-white shadow-sm" title="Xác nhận nộp phạt" @click="openFinePaymentModal(item)"><i class="fas fa-check-circle"></i></button>
+                         <template v-if="item.trangThai === 'trễ hạn' && item.daXacNhanNopPhat && !item.daNopPhat">
+                             <button class="btn btn-icon-only btn-rounded btn-info btn-sm text-white shadow-sm" title="Xác nhận nộp phạt & Trả sách" @click="openFinePaymentModal(item)"><i class="fas fa-check-circle"></i></button>
                          </template>
 
                          <button class="btn btn-icon-only btn-rounded btn-light border btn-sm text-secondary" title="Chi tiết" @click="viewDetails(item)"><i class="fas fa-eye"></i></button>
@@ -459,20 +459,11 @@ export default {
             // Tìm nhà xuất bản có MANXB matching
             nhaXuatBanInfo = nhaXuatBanRes.data.find(nxb => nxb.MANXB === sachInfo.MANXB);
           }
-
-          // Tính tiền phạt cho sách trễ hạn
-          let tienPhat = 0;
-          if (item.trangThai === 'trễ hạn') {
-            const soLuong = item.soLuong || 1;
-            tienPhat = soLuong * 50000; // 50,000đ mỗi cuốn
-          }
-
           return {
             ...item,
             docGiaInfo: docGiaMap.get(item.docGiaId),
             sachInfo: sachInfo ? { ...sachInfo, tenNhaXuatBan: nhaXuatBanInfo?.TENNXB || 'N/A' } : null,
             nhanVienInfo: item.nhanVienId ? nhanVienMap.get(item.nhanVienId) : null,
-            tienPhat: tienPhat
           };
         });
       } catch (error) { console.error(error); } finally { this.loading = false; }
