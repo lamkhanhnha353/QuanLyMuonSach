@@ -5,15 +5,20 @@
     <main class="main-content">
       <router-view />
     </main>
+
+    <!-- Chatbox hỗ trợ cho độc giả -->
+    <ChatboxWidget />
   </div>
 </template>
 
 <script>
 import AppHeader from "@/components/AppHeader.vue";
+import ChatboxWidget from "@/components/ChatboxWidget.vue";
 export default {
   name: "PublicLayout",
   components: {
     AppHeader,
+    ChatboxWidget,
   },
 };
 </script>
