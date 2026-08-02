@@ -93,19 +93,9 @@ class MuonSachService {
             throw new Error(`Cuốn sách này bạn chỉ được mượn tối đa 3 quyển. Hiện tại bạn đã mượn ${bookBorrowCount} quyển`);
         }
 
-        // --- 4. NÂNG CẤP LOGIC NHÂN VIÊN ---
+        // Độc giả tạo luôn là "chờ duyệt", nhân viên sẽ duyệt sau
         let trangThaiMoi = "chờ duyệt";
         let nhanVienXuLyId = null;
-
-        // Đọc 'payload.nhanVienId'
-        if (payload.nhanVienId) {
-            const cleanNhanVienId = payload.nhanVienId ? String(payload.nhanVienId).trim().replace(/"/g, '') : null;
-            if (ObjectId.isValid(cleanNhanVienId)) {
-                nhanVienXuLyId = new ObjectId(cleanNhanVienId);
-                trangThaiMoi = "đã duyệt"; // Tự động duyệt luôn
-            }
-        }
-        // --- KẾT THÚC NÂNG CẤP ---
 
         const phieuMuonData = {
             docGiaId: docGiaId,
@@ -236,7 +226,7 @@ class MuonSachService {
         // 2. Trạng thái mới là "từ chối" (VÀ trạng thái cũ là "chờ duyệt" hoặc "đã duyệt" hoặc "đang mượn" hoặc "đang chờ trả")
 
         const isReturning = (newTrangThai === "đã trả" && oldTrangThai !== "đã trả");
-        const isRejected = (newTrangThai === "từ chối" && ["chờ duyệt", "đã duyệt", "đang mượn", "đang chờ trả"].includes(oldTrangThai));
+        const isRejected = (newTrangThai === "từ chối" && ["đã duyệt", "đang mượn", "đang chờ trả"].includes(oldTrangThai));
 
         if (isReturning || isRejected) {
             // Cộng soLuong trả lại SOQUYEN cho sách
