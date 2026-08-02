@@ -9,12 +9,12 @@ router.route("/login")
     .post(docgia.login);
 
 router.route("/")
-    .get(verifyToken, checkRole(["Admin"]), docgia.findAll)
+    .get(verifyToken, checkRole(["Admin", "Staff"]), docgia.findAll)
     .post(docgia.create) // Đây là Đăng Ký
     .delete(verifyToken, checkRole(["Admin"]), docgia.deleteAll);
 
 router.route("/:id")
-    .get(verifyToken, checkRole(["Admin"]), docgia.findOne)
+    .get(verifyToken, checkRole(["Admin", "Staff", "DocGia"]), docgia.findOne)
     .put(verifyToken, checkRole(["Admin"]), docgia.update)
     .delete(verifyToken, checkRole(["Admin"]), docgia.delete);
 
