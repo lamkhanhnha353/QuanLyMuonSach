@@ -36,6 +36,7 @@ class AuthService {
         if (response.data && response.data.data) {
           // Ghi đè "user" bằng thông tin Nhân Viên
           localStorage.setItem("user", JSON.stringify(response.data.data));
+          if (response.data.token) localStorage.setItem("token", response.data.token);
           return response.data.data;
         } else {
           return null;

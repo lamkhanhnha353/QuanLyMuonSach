@@ -14,7 +14,8 @@ http.interceptors.request.use((config) => {
 http.interceptors.response.use(
   (res) => res,
   (err) => {
-    if (err.response?.status === 401) {
+    const isLoginUrl = err.config && err.config.url && err.config.url.includes('/login');
+    if (err.response?.status === 401 && !isLoginUrl) {
       localStorage.removeItem("user");
       localStorage.removeItem("token");
       window.location.href = "/login"; // đổi đúng path login của nhóm

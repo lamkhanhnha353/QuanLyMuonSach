@@ -442,9 +442,11 @@ export default {
     async fetchData() {
       this.loading = true;
       try {
-        const [muonSachRes, docGiaRes, sachRes, nhanVienRes, nhaXuatBanRes] = await Promise.all([
-          MuonSachService.getAll(), DocGiaService.getAll(), SachService.getAll(), NhanVienService.getAll(), NhaXuatBanService.getAll()
+        const [muonSachRes, sachRes, nhaXuatBanRes] = await Promise.all([
+          MuonSachService.getAll(), SachService.getAll(), NhaXuatBanService.getAll()
         ]);
+        const docGiaRes = await DocGiaService.getAll().catch(() => ({ data: [] }));
+        const nhanVienRes = await NhanVienService.getAll().catch(() => ({ data: [] }));
         const docGiaMap = new Map(docGiaRes.data.map(item => [item._id, item]));
         const sachMap = new Map(sachRes.data.map(item => [item._id, item]));
         const nhanVienMap = new Map(nhanVienRes.data.map(item => [item._id, item]));
