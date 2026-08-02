@@ -1,6 +1,6 @@
 const express = require("express");
 const muonsach = require("../controllers/muonsach.controller");
-    
+const loginLimiter = require("../middleware/loginLimiter");
 const router = express.Router();
 
 // Route cho Độc Giả: Tạo phiếu mượn
@@ -11,7 +11,7 @@ router.route("/")
 
 // Route cho Độc Giả: Xem lịch sử mượn của mình
 // :id ở đây là ID của Độc Giả
-router.route("/docgia/:id") 
+router.route("/docgia/:id")
     .get(muonsach.findByDocGia);
 
 // Route cho Nhân Viên: Quản lý 1 phiếu mượn cụ thể
