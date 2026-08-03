@@ -1,4 +1,5 @@
 const { ObjectId } = require("mongodb");
+const redis = require("../config/redis");
 const bcrypt = require("bcryptjs");
 
 class DocGiaService {
@@ -67,10 +68,22 @@ class DocGiaService {
      * @param {object} payload Chứa username và password
      * @returns {object} Thông tin độc giả (đã bỏ password)
      */
-    async login(payload) {
+    async login(payload, ip) {
         // 1. Tìm độc giả bằng USERNAME
+        const username = payload.username;
+        const failKey = `login_fail:${username}:${ip}`;
+        const lockKey = `login_lock:${username}:${ip}`;
+        // 1. Kiểm tra tài khoản có bị khóa
+        const locked = await redis.get(lockKey);
+        if (locked) {
+            const ttl = await redis.ttl(lockKey);
+            throw {
+                status: 423,
+                message:
+                    `Tài khoản bị khóa. Thử lại sau ${ttl} giây`
+            };
+        }
         const docgia = await this.DocGia.findOne({ username: payload.username }); 
-        
         if (!docgia) {
             throw new Error("Username hoặc mật khẩu không đúng"); 
         }
@@ -79,9 +92,39 @@ class DocGiaService {
         const isMatch = await bcrypt.compare(payload.password, docgia.password);
         
         if (!isMatch) {
-            throw new Error("Username hoặc mật khẩu không đúng"); 
+            const attempts = await redis.incr(failKey);
+            console.log(`Số lần thử đăng nhập thất bại cho ${username}: ${ip} : ${attempts}`);
+            if (attempts === 1) {
+                await redis.expire(
+                    failKey,
+                    900
+                );
+            }
+            if (attempts >= 5) {
+                await redis.set(
+                    lockKey,
+                    "locked",
+                    {
+                        EX: 900
+                    }
+                );
+                await redis.del(failKey);
+                throw {
+                    status: 423,
+                    message:
+                        "Tài khoản bị khóa 15 phút do nhập sai quá nhiều lần"
+                };
+            }
+            throw {
+                status: 401,
+                message:
+                    `Sai mật khẩu. Còn ${5 - attempts} lần thử`
+
+            };
+            throw new Error("Username hoặc Mật khẩu không đúng");
+
         }
-        
+        await redis.del(failKey);
         delete docgia.password;
         return docgia;
     }

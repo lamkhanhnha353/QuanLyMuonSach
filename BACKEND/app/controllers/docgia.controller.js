@@ -27,13 +27,14 @@ exports.create = async (req, res, next) => {
 
 // 2. Login: Đăng nhập
 exports.login = async (req, res, next) => {
+    const ip = req.ip; // Lấy địa chỉ IP của người dùng
     if (!req.body?.username || !req.body?.password) {
         return next(new ApiError(400, "Username và Mật khẩu là bắt buộc"));
     }
 
     try {
         const docGiaService = new DocGiaService(MongoDB.client);
-        const docgia = await docGiaService.login(req.body);
+        const docgia = await docGiaService.login(req.body, ip);
 
         const token = jwt.sign({
             _id: docgia._id,
@@ -43,8 +44,8 @@ exports.login = async (req, res, next) => {
         return res.send({ message: "Đăng nhập thành công", data: docgia, token });
 
     } catch (error) {
-        // Bắt lỗi "Username hoặc mật khẩu không đúng"
-        return next(new ApiError(401, error.message));
+        // Bắt lỗi "Username hoặc mật khẩu không đúng" / tài khoản bị khóa
+        return next(new ApiError(error.status || 401, error.message)); // 401 = Unauthorized
     }
 };
 
@@ -215,3 +216,4 @@ exports.checkUsernameExists = async (req, res, next) => {
         );
     }
 };
+

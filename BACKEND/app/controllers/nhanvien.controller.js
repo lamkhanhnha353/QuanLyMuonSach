@@ -31,6 +31,7 @@ exports.create = async (req, res, next) => {
 // 2. Login: Đăng nhập
 exports.login = async (req, res, next) => {
     // FIX 2: Kiểm tra "password" (thường)
+    const ip = req.ip;
     if (!req.body?.MSNV || !req.body?.password) {
         return next(new ApiError(400, "MSNV và Mật khẩu là bắt buộc"));
     }
@@ -38,16 +39,17 @@ exports.login = async (req, res, next) => {
     try {
         const nhanVienService = new NhanVienService(MongoDB.client);
         // (Hàm service.login đã được sửa lỗi so sánh pass)
-        const nhanvien = await nhanVienService.login(req.body);
+        const nhanvien = await nhanVienService.login(req.body, ip);
 
         const token = jwt.sign({
             _id: nhanvien._id,
             role: nhanvien.ChucVu
         }, config.jwt.secret, { expiresIn: config.jwt.expiresIn });
+
         // (Format trả về của bạn)
         return res.send({ message: "Đăng nhập thành công", data: nhanvien, token });
     } catch (error) {
-        return next(new ApiError(401, error.message)); // 401 = Unauthorized
+        return next(new ApiError(error.status || 401, error.message)); // 401 = Unauthorized
     }
 };
 
@@ -139,3 +141,4 @@ exports.deleteAll = async (_req, res, next) => {
         );
     }
 };
+

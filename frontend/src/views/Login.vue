@@ -19,25 +19,16 @@
             </p>
           </div>
 
-          <Form 
-            @submit="handleUnifiedLogin" 
-            :validation-schema="loginSchema" 
-            :validate-on-input="true"
-            v-slot="{ values }" 
-          >
+          <Form @submit="handleUnifiedLogin" :validation-schema="loginSchema" :validate-on-input="true"
+            v-slot="{ values }">
             <div class="form-group mb-4">
               <label class="form-label">Tên đăng nhập hoặc MSNV</label>
               <div class="input-group-custom">
                 <span class="input-icon">
                   <i class="fa-solid fa-user"></i>
                 </span>
-                
-                <Field 
-                  name="identifier" 
-                  type="text" 
-                  class="form-control" 
-                  placeholder="Nhập tên đăng nhập hoặc MSNV"
-                />
+
+                <Field name="identifier" type="text" class="form-control" placeholder="Nhập tên đăng nhập hoặc MSNV" />
               </div>
               <ErrorMessage name="identifier" class="error-feedback" />
             </div>
@@ -55,19 +46,11 @@
                   <i class="fa-solid fa-lock"></i>
                 </span>
 
-                <Field 
-                  name="password"
-                  :type="showPassword ? 'text' : 'password'"
-                  class="form-control" 
-                  placeholder="Nhập mật khẩu của bạn"
-                />
+                <Field name="password" :type="showPassword ? 'text' : 'password'" class="form-control"
+                  placeholder="Nhập mật khẩu của bạn" />
 
-                <button 
-                  type="button" 
-                  class="btn-toggle-password"
-                  @click="showPassword = !showPassword"
-                  v-if="values.password" 
-                >
+                <button type="button" class="btn-toggle-password" @click="showPassword = !showPassword"
+                  v-if="values.password">
                   <i v-if="showPassword" class="fa-solid fa-eye"></i>
                   <i v-else class="fa-solid fa-eye-slash"></i>
                 </button>
@@ -138,25 +121,38 @@ export default {
         let loggedInUser = null;
         let userType = null;
 
-        // Thử login độc giả
+        // Thử đăng nhập độc giả
         try {
           loggedInUser = await AuthService.login({
             username: identifier,
             password,
           });
+
           userType = "docgia";
-        } catch {
-          // Nếu không phải độc giả -> thử nhân viên
-          try {
-            loggedInUser = await AuthService.loginNhanVien({
-              MSNV: identifier,
-              password,
-            });
-            userType = "nhanvien";
-          } catch {
-            throw new Error("Tên đăng nhập/MSNV hoặc mật khẩu không đúng.");
+
+        } catch (error) {
+          console.log("LOGIN ERROR:", error.response);
+
+          // Nếu tài khoản độc giả bị khóa
+          if (error.response?.status === 423) {
+            const retryAfter = error.response.data.retryAfter;
+
+            this.errorMessage = retryAfter
+              ? `Tài khoản đã bị khóa do nhập sai mật khẩu quá nhiều lần. Vui lòng thử lại sau ${Math.ceil(retryAfter / 60)} phút.`
+              : "Tài khoản đã bị khóa trong 15 phút do nhập sai mật khẩu quá nhiều lần.";
+            this.loading = false;
+            return; // QUAN TRỌNG: dừng luôn, không thử nhân viên
           }
+
+          // Không phải độc giả -> thử nhân viên
+          loggedInUser = await AuthService.loginNhanVien({
+            MSNV: identifier,
+            password,
+          });
+
+          userType = "nhanvien";
         }
+
 
         eventBus.emit("auth-change");
         this.loading = false;
@@ -166,28 +162,47 @@ export default {
             ? `${loggedInUser.HOLOT} ${loggedInUser.TEN}`
             : loggedInUser.HoTenNV;
 
-        this.successMessage = "Đăng nhập thành công! Xin chào " + displayName;
+        this.successMessage =
+          "Đăng nhập thành công! Xin chào " + displayName;
+
 
         setTimeout(() => {
           if (userType === "nhanvien") {
-            if (loggedInUser.ChucVu === "Admin") this.$router.push("/admin");
-            else this.$router.push("/staff");
+            if (loggedInUser.ChucVu === "Admin") {
+              this.$router.push("/admin");
+            } else {
+              this.$router.push("/staff");
+            }
           } else {
             this.$router.push("/");
           }
         }, 700);
 
+
       } catch (error) {
         this.loading = false;
-        this.errorMessage =
-          error.message || "Đăng nhập thất bại. Vui lòng thử lại.";
+
+        console.log("FINAL ERROR:", error.response);
+
+        if (error.response?.status === 423) {
+          const retryAfter = error.response.data.retryAfter;
+
+          this.errorMessage = retryAfter
+            ? `Tài khoản đã bị khóa. Vui lòng thử lại sau ${Math.ceil(retryAfter / 60)} phút.`
+            : "Tài khoản đã bị khóa trong 15 phút.";
+        }
+        else {
+          this.errorMessage =
+            error.response?.data?.message ||
+            error.message ||
+            "Đăng nhập thất bại. Vui lòng thử lại.";
+        }
       }
     },
-
     showForgotPasswordAlert() {
       alert("Tính năng đang trong giai đoạn phát triển");
     },
-  },
+  }
 };
 </script>
 
@@ -196,13 +211,28 @@ export default {
 <style scoped>
 /* ==== Toast (Giữ nguyên) ==== */
 @keyframes slideInFromRight {
-  from { transform: translateX(100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
+
 @keyframes fadeOut {
-  from { opacity: 1; }
-  to { transform: translateX(50px); opacity: 0; }
+  from {
+    opacity: 1;
+  }
+
+  to {
+    transform: translateX(50px);
+    opacity: 0;
+  }
 }
+
 .toast-animated {
   position: fixed;
   top: 80px;
@@ -228,42 +258,56 @@ export default {
 
 /* ==== Layout ==== */
 .login-container {
-  min-height: 90vh; 
-  background-color: #f9fafb; 
+  min-height: 90vh;
+  background-color: #f9fafb;
   padding: 50px 0;
-  display: flex; /* Dùng flexbox để căn giữa hoàn hảo */
-  align-items: center; /* Căn giữa theo chiều dọc */
-  justify-content: center; /* Căn giữa theo chiều ngang */
+  display: flex;
+  /* Dùng flexbox để căn giữa hoàn hảo */
+  align-items: center;
+  /* Căn giữa theo chiều dọc */
+  justify-content: center;
+  /* Căn giữa theo chiều ngang */
 }
 
 .form-container {
   background: #ffffff;
   padding: 40px;
-  border-radius: 16px; /* Bo góc nhiều hơn nữa */
-  box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.1), 0 4px 10px -4px rgb(0 0 0 / 0.05); /* Đổ bóng mạnh hơn một chút */
-  max-width: 440px; /* Tăng nhẹ độ rộng để thoáng hơn */
-  width: 100%; /* Đảm bảo nó dùng hết max-width */
-  margin: 0 auto; /* Căn giữa form */
+  border-radius: 16px;
+  /* Bo góc nhiều hơn nữa */
+  box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.1), 0 4px 10px -4px rgb(0 0 0 / 0.05);
+  /* Đổ bóng mạnh hơn một chút */
+  max-width: 440px;
+  /* Tăng nhẹ độ rộng để thoáng hơn */
+  width: 100%;
+  /* Đảm bảo nó dùng hết max-width */
+  margin: 0 auto;
+  /* Căn giữa form */
 }
 
 /* Tiêu đề */
 .text-center h4 {
   font-weight: 700;
-  font-size: 28px; /* Tăng kích thước tiêu đề chính */
-  color: #1a202c; /* Màu tối hơn cho tiêu đề */
+  font-size: 28px;
+  /* Tăng kích thước tiêu đề chính */
+  color: #1a202c;
+  /* Màu tối hơn cho tiêu đề */
   margin-bottom: 8px;
 }
+
 .text-secondary-light {
   color: #6b7280;
   font-size: 15px;
-  line-height: 1.5; /* Tăng line-height cho dễ đọc */
+  line-height: 1.5;
+  /* Tăng line-height cho dễ đọc */
 }
+
 .form-label {
   font-weight: 600;
   font-size: 14px;
   color: #374151;
-  margin-bottom: 8px; 
-  display: block; /* Đảm bảo label chiếm một dòng riêng */
+  margin-bottom: 8px;
+  display: block;
+  /* Đảm bảo label chiếm một dòng riêng */
 }
 
 /* ==== Input + Icon ==== */
@@ -273,112 +317,143 @@ export default {
   justify-content: center;
   padding-left: 14px;
   color: #9ca3af;
-  font-size: 19px; /* Tăng kích thước icon */
-  min-width: 40px; /* Đảm bảo icon có đủ không gian */
-  transition: color 0.2s ease; /* Hiệu ứng chuyển màu cho icon */
+  font-size: 19px;
+  /* Tăng kích thước icon */
+  min-width: 40px;
+  /* Đảm bảo icon có đủ không gian */
+  transition: color 0.2s ease;
+  /* Hiệu ứng chuyển màu cho icon */
 }
 
 .input-group-custom {
   display: flex;
   align-items: center;
-  border: 1px solid #e2e8f0; /* Viền sáng hơn */
-  border-radius: 10px; /* Bo góc nhẹ hơn cho input group */
-  background-color: #f8fafc; /* Nền input hơi xám */
+  border: 1px solid #e2e8f0;
+  /* Viền sáng hơn */
+  border-radius: 10px;
+  /* Bo góc nhẹ hơn cho input group */
+  background-color: #f8fafc;
+  /* Nền input hơi xám */
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
 /* Hiệu ứng khi bấm vào (Focus) */
 .input-group-custom:focus-within {
-  border-color: #2563eb; /* Màu xanh đậm hơn khi focus */
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2); /* Đổ bóng xanh nhẹ */
-  background-color: #ffffff; /* Nền trắng khi focus */
+  border-color: #2563eb;
+  /* Màu xanh đậm hơn khi focus */
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+  /* Đổ bóng xanh nhẹ */
+  background-color: #ffffff;
+  /* Nền trắng khi focus */
 }
+
 .input-group-custom:focus-within .input-icon {
-  color: #2563eb; /* Màu icon đổi thành xanh khi focus */
+  color: #2563eb;
+  /* Màu icon đổi thành xanh khi focus */
 }
 
 .form-control {
   border: none !important;
   box-shadow: none !important;
   outline: none !important;
-  
-  flex-grow: 1; 
-  
-  padding: 13px 14px 13px 12px; /* Padding lớn hơn cho input */
-  height: 48px; /* Chiều cao cố định, lớn hơn */
-  font-size: 16px; /* Font chữ to hơn */
-  background-color: transparent; 
-  color: #1a202c; /* Màu chữ đậm */
+
+  flex-grow: 1;
+
+  padding: 13px 14px 13px 12px;
+  /* Padding lớn hơn cho input */
+  height: 48px;
+  /* Chiều cao cố định, lớn hơn */
+  font-size: 16px;
+  /* Font chữ to hơn */
+  background-color: transparent;
+  color: #1a202c;
+  /* Màu chữ đậm */
 }
 
 /* ĐÃ XÓA KHỐI CSS GÂY LỖI TẠI ĐÂY */
 
 .form-control::placeholder {
-  color: #9ca3af; 
+  color: #9ca3af;
   /* ĐÃ XÓA TRANSITION TẠI ĐÂY */
 }
 
 /* Nút con mắt */
 .password-input .btn-toggle-password {
-  position: static; 
+  position: static;
   transform: none;
   flex-shrink: 0;
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 19px; /* Đồng bộ kích thước icon */
+  font-size: 19px;
+  /* Đồng bộ kích thước icon */
   color: #9ca3af;
   padding: 0 16px;
   z-index: 3;
 }
+
 .password-input .btn-toggle-password:hover {
   color: #374151;
 }
 
 .password-input .form-control {
-  padding-right: 0 !important; 
+  padding-right: 0 !important;
 }
 
 
 /* Error */
 .error-feedback {
-  color: #e53e3e; /* Màu đỏ sáng hơn */
+  color: #e53e3e;
+  /* Màu đỏ sáng hơn */
   font-size: 13px;
-  margin-top: 6px; 
+  margin-top: 6px;
 }
 
 /* Button */
 .btn-primary {
-  background-color: #2563eb; /* Màu xanh đậm hơn, đồng bộ với focus */
-  border: none; /* Bỏ border */
+  background-color: #2563eb;
+  /* Màu xanh đậm hơn, đồng bộ với focus */
+  border: none;
+  /* Bỏ border */
   font-weight: 600;
-  padding: 14px; /* Nút to hơn */
-  border-radius: 10px; /* Đồng bộ bo góc */
+  padding: 14px;
+  /* Nút to hơn */
+  border-radius: 10px;
+  /* Đồng bộ bo góc */
   font-size: 16px;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.25); /* Thêm bóng mờ cho nút */
+  box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.25);
+  /* Thêm bóng mờ cho nút */
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: #1d4ed8; /* Màu xanh đậm hơn khi hover */
-  transform: translateY(-2px); /* Hiệu ứng nhấc lên */
-  box-shadow: 0 6px 16px 0 rgba(37, 99, 235, 0.3); /* Bóng mờ rõ hơn */
+  background-color: #1d4ed8;
+  /* Màu xanh đậm hơn khi hover */
+  transform: translateY(-2px);
+  /* Hiệu ứng nhấc lên */
+  box-shadow: 0 6px 16px 0 rgba(37, 99, 235, 0.3);
+  /* Bóng mờ rõ hơn */
 }
+
 .btn-primary:disabled {
   background-color: #2563eb;
   opacity: 0.6;
 }
 
 /* Link */
-.text-link, .text-link-small {
-  color: #2563eb !important; /* Đồng bộ màu link */
+.text-link,
+.text-link-small {
+  color: #2563eb !important;
+  /* Đồng bộ màu link */
   text-decoration: none;
-  font-weight: 600; 
+  font-weight: 600;
 }
+
 .text-link-small {
   font-weight: 500;
   font-size: 14px;
 }
+
 .text-link:hover,
 .text-link-small:hover {
   text-decoration: underline;
@@ -386,29 +461,34 @@ export default {
 }
 
 .alert {
-  border-radius: 8px; /* Đồng bộ bo góc */
+  border-radius: 8px;
+  /* Đồng bộ bo góc */
   font-size: 14px;
   padding: 12px 16px;
-  background-color: #fff5f5; /* Nền đỏ nhạt */
-  color: #c53030; /* Chữ đỏ đậm */
-  border: 1px solid #fed7d7; /* Viền đỏ nhạt */
+  background-color: #fff5f5;
+  /* Nền đỏ nhạt */
+  color: #c53030;
+  /* Chữ đỏ đậm */
+  border: 1px solid #fed7d7;
+  /* Viền đỏ nhạt */
 }
 
 /* ==== KHẮC PHỤC LỖI AUTOFILL CỦA TRÌNH DUYỆT ==== */
 .form-control:-webkit-autofill,
-.form-control:-webkit-autofill:hover, 
-.form-control:-webkit-autofill:focus, 
+.form-control:-webkit-autofill:hover,
+.form-control:-webkit-autofill:focus,
 .form-control:-webkit-autofill:active {
-    -webkit-text-fill-color: #1a202c; /* Đồng bộ màu chữ */
-    transition: background-color 5000s ease-in-out 0s;
-    /* Hack: Vẽ bóng trắng đè lên nền autofill của trình duyệt */
-    /* Cập nhật màu nền này để khớp với màu .input-group-custom */
-    box-shadow: 0 0 0 1000px #f8fafc inset !important;
+  -webkit-text-fill-color: #1a202c;
+  /* Đồng bộ màu chữ */
+  transition: background-color 5000s ease-in-out 0s;
+  /* Hack: Vẽ bóng trắng đè lên nền autofill của trình duyệt */
+  /* Cập nhật màu nền này để khớp với màu .input-group-custom */
+  box-shadow: 0 0 0 1000px #f8fafc inset !important;
 }
 
 /* Khi focus vào input đã autofill */
 .input-group-custom:focus-within .form-control:-webkit-autofill {
   /* Đổi nền thành trắng để khớp với hiệu ứng focus */
-  box-shadow: 0 0 0 1000px #ffffff inset !important; 
+  box-shadow: 0 0 0 1000px #ffffff inset !important;
 }
 </style>

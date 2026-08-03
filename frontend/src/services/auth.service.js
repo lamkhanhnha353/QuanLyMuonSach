@@ -41,6 +41,11 @@ class AuthService {
         } else {
           return null;
         }
+      }).catch((error) => {
+        if (error.response) {
+          throw error;
+        }
+        throw error;
       });
   }
 
@@ -76,3 +81,4 @@ class AuthService {
 }
 
 export default new AuthService();
+

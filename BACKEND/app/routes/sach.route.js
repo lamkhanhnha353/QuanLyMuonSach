@@ -18,3 +18,4 @@ router.route("/:id")
 router.post("/upload/image", verifyToken, checkRole(["Admin"]), sach.uploadImage);
 
 module.exports = router;
+

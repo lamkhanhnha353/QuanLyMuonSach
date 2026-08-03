@@ -2,11 +2,12 @@ const express = require("express");
 const docgia = require("../controllers/docgia.controller");
 const verifyToken = require("../middlewares/verifyToken");
 const checkRole = require("../middlewares/checkRole");
+const loginLimiter = require("../middleware/loginLimiter");
 
 const router = express.Router();
 
 router.route("/login")
-    .post(docgia.login);
+    .post(loginLimiter, docgia.login);
 
 router.route("/")
     .get(verifyToken, checkRole(["Admin", "Staff"]), docgia.findAll)
@@ -27,3 +28,4 @@ router.route("/:id/favorites/:sachId")
     .delete(verifyToken, checkRole(["DocGia"]), docgia.removeFavorite);
 
 module.exports = router;
+

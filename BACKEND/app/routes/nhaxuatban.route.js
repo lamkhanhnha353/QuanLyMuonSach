@@ -16,3 +16,4 @@ router.route("/:id")
     .delete(verifyToken, checkRole(["Admin"]), nhaxuatban.delete);
 
 module.exports = router;
+

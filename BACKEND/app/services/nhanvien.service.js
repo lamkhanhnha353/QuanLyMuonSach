@@ -1,6 +1,6 @@
 const { ObjectId } = require("mongodb");
 const bcrypt = require("bcryptjs"); 
-
+const redis = require("../config/redis");
 class NhanVienService {
     constructor(client) {
         this.NhanVien = client.db().collection("NHANVIEN");
@@ -54,22 +54,62 @@ class NhanVienService {
         return nhanvienData;
     }
 
-    async login(payload) {
-        // (Hàm này đã sửa ở bước trước, giữ nguyên)
+    async login(payload, ip) {
+        const username = payload.MSNV;
+        const failKey = `login_fail:${username}:${ip}`;
+        const lockKey = `login_lock:${username}:${ip}`;
+        // 1. Kiểm tra tài khoản có bị khóa
+        const locked = await redis.get(lockKey);
+        if (locked) {
+            const ttl = await redis.ttl(lockKey);
+            throw {
+                status: 423,
+                message:
+                    `Tài khoản bị khóa. Thử lại sau ${ttl} giây`
+            };
+        }
         const nhanvien = await this.NhanVien.findOne({ MSNV: payload.MSNV });
         
         if (!nhanvien) {
             throw new Error("MSNV hoặc Mật khẩu không đúng");
         }
-
         const isMatch = await bcrypt.compare(payload.password, nhanvien.Password);
         
         if (!isMatch) {
-            throw new Error("MSNV hoặc Mật khẩu không đúng");
+            const attempts = await redis.incr(failKey);
+            console.log(`Số lần thử đăng nhập thất bại cho ${username}: ${ip} : ${attempts}`);
+            if (attempts === 1) {
+                await redis.expire(
+                    failKey,
+                    900
+                );
+            }
+            if (attempts >= 5) {
+                await redis.set(
+                    lockKey,
+                    "locked",
+                    {
+                        EX: 900
+                    }
+                );
+                await redis.del(failKey);
+                throw {
+                    status: 423,
+                    message:
+                        "Tài khoản bị khóa 15 phút do nhập sai quá nhiều lần"
+                };
+            }
+            throw {
+                status: 401,
+                message:
+                    `Sai mật khẩu. Còn ${5 - attempts} lần thử`
+            };
         }
-
+        // 4. Login thành công
+        await redis.del(failKey);
         delete nhanvien.Password;
         return nhanvien;
+
     }
 
     // --- Chức năng CRUD (Giữ nguyên) ---

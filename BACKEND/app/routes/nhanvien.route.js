@@ -2,11 +2,12 @@ const express = require("express");
 const nhanvien = require("../controllers/nhanvien.controller");
 const verifyToken = require("../middlewares/verifyToken");
 const checkRole = require("../middlewares/checkRole");
+const loginLimiter = require("../middleware/loginLimiter");
 
 const router = express.Router();
 
 router.route("/login")
-    .post(nhanvien.login);
+    .post(loginLimiter, nhanvien.login);
 
 // --- Route CRUD (cho Admin quản lý) ---
 
@@ -21,3 +22,4 @@ router.route("/:id")
     .delete(verifyToken, checkRole(["Admin"]), nhanvien.delete);
 
 module.exports = router;
+
