@@ -117,7 +117,8 @@ class MuonSachService {
 
     async find(filter) {
         const cursor = await this.MuonSach.find(filter);
-        return await cursor.toArray();
+        const records = await cursor.toArray();
+        return await this._populateMuonSachRecords(records);
     }
 
     //3. Find by ID: Lấy chi tiết 1 phiếu mượn. 
@@ -125,6 +126,47 @@ class MuonSachService {
         return await this.MuonSach.findOne({
             _id: ObjectId.isValid(id) ? new ObjectId(id) : null,
         });
+    }
+
+    _normalizeObjectId(value) {
+        if (!value) return null;
+        if (value instanceof ObjectId) return value;
+        if (typeof value === 'string') {
+            return ObjectId.isValid(value) ? new ObjectId(value) : null;
+        }
+        if (typeof value === 'object') {
+            if (value.$oid && ObjectId.isValid(value.$oid)) {
+                return new ObjectId(value.$oid);
+            }
+            if (typeof value.toString === 'function') {
+                const str = value.toString();
+                if (ObjectId.isValid(str)) return new ObjectId(str);
+            }
+        }
+        return null;
+    }
+
+    async _populateMuonSachRecords(records) {
+        if (!records || records.length === 0) return [];
+
+        return await Promise.all(records.map(async (rec) => {
+            const out = { ...rec };
+            const normalizedNhanVienId = this._normalizeObjectId(rec.nhanVienId);
+
+            if (normalizedNhanVienId) {
+                try {
+                    const nhanVien = await this.client.db().collection("NHANVIEN").findOne({ _id: normalizedNhanVienId });
+                    if (nhanVien) {
+                        out.TenNhanVien = (nhanVien.HOLOT || '') + ' ' + (nhanVien.TEN || nhanVien.HoTenNV || '');
+                        out.TenNhanVien = out.TenNhanVien.trim() || 'Nhân viên không xác định';
+                    }
+                } catch (error) {
+                    console.error("Error fetching staff:", error);
+                }
+            }
+
+            return out;
+        }));
     }
 
     //4. Find by DocGiaId: Chức năng cho Độc Giả xem lịch sử mượn.
@@ -139,11 +181,10 @@ class MuonSachService {
             const out = { ...rec };
 
             // Populate staff name if nhanVienId exists
-            if (rec.nhanVienId) {
+            if (rec.nhanVienId && !out.nhanVienName && !out.TenNhanVien) {
                 try {
                     const nhanVien = await this.client.db().collection("NHANVIEN").findOne({ _id: rec.nhanVienId });
                     if (nhanVien) {
-                        // Try multiple field combinations
                         out.nhanVienName = (nhanVien.HOLOT || nhanVien.HoTenNV || '') + ' ' + (nhanVien.TEN || '');
                         out.nhanVienName = out.nhanVienName.trim() || 'Nhân viên không xác định';
                     }

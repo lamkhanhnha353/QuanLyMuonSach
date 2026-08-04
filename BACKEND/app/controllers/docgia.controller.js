@@ -27,7 +27,8 @@ exports.create = async (req, res, next) => {
 
 // 2. Login: Đăng nhập
 exports.login = async (req, res, next) => {
-    const ip = req.ip; // Lấy địa chỉ IP của người dùng
+    const ip = req.headers["x-test-user"] || req.ip;
+
     if (!req.body?.username || !req.body?.password) {
         return next(new ApiError(400, "Username và Mật khẩu là bắt buộc"));
     }

@@ -1,10 +1,11 @@
-const rateLimit = require("express-rate-limit");
+const { rateLimit, ipKeyGenerator } = require("express-rate-limit");
 
 const loginLimiter = rateLimit({
     windowMs: 30 * 1000,
     max: 15,
     keyGenerator: (req) => {
-        return req.headers["x-test-user"] || req.ip;
+        // Ưu tiên header x-test-user (dùng để test), ngược lại dùng IP đã chuẩn hóa IPv6
+        return req.headers["x-test-user"] || ipKeyGenerator(req.ip);
     },
     handler: (req, res, next, options) => {
         const resetTime = req.rateLimit.resetTime;

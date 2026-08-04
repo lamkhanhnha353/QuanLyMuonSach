@@ -7,12 +7,24 @@ import NhaXuatBanService from './nhaxuatban.service';
 import NhanVienService from './nhanvien.service';
 
 class ExportService {
-  // Helper function để normalize field names (handle both UPPERCASE và camelCase)
+ 
   normalizeField(obj, fieldNames) {
     for (const fieldName of fieldNames) {
       if (obj[fieldName]) return obj[fieldName];
     }
     return '';
+  }
+
+  normalizeId(value) {
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'object') {
+      if (value.$oid) return String(value.$oid);
+      if (value._bsontype === 'ObjectID' && typeof value.toHexString === 'function') return value.toHexString();
+      if (typeof value.toString === 'function') return value.toString();
+      return JSON.stringify(value);
+    }
+    return String(value);
   }
 
   // Lấy tất cả dữ liệu từ API
@@ -43,9 +55,13 @@ class ExportService {
 
       // Populate muonSaches data
       const populatedMuonSaches = muonSaches.map(ms => {
-        const docGia = docGias.find(dg => dg._id === ms.docGiaId || dg._id === ms.MaDocGia);
-        const sach = saches.find(s => s._id === ms.sachId || s._id === ms.MaSach);
-        const nhanVien = nhanViens.find(nv => nv._id === ms.nhanVienId || nv._id === ms.MaNhanVien);
+        const docGia = docGias.find(dg => this.normalizeId(dg._id) === this.normalizeId(ms.docGiaId) || this.normalizeId(dg._id) === this.normalizeId(ms.MaDocGia));
+        const sach = saches.find(s => this.normalizeId(s._id) === this.normalizeId(ms.sachId) || this.normalizeId(s._id) === this.normalizeId(ms.MaSach));
+        const msNhanVienId = this.normalizeId(ms.nhanVienId) || this.normalizeId(ms.MaNhanVien) || this.normalizeId(ms.NhanVienId) || this.normalizeId(ms.NHANVIENID);
+        const nhanVien = nhanViens.find(nv => {
+          const nvId = this.normalizeId(nv._id) || this.normalizeId(nv.MaNhanVien) || this.normalizeId(nv.MSNV);
+          return nvId !== '' && nvId === msNhanVienId;
+        });
 
         // Build reader name (HOLOT + TEN)
         const tenDocGia = docGia 
@@ -56,7 +72,7 @@ class ExportService {
         const tenSach = sach?.TENSACH || sach?.TenSach || '';
 
         // Build staff name (HoTenNV)
-        const tenNhanVien = nhanVien?.HoTenNV || nhanVien?.HoTen || '';
+        const tenNhanVien = nhanVien?.HoTenNV || nhanVien?.HoTen || ms.nhanVienName || ms.TenNhanVien || '';
 
         return {
           ...ms,
